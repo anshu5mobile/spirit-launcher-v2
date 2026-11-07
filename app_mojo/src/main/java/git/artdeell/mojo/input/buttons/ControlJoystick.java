@@ -12,7 +12,9 @@ import static git.artdeell.mojo.input.gamepad.GamepadJoystick.DIRECTION_WEST;
 import static git.artdeell.mojo.game.platform.Platform.PLATFORM;
 
 import android.annotation.SuppressLint;
+import android.os.SystemClock;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 
 import git.artdeell.mojo.Tools;
@@ -38,6 +40,9 @@ public class ControlJoystick extends JoystickView implements ControlInterface {
     private ControlJoystickData mControlData;
     private int mLastDirectionInt = GamepadJoystick.DIRECTION_NONE;
     private int mCurrentDirectionInt = GamepadJoystick.DIRECTION_NONE;
+    /** SPIRIT: true jab tak joystick pe ungli rakhi hai (ACTION_DOWN se UP/CANCEL tak). */
+    private boolean mTouching = false;
+
     public ControlJoystick(ControlLayout parent, ControlJoystickData data) {
         super(parent.getContext());
         init(data, parent);
@@ -76,6 +81,73 @@ public class ControlJoystick extends JoystickView implements ControlInterface {
                 sendInput(mDirectionForwardLock, isLocked);
             }
         });
+    }
+
+    // ------------------------------------------------------------------
+    // SPIRIT FIX: joystick atakna
+    //
+    // JoystickView library sirf ACTION_UP pe joystick ko center karti hai aur
+    // keys chhodti hai. ACTION_CANCEL (jo Android tab bhejta hai jab kai ungliyon
+    // wale gestures / system gesture touch cheen lete hain) ko wo ignore karti hai.
+    // Tab uska thread last direction bhejta rehta hai aur W/A/S/D atke rehte hain.
+    // Yahan CANCEL ko UP ki tarah treat kiya jata hai, aur view chhupne/hatne par bhi
+    // joystick reset hota hai.
+    // ------------------------------------------------------------------
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                mTouching = true;
+                break;
+            case MotionEvent.ACTION_UP:
+                mTouching = false;
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                forceRelease();
+                return true;
+            default:
+                break;
+        }
+        return super.onTouchEvent(event);
+    }
+
+    /** Joystick ko center karo aur saari direction keys chhod do. */
+    private void forceRelease() {
+        if (mControlData == null) return; // constructor abhi poora nahi hua
+
+        if (mTouching) {
+            mTouching = false;
+            // Library ko ek nakli ACTION_UP do, taaki uska thread ruke aur button center pe aaye
+            long now = SystemClock.uptimeMillis();
+            MotionEvent up = MotionEvent.obtain(now, now, MotionEvent.ACTION_UP,
+                    getWidth() / 2f, getHeight() / 2f, 0);
+            super.onTouchEvent(up);
+            up.recycle();
+        }
+        releaseDirectionKeys();
+    }
+
+    private void releaseDirectionKeys() {
+        if (mCurrentDirectionInt != DIRECTION_NONE) {
+            sendDirectionalKeycode(mCurrentDirectionInt, false);
+        }
+        mLastDirectionInt = DIRECTION_NONE;
+        mCurrentDirectionInt = DIRECTION_NONE;
+    }
+
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+        super.onVisibilityChanged(changedView, visibility);
+        // Menu/inventory khulne pe joystick chhup jaye to bhi keys na atkein
+        if (visibility != View.VISIBLE) forceRelease();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        forceRelease();
+        super.onDetachedFromWindow();
     }
 
     @Override
