@@ -1,0 +1,77 @@
+name: Spirit audit
+
+# Sirf padhta hai, repo me kuch badalta nahi. Run karne ke baad artifact "spirit-audit" download karo.
+on:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect report
+        shell: bash
+        run: |
+          set +e
+          set +o pipefail
+          R="$RUNNER_TEMP/spirit-audit.txt"
+          EX="--exclude-dir=.git --exclude-dir=build --exclude-dir=.gradle"
+          : > "$R"
+          sec() { printf '\n\n########## %s ##########\n' "$1" >> "$R"; }
+
+          sec "TOP LEVEL"
+          ls -la >> "$R"
+
+          sec "FILES AND FOLDERS WITH mojo IN THE NAME"
+          find . -path ./.git -prune -o -iname '*mojo*' -print | sort | head -300 >> "$R"
+
+          sec "FILES CONTAINING mojo, COUNT BY EXTENSION"
+          grep -rIil $EX mojo . | sed -E 's/.*\.([A-Za-z0-9_]+)$/\1/' | sort | uniq -c | sort -rn >> "$R"
+
+          sec "NON-SOURCE FILES WITH mojo (res, gradle, manifest, docs, ci)  [file:line:text]"
+          grep -rIin $EX \
+            --include='*.xml' --include='*.gradle' --include='*.kts' --include='*.md' \
+            --include='*.yml' --include='*.yaml' --include='*.json' --include='*.txt' \
+            --include='*.properties' --include='*.cmake' --include='*.pro' --include='*.toml' \
+            mojo . | cut -c1-220 | head -600 >> "$R"
+
+          sec "STRING LITERALS WITH mojo IN JAVA/KOTLIN/C/C++ (package and import lines skipped)"
+          grep -rIin $EX \
+            --include='*.java' --include='*.kt' --include='*.c' --include='*.cpp' --include='*.h' \
+            '"[^"]*mojo[^"]*"' . | grep -v -E ':[0-9]+:[[:space:]]*(package|import) ' | cut -c1-220 | head -300 >> "$R"
+
+          sec "JAVA/KOTLIN PACKAGE NAMES (top 15)"
+          grep -rIh $EX --include='*.java' --include='*.kt' -E '^package ' . | sort | uniq -c | sort -rn | head -15 >> "$R"
+
+          sec "KEY FILES: manifest and gradle"
+          for f in $(find . -path ./.git -prune -o \( -name AndroidManifest.xml -o -name build.gradle -o -name settings.gradle -o -name gradle.properties \) -print | grep -v '/build/' | sort); do
+            printf '\n----- %s -----\n' "$f" >> "$R"
+            head -c 12000 "$f" >> "$R"
+          done
+
+          sec "KEY FILES: theme, colors, strings, dimens (res/values)"
+          for f in $(find . -path ./.git -prune -o -path '*/res/values/*' \( -name 'colors.xml' -o -name 'themes.xml' -o -name 'styles.xml' -o -name 'strings.xml' -o -name 'dimens.xml' \) -print | sort); do
+            printf '\n----- %s -----\n' "$f" >> "$R"
+            head -c 20000 "$f" >> "$R"
+          done
+
+          sec "ICON, LOGO AND SPLASH FILES"
+          find . -path ./.git -prune -o -path '*/res/*' \( -iname 'ic_launcher*' -o -iname '*logo*' -o -iname '*splash*' -o -iname '*banner*' \) -print | sort | head -100 >> "$R"
+
+          sec "BUTTON, BACKGROUND AND CARD DRAWABLES"
+          find . -path ./.git -prune -o -path '*/res/drawable*' \( -iname '*button*' -o -iname 'background*' -o -iname '*card*' \) -print | sort | head -100 >> "$R"
+
+          sec "LICENSE AND NOTICE FILES"
+          ls -la LICENSE* NOTICE* 2>/dev/null >> "$R"
+          head -20 LICENSE >> "$R" 2>/dev/null
+
+          sec "SUBMODULES"
+          cat .gitmodules >> "$R" 2>/dev/null
+
+          wc -c "$R"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spirit-audit
+          path: ${{ runner.temp }}/spirit-audit.txt
