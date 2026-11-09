@@ -8,6 +8,7 @@ import git.artdeell.mojo.prefs.LauncherPreferences;
 
 import git.artdeell.mojo.CallbackBridge;
 
+// SPIRIT: alag delay (PREF_HOTBAR_DROP_DELAY) aur dheema repeat (500 ms)
 public class DropGesture implements Runnable{
     private final Handler mHandler;
     private boolean mActive;
@@ -19,7 +20,7 @@ public class DropGesture implements Runnable{
     public void submit() {
         if(!mActive) {
             mActive = true;
-            mHandler.postDelayed(this, LauncherPreferences.PREF_LONGPRESS_TRIGGER);
+            mHandler.postDelayed(this, LauncherPreferences.PREF_HOTBAR_DROP_DELAY);
         }
     }
 
@@ -32,6 +33,6 @@ public class DropGesture implements Runnable{
     public void run() {
         if(!mActive) return;
         CallbackBridge.sendKeyPress(KeyEvent.KEYCODE_Q);
-        mHandler.postDelayed(this, 250);
+        mHandler.postDelayed(this, 500);
     }
 }
