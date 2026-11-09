@@ -4,6 +4,8 @@ import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_BUTTON_TRANSPAREN
 import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_DISABLE_GESTURES;
 import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_ENABLE_GYRO;
 import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_GYRO_INVERT_X;
+import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_HOTBAR_DROP_DELAY;
+import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_HOTBAR_HOLD_DROP;
 import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_GYRO_INVERT_Y;
 import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_GYRO_SENSITIVITY;
 import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_LONGPRESS_TRIGGER;
@@ -32,13 +34,14 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
     private SharedPreferences.Editor mEditor;
 
-    private SwitchCompat mGyroSwitch, mGyroXSwitch, mGyroYSwitch, mGestureSwitch;
-    private CustomSeekbar mGyroSensitivityBar, mMouseSpeedBar, mGestureDelayBar, mResolutionBar, mTransparencyBar;
-    private TextView mGyroSensitivityText, mGyroSensitivityDisplayText, mMouseSpeedText, mGestureDelayText, mGestureDelayDisplayText, mResolutionText, mTransparencyText;
+    private SwitchCompat mGyroSwitch, mGyroXSwitch, mGyroYSwitch, mGestureSwitch, mHotbarDropSwitch;
+    private CustomSeekbar mGyroSensitivityBar, mMouseSpeedBar, mGestureDelayBar, mResolutionBar, mTransparencyBar, mHotbarDropDelayBar;
+    private TextView mGyroSensitivityText, mGyroSensitivityDisplayText, mMouseSpeedText, mGestureDelayText, mGestureDelayDisplayText, mResolutionText, mTransparencyText, mHotbarDropDelayText, mHotbarDropDelayDisplayText;
 
     private boolean mOriginalGyroEnabled, mOriginalGyroXEnabled, mOriginalGyroYEnabled, mOriginalGestureDisabled;
     private float mOriginalGyroSensitivity, mOriginalMouseSpeed, mOriginalResolution;
-    private int mOriginalGestureDelay;
+    private int mOriginalGestureDelay, mOriginalHotbarDropDelay;
+    private boolean mOriginalHotbarDrop;
     private short mOriginalTransparency;
 
     public QuickSettingSideDialog(Context context, ViewGroup parent) {
@@ -67,6 +70,10 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         mGyroXSwitch = mDialogContent.findViewById(R.id.checkboxGyroX);
         mGyroYSwitch = mDialogContent.findViewById(R.id.checkboxGyroY);
         mGestureSwitch = mDialogContent.findViewById(R.id.checkboxGesture);
+        mHotbarDropSwitch = mDialogContent.findViewById(R.id.checkboxHotbarDrop);
+        mHotbarDropDelayBar = mDialogContent.findViewById(R.id.editHotbarDropDelay_seekbar);
+        mHotbarDropDelayText = mDialogContent.findViewById(R.id.editHotbarDropDelay_textView_percent);
+        mHotbarDropDelayDisplayText = mDialogContent.findViewById(R.id.editHotbarDropDelay_textView);
 
         mGyroSensitivityBar = mDialogContent.findViewById(R.id.editGyro_seekbar);
         mMouseSpeedBar = mDialogContent.findViewById(R.id.editMouseSpeed_seekbar);
@@ -90,6 +97,8 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         mOriginalGyroXEnabled = PREF_GYRO_INVERT_X;
         mOriginalGyroYEnabled = PREF_GYRO_INVERT_Y;
         mOriginalGestureDisabled = PREF_DISABLE_GESTURES;
+        mOriginalHotbarDrop = PREF_HOTBAR_HOLD_DROP;
+        mOriginalHotbarDropDelay = PREF_HOTBAR_DROP_DELAY;
 
         mOriginalGyroSensitivity = PREF_GYRO_SENSITIVITY;
         mOriginalMouseSpeed = PREF_MOUSESPEED;
@@ -101,6 +110,7 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         mGyroXSwitch.setChecked(mOriginalGyroXEnabled);
         mGyroYSwitch.setChecked(mOriginalGyroYEnabled);
         mGestureSwitch.setChecked(mOriginalGestureDisabled);
+        mHotbarDropSwitch.setChecked(mOriginalHotbarDrop);
 
         mGyroSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             PREF_ENABLE_GYRO = isChecked;
@@ -126,6 +136,20 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
             updateGestureVisibility(isChecked);
             mEditor.putBoolean("disableGestures", isChecked);
         });
+
+        mHotbarDropSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            PREF_HOTBAR_HOLD_DROP = isChecked;
+            updateHotbarDropVisibility(isChecked);
+            mEditor.putBoolean("hotbarHoldDrop", isChecked);
+        });
+
+        mHotbarDropDelayBar.setOnSeekBarChangeListener((SimpleSeekBarListener) (seekBar, progress, fromUser) -> {
+            PREF_HOTBAR_DROP_DELAY = progress;
+            mEditor.putInt("hotbarDropDelay", progress);
+            setSeekTextMillisecond(mHotbarDropDelayText, progress);
+        });
+        mHotbarDropDelayBar.setProgress(mOriginalHotbarDropDelay);
+        setSeekTextMillisecond(mHotbarDropDelayText, mHotbarDropDelayBar.getProgress());
 
         mGyroSensitivityBar.setOnSeekBarChangeListener((SimpleSeekBarListener) (seekBar, progress, fromUser) -> {
             PREF_GYRO_SENSITIVITY = progress / 100f;
@@ -172,6 +196,7 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
         updateGyroVisibility(mOriginalGyroEnabled);
         updateGestureVisibility(mOriginalGestureDisabled);
+        updateHotbarDropVisibility(mOriginalHotbarDrop);
     }
 
     private static void setSeekTextMillisecond(TextView target, int value) {
@@ -211,7 +236,17 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         mGestureDelayDisplayText.setVisibility(visibility);
     }
 
+    /** SPIRIT: delay slider sirf tab dikhta hai jab hold-to-drop ON ho. */
+    private void updateHotbarDropVisibility(boolean isEnabled) {
+        int visibility = isEnabled ? View.VISIBLE : View.GONE;
+        mHotbarDropDelayBar.setVisibility(visibility);
+        mHotbarDropDelayText.setVisibility(visibility);
+        mHotbarDropDelayDisplayText.setVisibility(visibility);
+    }
+
     private void removeListeners() {
+        mHotbarDropSwitch.setOnCheckedChangeListener(null);
+        mHotbarDropDelayBar.setOnSeekBarChangeListener(null);
         mGyroSwitch.setOnCheckedChangeListener(null);
         mGyroXSwitch.setOnCheckedChangeListener(null);
         mGyroYSwitch.setOnCheckedChangeListener(null);
@@ -240,6 +275,8 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
             PREF_GYRO_INVERT_X = mOriginalGyroXEnabled;
             PREF_GYRO_INVERT_Y = mOriginalGyroYEnabled;
             PREF_DISABLE_GESTURES = mOriginalGestureDisabled;
+            PREF_HOTBAR_HOLD_DROP = mOriginalHotbarDrop;
+            PREF_HOTBAR_DROP_DELAY = mOriginalHotbarDropDelay;
 
             PREF_GYRO_SENSITIVITY = mOriginalGyroSensitivity;
             PREF_MOUSESPEED = mOriginalMouseSpeed;
