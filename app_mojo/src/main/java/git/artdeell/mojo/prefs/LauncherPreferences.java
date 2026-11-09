@@ -56,6 +56,9 @@ public class LauncherPreferences {
     public static boolean PREF_GYRO_INVERT_X = false;
     public static boolean PREF_GYRO_INVERT_Y = false;
 
+    /** SPIRIT: hotbar slot ko hold karne pe item drop (default OFF). */
+    public static boolean PREF_HOTBAR_HOLD_DROP = false;
+
     public static boolean PREF_FORCE_VSYNC = false;
 
     public static boolean PREF_USE_ANGLE = false;
@@ -109,6 +112,7 @@ public class LauncherPreferences {
         PREF_GYRO_SMOOTHING = DEFAULT_PREF.getBoolean("gyroSmoothing", true);
         PREF_GYRO_INVERT_X = DEFAULT_PREF.getBoolean("gyroInvertX", false);
         PREF_GYRO_INVERT_Y = DEFAULT_PREF.getBoolean("gyroInvertY", false);
+        PREF_HOTBAR_HOLD_DROP = DEFAULT_PREF.getBoolean("hotbarHoldDrop", false);
         PREF_FORCE_VSYNC = DEFAULT_PREF.getBoolean("force_vsync", isDevicePowerful);
         PREF_USE_ANGLE = DEFAULT_PREF.getBoolean("use_angle", false);
         PREF_BUTTON_ALL_CAPS = DEFAULT_PREF.getBoolean("buttonAllCaps", true);
