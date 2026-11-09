@@ -198,6 +198,53 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/editGestureDelay_textView" />
 
+    <!-- SPIRIT: hotbar slot hold karke item drop (default OFF) -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/checkboxHotbarDrop"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_36sdp"
+        android:text="Hold hotbar slot to drop item"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editGestureDelay_seekbar"/>
+
+    <TextView
+        android:id="@+id/editHotbarDropDelay_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_5sdp"
+        android:gravity="center"
+        android:paddingEnd="5dp"
+        android:text="Hotbar drop delay"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/checkboxHotbarDrop" />
+
+    <com.kdt.CustomSeekbar
+        android:id="@+id/editHotbarDropDelay_seekbar"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/_36sdp"
+
+        android:min="300"
+        android:max="2000"
+        app:seekBarIncrement="100"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.538"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editHotbarDropDelay_textView" />
+
+    <TextView
+        android:id="@+id/editHotbarDropDelay_textView_percent"
+        android:layout_width="150dp"
+        android:layout_height="0dp"
+        android:gravity="end"
+        tools:text="700 ms"
+
+        app:layout_constraintBottom_toBottomOf="@id/editHotbarDropDelay_textView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/editHotbarDropDelay_textView" />
+
     <!-- button transparency seekbar -->
     <TextView
         android:id="@+id/buttonTransparency_textView"
@@ -209,7 +256,7 @@
         android:text="@string/preference_button_transparency"
 
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editGestureDelay_seekbar" />
+        app:layout_constraintTop_toBottomOf="@id/editHotbarDropDelay_seekbar" />
 
     <com.kdt.CustomSeekbar
         android:id="@+id/buttonTransparency_seekBar"
