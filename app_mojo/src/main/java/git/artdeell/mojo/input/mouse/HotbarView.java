@@ -104,7 +104,7 @@ public class HotbarView extends View implements MCOptionUtils.MCOptionListener, 
         // Check if we need to cancel the drop event
         int actionMasked = event.getActionMasked();
         if(isLastEventInGesture(actionMasked)) mDropGesture.cancel();
-        else mDropGesture.submit();
+        else if(LauncherPreferences.PREF_HOTBAR_HOLD_DROP) mDropGesture.submit(); // SPIRIT: hold-to-drop default OFF
         // Determine the hotbar slot
         float x = event.getX();
         // Ignore positions equal to mWidth because they would translate into an out-of-bounds hotbar index
@@ -126,7 +126,7 @@ public class HotbarView extends View implements MCOptionUtils.MCOptionListener, 
         // Cancel the event since we changed hotbar slots.
         mDropGesture.cancel();
         // Only resubmit the gesture only if it isn't the last event we will receive.
-        if(!isLastEventInGesture(actionMasked)) mDropGesture.submit();
+        if(!isLastEventInGesture(actionMasked) && LauncherPreferences.PREF_HOTBAR_HOLD_DROP) mDropGesture.submit();
         return true;
     }
 
