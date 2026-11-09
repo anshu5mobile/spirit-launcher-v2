@@ -58,6 +58,8 @@ public class LauncherPreferences {
 
     /** SPIRIT: hotbar slot ko hold karne pe item drop (default OFF). */
     public static boolean PREF_HOTBAR_HOLD_DROP = false;
+    /** SPIRIT: hold-to-drop ka delay (ms), default 700. */
+    public static int PREF_HOTBAR_DROP_DELAY = 700;
 
     public static boolean PREF_FORCE_VSYNC = false;
 
@@ -113,6 +115,7 @@ public class LauncherPreferences {
         PREF_GYRO_INVERT_X = DEFAULT_PREF.getBoolean("gyroInvertX", false);
         PREF_GYRO_INVERT_Y = DEFAULT_PREF.getBoolean("gyroInvertY", false);
         PREF_HOTBAR_HOLD_DROP = DEFAULT_PREF.getBoolean("hotbarHoldDrop", false);
+        PREF_HOTBAR_DROP_DELAY = DEFAULT_PREF.getInt("hotbarDropDelay", 700);
         PREF_FORCE_VSYNC = DEFAULT_PREF.getBoolean("force_vsync", isDevicePowerful);
         PREF_USE_ANGLE = DEFAULT_PREF.getBoolean("use_angle", false);
         PREF_BUTTON_ALL_CAPS = DEFAULT_PREF.getBoolean("buttonAllCaps", true);
