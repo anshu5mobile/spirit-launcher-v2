@@ -55,6 +55,8 @@ public class MainMenuFragment extends Fragment {
         Button mShareLogsButton = view.findViewById(R.id.share_logs_button);
         Button mOpenDirectoryButton = view.findViewById(R.id.open_files_button);
 
+        View mCreateInstanceButton = view.findViewById(R.id.create_instance_button); // SPIRIT (null in layouts without it)
+
         ImageButton mEditProfileButton = view.findViewById(R.id.edit_profile_button);
         Button mPlayButton = view.findViewById(R.id.play_button);
         mVersionSpinner = view.findViewById(R.id.mc_version_spinner);
@@ -71,6 +73,11 @@ public class MainMenuFragment extends Fragment {
 
         mOpenDirectoryButton.setOnClickListener((v)-> openGameDirectory(v.getContext()));
 
+
+        if(mCreateInstanceButton != null) {
+            mCreateInstanceButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(),
+                    ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null));
+        }
 
         mNewsButton.setOnLongClickListener((v)->{
             Tools.swapFragment(requireActivity(), GamepadMapperFragment.class, GamepadMapperFragment.TAG, null);
