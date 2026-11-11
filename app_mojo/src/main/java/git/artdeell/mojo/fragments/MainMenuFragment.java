@@ -7,8 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -48,41 +46,40 @@ public class MainMenuFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Button mNewsButton = view.findViewById(R.id.news_button);
-        Button mDiscordButton = view.findViewById(R.id.social_media_button);
-        Button mCustomControlButton = view.findViewById(R.id.custom_control_button);
-        Button mInstallJarButton = view.findViewById(R.id.install_jar_button);
-        Button mShareLogsButton = view.findViewById(R.id.share_logs_button);
-        Button mOpenDirectoryButton = view.findViewById(R.id.open_files_button);
+        View mNewsButton = view.findViewById(R.id.news_button);
+        View mDiscordButton = view.findViewById(R.id.social_media_button);
+        View mCustomControlButton = view.findViewById(R.id.custom_control_button);
+        View mInstallJarButton = view.findViewById(R.id.install_jar_button);
+        View mShareLogsButton = view.findViewById(R.id.share_logs_button);
+        View mOpenDirectoryButton = view.findViewById(R.id.open_files_button);
+        View mCreateInstanceButton = view.findViewById(R.id.create_instance_button);
+        View mWardrobeButton = view.findViewById(R.id.spirit_wardrobe_button);
+        View mBrowseButton = view.findViewById(R.id.spirit_browse_button);
 
-        View mCreateInstanceButton = view.findViewById(R.id.create_instance_button); // SPIRIT (null in layouts without it)
-
-        ImageButton mEditProfileButton = view.findViewById(R.id.edit_profile_button);
-        Button mPlayButton = view.findViewById(R.id.play_button);
+        View mEditProfileButton = view.findViewById(R.id.edit_profile_button);
+        View mPlayButton = view.findViewById(R.id.play_button);
         mVersionSpinner = view.findViewById(R.id.mc_version_spinner);
 
-        mNewsButton.setOnClickListener(v -> Tools.openURL(requireActivity(), Tools.URL_HOME));
-        mDiscordButton.setOnClickListener(v -> Tools.openURL(requireActivity(), getString(R.string.social_media_invite)));
-        mCustomControlButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), CustomControlsActivity.class)));
-        mInstallJarButton.setOnClickListener(v -> runInstallerWithConfirmation());
-        mEditProfileButton.setOnClickListener(v -> mVersionSpinner.openProfileEditor(requireActivity()));
-
-        mPlayButton.setOnClickListener(v -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
-
-        mShareLogsButton.setOnClickListener((v) -> shareLog(requireContext()));
-
-        mOpenDirectoryButton.setOnClickListener((v)-> openGameDirectory(v.getContext()));
-
-
-        if(mCreateInstanceButton != null) {
-            mCreateInstanceButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(),
-                    ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null));
+        if(mNewsButton != null) {
+            mNewsButton.setOnClickListener(v -> Tools.openURL(requireActivity(), Tools.URL_HOME));
+            mNewsButton.setOnLongClickListener((v)->{
+                Tools.swapFragment(requireActivity(), GamepadMapperFragment.class, GamepadMapperFragment.TAG, null);
+                return true;
+            });
         }
+        if(mDiscordButton != null) mDiscordButton.setOnClickListener(v -> Tools.openURL(requireActivity(), getString(R.string.social_media_invite)));
+        if(mCustomControlButton != null) mCustomControlButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), CustomControlsActivity.class)));
+        if(mInstallJarButton != null) mInstallJarButton.setOnClickListener(v -> runInstallerWithConfirmation());
+        if(mEditProfileButton != null) mEditProfileButton.setOnClickListener(v -> mVersionSpinner.openProfileEditor(requireActivity()));
+        if(mPlayButton != null) mPlayButton.setOnClickListener(v -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
+        if(mShareLogsButton != null) mShareLogsButton.setOnClickListener((v) -> shareLog(requireContext()));
+        if(mOpenDirectoryButton != null) mOpenDirectoryButton.setOnClickListener((v)-> openGameDirectory(v.getContext()));
+        if(mCreateInstanceButton != null) mCreateInstanceButton.setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null));
 
-        mNewsButton.setOnLongClickListener((v)->{
-            Tools.swapFragment(requireActivity(), GamepadMapperFragment.class, GamepadMapperFragment.TAG, null);
-            return true;
-        });
+        View.OnClickListener soon = v -> Toast.makeText(requireContext(), R.string.spirit_coming_soon, Toast.LENGTH_SHORT).show();
+        if(mWardrobeButton != null) mWardrobeButton.setOnClickListener(soon);
+        if(mBrowseButton != null) mBrowseButton.setOnClickListener(soon);
     }
 
     private void openGameDirectory(Context context) {
