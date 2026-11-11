@@ -247,6 +247,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             setIntent(activityIntent);
 
             setTitle("Spirit Launcher (" + version + ")");
+            populateLoadingScreen(version);
 
             // Menu
             gameActionArrayAdapter = new ArrayAdapter<>(this,
@@ -283,6 +284,33 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         } catch (Throwable e) {
             Tools.showError(this, e, true);
         }
+    }
+
+    private void populateLoadingScreen(String versionId) {
+        if(mLoadingScreen == null || versionId == null) return;
+        TextView nameView = mLoadingScreen.findViewById(R.id.main_loading_name);
+        TextView versionView = mLoadingScreen.findViewById(R.id.main_loading_version);
+        String name = versionId;
+        try {
+            File dir = instance.getGameDirectory();
+            if(dir != null && dir.getName().length() > 0) name = dir.getName();
+        } catch (Throwable ignored) {}
+        nameView.setText(name);
+        versionView.setText(prettyVersion(versionId));
+    }
+
+    private static String prettyVersion(String id) {
+        java.util.regex.Matcher m;
+        m = java.util.regex.Pattern.compile("^(fabric|quilt)-loader-([0-9.]+)-(.+)$").matcher(id);
+        if(m.matches()) {
+            String l = m.group(1);
+            return "Minecraft " + m.group(3) + " \u00b7 " + Character.toUpperCase(l.charAt(0)) + l.substring(1) + " " + m.group(2);
+        }
+        m = java.util.regex.Pattern.compile("^(.+)-forge-(.+)$").matcher(id);
+        if(m.matches()) return "Minecraft " + m.group(1) + " \u00b7 Forge " + m.group(2);
+        m = java.util.regex.Pattern.compile("^neoforge-(.+)$", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(id);
+        if(m.matches()) return "NeoForge " + m.group(1);
+        return "Minecraft " + id;
     }
 
     private void loadControls() {
