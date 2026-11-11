@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="spirit_brand_stacked">SPIRIT\nLAUNCHER</string>
+    <string name="spirit_auth_ms">Microsoft</string>
+    <string name="spirit_auth_ms_sub">Premium Minecraft account</string>
+    <string name="spirit_auth_ely">Ely.by</string>
+    <string name="spirit_auth_ely_sub">Email and password, then Next</string>
+    <string name="spirit_auth_local">Offline</string>
+    <string name="spirit_auth_local_sub">Just pick a username</string>
+    <string name="spirit_add_account_title">Add new account</string>
+    <string name="spirit_add_account_sub">Choose how you want to sign in.</string>
+    <string name="spirit_switch_control">Switch Control</string>
+    <string name="spirit_switch_control_sub">Change your control layout without leaving the game</string>
+    <string name="spirit_coming_soon_badge">COMING SOON</string>
+    <string name="spirit_wardrobe_title">Wardrobe</string>
+    <string name="spirit_wardrobe_intro">One place to change your skin, whatever account you use: local, Ely.by or Microsoft.</string>
+    <string name="spirit_wardrobe_preview">3D skin preview</string>
+    <string name="spirit_skin_username">Skin from username</string>
+    <string name="spirit_skin_username_sub">Wear any premium player\'s skin.</string>
+    <string name="spirit_skin_url">Skin from URL</string>
+    <string name="spirit_skin_url_sub">Paste a link to a skin image.</string>
+    <string name="spirit_skin_library">Skin library</string>
+    <string name="spirit_skin_library_sub">Save favourites and switch in one tap.</string>
+    <string name="spirit_autoskin">Auto Skin</string>
+    <string name="spirit_autoskin_sub">Applies your skin when a server does not</string>
+    <string name="spirit_autoskin_body">If your skin is not applied after joining, Spirit will send this command with your skin link:</string>
+    <string name="spirit_autoskin_cmd">/skin set &lt;your skin url&gt;</string>
+    <string name="spirit_autoskin_note">Only on servers I allow</string>
+    <string name="spirit_browse_title">Browse</string>
+    <string name="spirit_browse_search">Search mods, packs, shaders, worlds…</string>
+    <string name="spirit_browse_note">Results will be filtered by your Minecraft version and loader automatically, so you never install something that crashes the game.</string>
+    <string name="spirit_tab_mods">Mods</string>
+    <string name="spirit_tab_packs">Packs</string>
+    <string name="spirit_tab_shaders">Shaders</string>
+    <string name="spirit_tab_worlds">Worlds</string>
+    <string name="spirit_about_title">About and Credits</string>
+    <string name="spirit_about_discord">Join our Discord</string>
+    <string name="spirit_about_made">Made by AV Studios</string>
+    <string name="spirit_about_made_sub">A Minecraft Java launcher for Android, tuned for low-end phones.</string>
+    <string name="spirit_about_oss">Open source credits</string>
+    <string name="spirit_about_oss_sub">Built on MojoLauncher and PojavLauncher by their contributors. Licensed under LGPL-3.0, all original copyright notices kept.</string>
+    <string name="spirit_about_legal">Not affiliated with Mojang or Microsoft</string>
+    <string name="spirit_about_legal_sub">Minecraft is a trademark of Mojang Studios.</string>
+    <string name="spirit_about_license">View license</string>
+    <string name="spirit_about_source">Source code</string>
+</resources>
