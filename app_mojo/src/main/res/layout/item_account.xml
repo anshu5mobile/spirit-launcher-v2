@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="@dimen/_52sdp"
     android:layout_width="match_parent"
+    android:background="@color/background_status_bar"
     android:orientation="horizontal">
 
     <fr.spse.extended_view.ExtendedTextView
@@ -13,6 +14,9 @@
         android:layout_weight="1"
 
         android:textSize="@dimen/_16ssp"
+        android:textColor="@color/spirit_text"
+        android:singleLine="true"
+        android:ellipsize="end"
         android:gravity="center_vertical"
         android:drawablePadding="@dimen/_6sdp"
         android:paddingStart="@dimen/_8sdp"
@@ -32,6 +36,7 @@
         android:layout_height="match_parent"
         android:background="?attr/selectableItemBackground"
         android:src="@drawable/ic_px_trash"
+        android:tint="@color/spirit_lime"
 
         android:padding="@dimen/padding_moderate"
         />
