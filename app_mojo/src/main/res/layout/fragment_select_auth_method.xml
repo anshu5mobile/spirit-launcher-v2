@@ -1,50 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background_app"
-    android:paddingHorizontal="@dimen/fragment_padding_medium">
-    <androidx.constraintlayout.widget.ConstraintLayout
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:background="@drawable/background_card"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:paddingVertical="@dimen/padding_extra_extra_large">
-
-        <com.kdt.mcgui.MineButton
-            android:id="@+id/button_microsoft_authentication"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/auth_select_microsoft"
-            android:textSize="@dimen/_12ssp"
-            android:layout_marginHorizontal="@dimen/_25sdp"
-            android:layout_marginBottom="@dimen/_20sdp"
-            app:layout_constraintTop_toTopOf="parent"
-            />
-
-        <com.kdt.mcgui.MineButton
-            android:id="@+id/button_elyby_authentication"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/auth_select_elyby"
-            android:textSize="@dimen/_12ssp"
-            android:layout_marginHorizontal="@dimen/_25sdp"
-            android:layout_marginTop="@dimen/_20sdp"
-            app:layout_constraintTop_toBottomOf="@+id/button_microsoft_authentication" />
-
-        <com.kdt.mcgui.MineButton
-            android:id="@+id/button_local_authentication"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/auth_select_local"
-            android:textSize="@dimen/_12ssp"
-            android:layout_marginHorizontal="@dimen/_25sdp"
-            android:layout_marginTop="@dimen/_20sdp"
-            app:layout_constraintTop_toBottomOf="@+id/button_elyby_authentication" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</FrameLayout>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/background_app" android:fillViewport="true">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/spirit_add_account_title" android:textSize="22sp" android:textColor="@color/spirit_text" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/spirit_add_account_sub" android:textSize="13sp" android:textColor="@color/spirit_text_dim"  android:layout_marginTop="2dp" android:layout_marginBottom="6dp"/>
+<LinearLayout android:id="@+id/button_microsoft_authentication" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="10dp" android:padding="14dp" android:background="@drawable/spirit_card_bg" android:clickable="true" android:focusable="true">
+<FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/spirit_icon_tile"><ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_spirit_ms" android:tint="@color/spirit_lime" android:contentDescription="@null"/></FrameLayout>
+<LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="14dp"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/spirit_auth_ms" android:textSize="16sp" android:textColor="@color/spirit_text" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/spirit_auth_ms_sub" android:textSize="12sp" android:textColor="@color/spirit_text_dim"  /></LinearLayout></LinearLayout>
+<LinearLayout android:id="@+id/button_elyby_authentication" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="10dp" android:padding="14dp" android:background="@drawable/spirit_card_bg" android:clickable="true" android:focusable="true">
+<FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/spirit_icon_tile"><ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_spirit_ely" android:tint="@color/spirit_lime" android:contentDescription="@null"/></FrameLayout>
+<LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="14dp"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/spirit_auth_ely" android:textSize="16sp" android:textColor="@color/spirit_text" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/spirit_auth_ely_sub" android:textSize="12sp" android:textColor="@color/spirit_text_dim"  /></LinearLayout></LinearLayout>
+<LinearLayout android:id="@+id/button_local_authentication" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="10dp" android:padding="14dp" android:background="@drawable/spirit_card_bg" android:clickable="true" android:focusable="true">
+<FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/spirit_icon_tile"><ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:src="@drawable/ic_spirit_wardrobe" android:tint="@color/spirit_lime" android:contentDescription="@null"/></FrameLayout>
+<LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="14dp"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/spirit_auth_local" android:textSize="16sp" android:textColor="@color/spirit_text" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/spirit_auth_local_sub" android:textSize="12sp" android:textColor="@color/spirit_text_dim"  /></LinearLayout></LinearLayout>
+</LinearLayout>
+</ScrollView>

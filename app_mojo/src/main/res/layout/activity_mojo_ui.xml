@@ -6,11 +6,22 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
+    <!-- left part of the header: same colour as the spinner so no black box shows -->
+    <View
+        android:id="@+id/spirit_header_left"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/spirit_header_left"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/spirit_title"
+        app:layout_constraintTop_toTopOf="@id/account_spinner"
+        app:layout_constraintBottom_toBottomOf="@id/account_spinner" />
+
     <ImageView
         android:id="@+id/spirit_logo"
-        android:layout_width="@dimen/_36sdp"
-        android:layout_height="@dimen/_36sdp"
-        android:layout_marginStart="12dp"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="10dp"
         android:src="@mipmap/ic_spirit"
         android:contentDescription="@null"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,13 +32,14 @@
         android:id="@+id/spirit_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:text="@string/spirit_brand"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="4dp"
+        android:text="@string/spirit_brand_stacked"
         android:textColor="@color/spirit_text"
-        android:textSize="13sp"
+        android:textSize="10sp"
         android:textStyle="bold"
-        android:letterSpacing="0.14"
-        android:maxLines="1"
+        android:letterSpacing="0.12"
+        android:lineSpacingExtra="1dp"
         app:layout_constraintStart_toEndOf="@id/spirit_logo"
         app:layout_constraintTop_toTopOf="@id/account_spinner"
         app:layout_constraintBottom_toBottomOf="@id/account_spinner" />
