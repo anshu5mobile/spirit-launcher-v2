@@ -33,7 +33,7 @@
         android:hasFragileUserData="true"
         android:icon="@mipmap/ic_spirit"
         android:isGame="true"
-        android:label="@string/app_short_name"
+        android:label="Spirit Launcher"
         android:process=":launcher"
         android:resizeableActivity="true"
         android:roundIcon="@mipmap/ic_spirit_round"
@@ -52,7 +52,7 @@
         <activity
             android:name=".TestStorageActivity"
             android:exported="true"
-            android:label="@string/app_short_name"
+            android:label="Spirit Launcher"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -62,7 +62,7 @@
         </activity>
         <activity
             android:name=".LauncherActivity"
-            android:label="@string/app_short_name"
+            android:label="Spirit Launcher"
             android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".ImportControlActivity"
