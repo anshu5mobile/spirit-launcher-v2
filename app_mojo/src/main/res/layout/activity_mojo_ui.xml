@@ -6,18 +6,45 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
+    <ImageView
+        android:id="@+id/spirit_logo"
+        android:layout_width="@dimen/_36sdp"
+        android:layout_height="@dimen/_36sdp"
+        android:layout_marginStart="12dp"
+        android:src="@mipmap/ic_spirit"
+        android:contentDescription="@null"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/account_spinner"
+        app:layout_constraintBottom_toBottomOf="@id/account_spinner" />
+
+    <TextView
+        android:id="@+id/spirit_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/spirit_brand"
+        android:textColor="@color/spirit_text"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.14"
+        android:maxLines="1"
+        app:layout_constraintStart_toEndOf="@id/spirit_logo"
+        app:layout_constraintTop_toTopOf="@id/account_spinner"
+        app:layout_constraintBottom_toBottomOf="@id/account_spinner" />
+
     <com.kdt.mcgui.AccountSpinner
         android:id="@+id/account_spinner"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="@dimen/_52sdp"
 
         android:dropDownWidth="@dimen/_250sdp"
         android:dropDownVerticalOffset="@dimen/_52sdp"
         android:paddingEnd="@dimen/_52sdp"
 
+        app:layout_constraintStart_toEndOf="@id/spirit_title"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="RtlSymmetry" />
-    <!-- Ignore because it's  done to fit the ImageButton within spinner background -->
 
     <ImageButton
         android:id="@+id/setting_button"
@@ -27,7 +54,6 @@
         android:src="@drawable/ic_px_sliders"
         android:scaleType="fitCenter"
         android:paddingVertical="@dimen/_8sdp"
-
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -40,15 +66,11 @@
         app:layout_constraintBottom_toTopOf="@+id/progress_layout"
         app:layout_constraintTop_toBottomOf="@+id/account_spinner" />
 
-
     <com.kdt.mcgui.ProgressLayout
         android:id="@+id/progress_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent" />
-
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
