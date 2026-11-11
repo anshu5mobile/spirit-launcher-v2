@@ -290,11 +290,21 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         if(mLoadingScreen == null || versionId == null) return;
         TextView nameView = mLoadingScreen.findViewById(R.id.main_loading_name);
         TextView versionView = mLoadingScreen.findViewById(R.id.main_loading_version);
-        String name = versionId;
+        String name = null;
+        // DisplayInstance holds the profile's display name; read it via reflection so a
+        // different field/getter name can never break the build.
         try {
-            File dir = instance.getGameDirectory();
-            if(dir != null && dir.getName().length() > 0) name = dir.getName();
+            java.lang.reflect.Field f = instance.getClass().getField("name");
+            Object v = f.get(instance);
+            if(v instanceof String) name = (String) v;
         } catch (Throwable ignored) {}
+        if(name == null || name.trim().isEmpty()) {
+            try {
+                Object v = instance.getClass().getMethod("getName").invoke(instance);
+                if(v instanceof String) name = (String) v;
+            } catch (Throwable ignored) {}
+        }
+        if(name == null || name.trim().isEmpty()) name = versionId;
         nameView.setText(name);
         versionView.setText(prettyVersion(versionId));
     }
@@ -490,6 +500,19 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 @Override
                 public void onButtonTransparencyChanged() {
                     mControlLayout.updateButtonOpacity();
+                }
+
+                @Override
+                public void onSwitchControl() {
+                    mControlLayout.openLoadDialog();
+                    // The new layout may or may not have its own menu button, re-check a few times
+                    // after the user picks a file so the side menu can always be reached.
+                    for(int delay : new int[]{800, 2000, 5000, 10000}) {
+                        mControlLayout.postDelayed(() -> {
+                            if(isInEditor) return;
+                            mDrawerPullButton.setVisibility(mControlLayout.hasMenuButton() ? View.GONE : View.VISIBLE);
+                        }, delay);
+                    }
                 }
             };
         }
