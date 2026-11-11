@@ -2,4 +2,14 @@
 <resources>
     <string name="spirit_loading_brand">SPIRIT LAUNCHER</string>
     <string name="spirit_loading_starting">STARTING</string>
+    <string name="spirit_brand">SPIRIT LAUNCHER</string>
+    <string name="spirit_ready_to_play">READY TO PLAY</string>
+    <string name="spirit_soon">SOON</string>
+    <string name="spirit_coming_soon">Coming soon</string>
+    <string name="spirit_cc_sub">Edit and pick layouts</string>
+    <string name="spirit_dir_sub">Open files folder</string>
+    <string name="spirit_wardrobe">Wardrobe</string>
+    <string name="spirit_wardrobe_sub">Skins and Auto Skin</string>
+    <string name="spirit_browse">Browse</string>
+    <string name="spirit_browse_sub">Mods, packs, shaders</string>
 </resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="spirit_card">#141813</color>
+    <color name="spirit_card_stroke">#1E2619</color>
+    <color name="spirit_text">#F2F7EA</color>
+    <color name="spirit_text_dim">#B4BFAB</color>
+</resources>
