@@ -65,6 +65,11 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
     }
 
     private void bindLayout() {
+        View switchControl = mDialogContent.findViewById(R.id.spirit_switch_control);
+        if(switchControl != null) switchControl.setOnClickListener(v -> {
+            disappear(true);
+            onSwitchControl();
+        });
         // Bind layout elements
         mGyroSwitch = mDialogContent.findViewById(R.id.checkboxGyro);
         mGyroXSwitch = mDialogContent.findViewById(R.id.checkboxGyroX);
@@ -306,5 +311,8 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
      * Called when the button transparency state is changed. Use {@link LauncherPreferences#PREF_BUTTON_TRANSPARENCY}
      */
     public abstract void onButtonTransparencyChanged();
+
+    /** Spirit: user tapped "Switch Control". Default does nothing. */
+    public void onSwitchControl() {}
 
 }
