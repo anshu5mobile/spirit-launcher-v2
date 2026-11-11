@@ -2,8 +2,6 @@ package git.artdeell.mojo.fragments;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,7 +11,6 @@ import com.kdt.mcgui.ProgressLayout;
 
 import git.artdeell.mojo.R;
 import git.artdeell.mojo.Tools;
-import git.artdeell.mojo.progresskeeper.ProgressKeeper;
 
 public class SelectAuthFragment extends Fragment {
     public static final String TAG = "AUTH_SELECT_FRAGMENT";
@@ -24,9 +21,9 @@ public class SelectAuthFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Button mMicrosoftButton = view.findViewById(R.id.button_microsoft_authentication);
-        Button mLocalButton = view.findViewById(R.id.button_local_authentication);
-        Button mElyByButton = view.findViewById(R.id.button_elyby_authentication);
+        View mMicrosoftButton = view.findViewById(R.id.button_microsoft_authentication);
+        View mLocalButton = view.findViewById(R.id.button_local_authentication);
+        View mElyByButton = view.findViewById(R.id.button_elyby_authentication);
 
         mMicrosoftButton.setOnClickListener(v -> launchAuthFragment(MicrosoftLoginFragment.class, MicrosoftLoginFragment.TAG));
         mLocalButton.setOnClickListener(v -> launchAuthFragment(LocalLoginFragment.class, LocalLoginFragment.TAG));

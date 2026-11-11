@@ -77,9 +77,15 @@ public class MainMenuFragment extends Fragment {
         if(mCreateInstanceButton != null) mCreateInstanceButton.setOnClickListener(v ->
                 Tools.swapFragment(requireActivity(), ProfileTypeSelectFragment.class, ProfileTypeSelectFragment.TAG, null));
 
-        View.OnClickListener soon = v -> Toast.makeText(requireContext(), R.string.spirit_coming_soon, Toast.LENGTH_SHORT).show();
-        if(mWardrobeButton != null) mWardrobeButton.setOnClickListener(soon);
-        if(mBrowseButton != null) mBrowseButton.setOnClickListener(soon);
+        if(mWardrobeButton != null) mWardrobeButton.setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), WardrobeFragment.class, WardrobeFragment.TAG, null));
+        if(mBrowseButton != null) mBrowseButton.setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), BrowseFragment.class, BrowseFragment.TAG, null));
+
+        // Tap the Spirit logo in the header to open About and Credits
+        View logo = requireActivity().findViewById(R.id.spirit_logo);
+        if(logo != null) logo.setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), AboutFragment.class, AboutFragment.TAG, null));
     }
 
     private void openGameDirectory(Context context) {
