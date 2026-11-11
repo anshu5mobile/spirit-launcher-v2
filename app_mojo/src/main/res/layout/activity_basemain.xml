@@ -70,38 +70,82 @@
 			android:id="@+id/main_loading_screen"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:background="#BB000000"
-			android:visibility="visible"
-			>
+			android:background="#050604"
+			android:visibility="visible">
 
 			<LinearLayout
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:layout_marginBottom="16dp"
 				android:layout_gravity="center"
 				android:gravity="center"
 				android:orientation="vertical">
 
-				<ProgressBar
-					android:id="@+id/main_loading_screen_progress"
-					android:layout_width="24dp"
-					android:layout_height="24dp"
-					android:indeterminate="true" />
+				<ImageView
+					android:layout_width="84dp"
+					android:layout_height="84dp"
+					android:src="@mipmap/ic_spirit"
+					android:contentDescription="@null" />
+
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="6dp"
+					android:text="@string/spirit_loading_brand"
+					android:textColor="#F2F7EA"
+					android:textSize="18sp"
+					android:textStyle="bold"
+					android:letterSpacing="0.2" />
 
 				<TextView
 					android:id="@+id/main_loading_screen_text"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:text="@string/loading_screen_title"
-					android:textColor="@android:color/white"
-					android:textSize="16sp" />
+					android:layout_marginTop="10dp"
+					android:text="@string/spirit_loading_starting"
+					android:textColor="@color/spirit_lime"
+					android:textSize="11sp"
+					android:textStyle="bold"
+					android:letterSpacing="0.15" />
+
+				<TextView
+					android:id="@+id/main_loading_name"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="4dp"
+					android:maxWidth="360dp"
+					android:maxLines="1"
+					android:ellipsize="end"
+					android:textColor="#F2F7EA"
+					android:textSize="20sp"
+					android:textStyle="bold" />
+
+				<TextView
+					android:id="@+id/main_loading_version"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="2dp"
+					android:maxWidth="360dp"
+					android:maxLines="1"
+					android:ellipsize="end"
+					android:textColor="#B4BFAB"
+					android:textSize="13sp" />
+
+				<ProgressBar
+					android:id="@+id/main_loading_screen_progress"
+					style="?android:attr/progressBarStyleHorizontal"
+					android:layout_width="240dp"
+					android:layout_height="6dp"
+					android:layout_marginTop="14dp"
+					android:indeterminate="true"
+					android:indeterminateTint="@color/spirit_lime" />
 
 				<TextView
 					android:id="@+id/main_loading_screen_warning"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
+					android:layout_marginTop="8dp"
 					android:text="@string/loading_screen_warning"
-					android:textColor="@android:color/darker_gray"
+					android:textColor="#9FAB96"
 					android:textSize="12sp" />
 			</LinearLayout>
 		</FrameLayout>
