@@ -32,6 +32,9 @@ import git.artdeell.mojo.utils.interfaces.SimpleSeekBarListener;
  */
 public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
+    public static final String PREF_LIVE_STATS = "spiritLiveStats";
+    private static boolean sFpsBoost = false;
+
     private SharedPreferences.Editor mEditor;
 
     private SwitchCompat mGyroSwitch, mGyroXSwitch, mGyroYSwitch, mGestureSwitch, mHotbarDropSwitch;
@@ -65,6 +68,22 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
     }
 
     private void bindLayout() {
+        androidx.appcompat.widget.SwitchCompat liveStats = mDialogContent.findViewById(R.id.spirit_switch_live_stats);
+        if(liveStats != null) {
+            liveStats.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_LIVE_STATS, false));
+            liveStats.setOnCheckedChangeListener((b, on) -> {
+                LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_LIVE_STATS, on).apply();
+                onLiveStatsChanged(on);
+            });
+        }
+        androidx.appcompat.widget.SwitchCompat fpsBoost = mDialogContent.findViewById(R.id.spirit_switch_fps_boost);
+        if(fpsBoost != null) {
+            fpsBoost.setChecked(sFpsBoost);
+            fpsBoost.setOnCheckedChangeListener((b, on) -> {
+                sFpsBoost = on;
+                onFpsBoosterChanged(on);
+            });
+        }
         View switchControl = mDialogContent.findViewById(R.id.spirit_switch_control);
         if(switchControl != null) switchControl.setOnClickListener(v -> {
             disappear(true);
@@ -314,5 +333,11 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
     /** Spirit: user tapped "Switch Control". Default does nothing. */
     public void onSwitchControl() {}
+
+    /** Spirit: Live RAM overlay toggled. */
+    public void onLiveStatsChanged(boolean enabled) {}
+
+    /** Spirit: FPS booster toggled (this session only). */
+    public void onFpsBoosterChanged(boolean enabled) {}
 
 }
