@@ -43,6 +43,9 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 		mControlLayout = findViewById(R.id.customctrl_controllayout);
 		mDrawerLayout = findViewById(R.id.customctrl_drawerlayout);
 		mDrawerNavigationView = findViewById(R.id.customctrl_navigation_view);
+		mDrawerNavigationView.setBackgroundColor(getResources().getColor(R.color.background_status_bar));
+		mDrawerNavigationView.setDivider(new android.graphics.drawable.ColorDrawable(getResources().getColor(R.color.spirit_card_stroke)));
+		mDrawerNavigationView.setDividerHeight(2);
 		View mPullDrawerButton = findViewById(R.id.drawer_button);
 
 		mPullDrawerButton.setOnClickListener(v -> mDrawerLayout.openDrawer(mDrawerNavigationView));
