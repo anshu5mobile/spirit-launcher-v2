@@ -212,6 +212,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         MCOptionUtils.MCOptionListener optionListener = MCOptionUtils::getMcScale;
         MCOptionUtils.addMCOptionListener(optionListener);
         mControlLayout.setModifiable(false);
+        mControlLayout.post(() -> setLiveStatsEnabled(LauncherPreferences.DEFAULT_PREF.getBoolean(QuickSettingSideDialog.PREF_LIVE_STATS, false)));
 
         // Set the activity for the executor. Must do this here, or else Tools.showErrorRemote() may not
         // execute the correct method
@@ -321,6 +322,68 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         m = java.util.regex.Pattern.compile("^neoforge-(.+)$", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(id);
         if(m.matches()) return "NeoForge " + m.group(1);
         return "Minecraft " + id;
+    }
+
+    // ---------------- Spirit: live RAM counter + FPS booster ----------------
+    private TextView mStatsView;
+    private boolean mStatsEnabled = false;
+    private float mOriginalScaleBeforeBoost = -1f;
+    private final Runnable mStatsUpdater = new Runnable() {
+        @Override
+        public void run() {
+            if(!mStatsEnabled || mStatsView == null) return;
+            try {
+                android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+                am.getMemoryInfo(mi);
+                android.os.Debug.MemoryInfo[] pm = am.getProcessMemoryInfo(new int[]{android.os.Process.myPid()});
+                long usedMb = pm[0].getTotalPss() / 1024;
+                long freeMb = mi.availMem / (1024 * 1024);
+                mStatsView.setText("RAM " + usedMb + " MB  |  free " + freeMb + " MB");
+            } catch (Throwable ignored) {}
+            mStatsView.postDelayed(this, 1000);
+        }
+    };
+
+    private void setLiveStatsEnabled(boolean enabled) {
+        mStatsEnabled = enabled;
+        if(enabled) {
+            if(mStatsView == null) {
+                ViewGroup frame = findViewById(R.id.content_frame);
+                if(frame == null) return;
+                mStatsView = new TextView(this);
+                mStatsView.setTextColor(0xFFA6F03A);
+                mStatsView.setTextSize(11);
+                mStatsView.setBackgroundColor(0x990A0C09);
+                int pad = (int) (6 * getResources().getDisplayMetrics().density);
+                mStatsView.setPadding(pad, pad / 2, pad, pad / 2);
+                android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
+                mStatsView.setLayoutParams(lp);
+                mStatsView.setTranslationZ(5);
+                mStatsView.setClickable(false);
+                frame.addView(mStatsView);
+            }
+            mStatsView.setVisibility(View.VISIBLE);
+            mStatsView.removeCallbacks(mStatsUpdater);
+            mStatsView.post(mStatsUpdater);
+        } else if(mStatsView != null) {
+            mStatsView.removeCallbacks(mStatsUpdater);
+            mStatsView.setVisibility(View.GONE);
+        }
+    }
+
+    private void applyFpsBooster(boolean enabled) {
+        if(enabled) {
+            if(mOriginalScaleBeforeBoost < 0) mOriginalScaleBeforeBoost = LauncherPreferences.PREF_SCALE_FACTOR;
+            LauncherPreferences.PREF_SCALE_FACTOR = Math.min(LauncherPreferences.PREF_SCALE_FACTOR, 0.6f);
+        } else if(mOriginalScaleBeforeBoost > 0) {
+            LauncherPreferences.PREF_SCALE_FACTOR = mOriginalScaleBeforeBoost;
+            mOriginalScaleBeforeBoost = -1f;
+        }
+        launcherGLView.refreshSize();
+        mHotbarView.onResolutionChanged();
     }
 
     private void loadControls() {
@@ -500,6 +563,16 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 @Override
                 public void onButtonTransparencyChanged() {
                     mControlLayout.updateButtonOpacity();
+                }
+
+                @Override
+                public void onLiveStatsChanged(boolean enabled) {
+                    setLiveStatsEnabled(enabled);
+                }
+
+                @Override
+                public void onFpsBoosterChanged(boolean enabled) {
+                    applyFpsBooster(enabled);
                 }
 
                 @Override
