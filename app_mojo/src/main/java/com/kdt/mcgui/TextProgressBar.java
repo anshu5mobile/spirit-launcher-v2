@@ -40,6 +40,8 @@ public class TextProgressBar extends ProgressBar {
         mTextPaint.setColor(Color.WHITE);
         mTextPaint.setFlags(Paint.FAKE_BOLD_TEXT_FLAG);
         mTextPaint.setAntiAlias(true);
+        // readable on both the lime filled part and the dark empty part
+        mTextPaint.setShadowLayer(4f, 0f, 0f, Color.BLACK);
     }
 
     @Override
