@@ -328,4 +328,22 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/buttonTransparency_textView" />
 
+    <!-- SPIRIT: Live RAM overlay -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/spirit_switch_live_stats"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_36sdp"
+        android:text="@string/spirit_live_stats"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonTransparency_seekBar" />
+
+    <!-- SPIRIT: FPS booster (lowers render resolution for this session) -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/spirit_switch_fps_boost"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_36sdp"
+        android:text="@string/spirit_fps_boost"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/spirit_switch_live_stats" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

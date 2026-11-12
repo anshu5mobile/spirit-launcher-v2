@@ -163,7 +163,9 @@
 		android:layout_width="200dp"
 		android:layout_height="match_parent"
 		android:layout_gravity="right"
-		android:background="?attr/colorBackgroundFloating"
+		android:background="@color/background_status_bar"
+		android:divider="@color/spirit_card_stroke"
+		android:dividerHeight="1dp"
 		android:fitsSystemWindows="false"
 		android:id="@+id/main_navigation_view"/>
 
