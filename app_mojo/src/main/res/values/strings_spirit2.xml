@@ -43,4 +43,6 @@
     <string name="spirit_about_legal_sub">Minecraft is a trademark of Mojang Studios.</string>
     <string name="spirit_about_license">View license</string>
     <string name="spirit_about_source">Source code</string>
+    <string name="spirit_live_stats">Live RAM counter</string>
+    <string name="spirit_fps_boost">FPS booster (lower resolution)</string>
 </resources>
