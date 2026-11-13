@@ -18,7 +18,9 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
+import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentContainerView;
 import androidx.fragment.app.FragmentManager;
@@ -29,9 +31,13 @@ import git.artdeell.mojo.authenticator.accounts.Accounts;
 import git.artdeell.mojo.extra.ExtraConstants;
 import git.artdeell.mojo.extra.ExtraCore;
 import git.artdeell.mojo.extra.ExtraListener;
+import git.artdeell.mojo.fragments.AboutFragment;
+import git.artdeell.mojo.fragments.AccountsFragment;
+import git.artdeell.mojo.fragments.BrowseFragment;
 import git.artdeell.mojo.fragments.MainMenuFragment;
 import git.artdeell.mojo.fragments.MicrosoftLoginFragment;
 import git.artdeell.mojo.fragments.SelectAuthFragment;
+import git.artdeell.mojo.fragments.WardrobeFragment;
 import git.artdeell.mojo.instances.Instance;
 import git.artdeell.mojo.instances.InstanceInstaller;
 import git.artdeell.mojo.instances.Instances;
@@ -54,6 +60,12 @@ public class LauncherActivity extends BaseActivity {
     private FragmentContainerView mFragmentView;
     private ImageButton mSettingsButton;
     private ProgressLayout mProgressLayout;
+    /** Bottom navigation and header group; both are null in layouts that do not have them (landscape) */
+    private View mNavBar;
+    private Group mHeaderGroup;
+    private static final int[] NAV_IDS = {
+            R.id.nav_home, R.id.nav_accounts, R.id.nav_wardrobe, R.id.nav_browse, R.id.nav_about
+    };
     private ProgressServiceKeeper mProgressServiceKeeper;
     private NotificationManager mNotificationManager;
     private static ActivityResultLauncher<String> mRequestPermissionLauncher;
@@ -62,6 +74,9 @@ public class LauncherActivity extends BaseActivity {
     private final FragmentManager.FragmentLifecycleCallbacks mFragmentCallbackListener = new FragmentManager.FragmentLifecycleCallbacks() {
         @Override
         public void onFragmentResumed(@NonNull FragmentManager fm, @NonNull Fragment f) {
+            // Dialogs (the add account sheet) and nested fragments must not change the screen chrome
+            if(f instanceof DialogFragment || f.getParentFragment() != null) return;
+            updateChrome(f);
             mSettingsButton.setImageDrawable(ContextCompat.getDrawable(getBaseContext(), f instanceof MainMenuFragment
                     ? R.drawable.ic_px_sliders : R.drawable.ic_px_home));
         }
@@ -79,10 +94,12 @@ public class LauncherActivity extends BaseActivity {
         FragmentManager manager = getSupportFragmentManager();
         if(!value || manager.isStateSaved()) return false;
         Fragment fragment = manager.findFragmentById(mFragmentView.getId());
-        // Allow starting the add account only from the main menu, should it be moved to fragment itself ?
-        if(!(fragment instanceof MainMenuFragment)) return false;
+        // Allow starting the add account only from the main menu or the accounts screen
+        if(!(fragment instanceof MainMenuFragment || fragment instanceof AccountsFragment)) return false;
 
-        Tools.swapFragment(this, SelectAuthFragment.class, SelectAuthFragment.TAG, null);
+        if(manager.findFragmentByTag(SelectAuthFragment.TAG) == null) {
+            new SelectAuthFragment().show(manager, SelectAuthFragment.TAG);
+        }
         return false;
     };
 
@@ -327,5 +344,71 @@ public class LauncherActivity extends BaseActivity {
         mFragmentView = findViewById(R.id.container_fragment);
         mSettingsButton = findViewById(R.id.setting_button);
         mProgressLayout = findViewById(R.id.progress_layout);
+        mNavBar = findViewById(R.id.spirit_nav_bar);
+        mHeaderGroup = findViewById(R.id.spirit_header_group);
+        bindNavigation();
+    }
+
+    private void bindNavigation() {
+        if(mNavBar == null) return;
+        bindNavItem(R.id.nav_home, null, null);
+        bindNavItem(R.id.nav_accounts, AccountsFragment.class, AccountsFragment.TAG);
+        bindNavItem(R.id.nav_wardrobe, WardrobeFragment.class, WardrobeFragment.TAG);
+        bindNavItem(R.id.nav_browse, BrowseFragment.class, BrowseFragment.TAG);
+        bindNavItem(R.id.nav_about, AboutFragment.class, AboutFragment.TAG);
+        // Home is the first screen
+        updateChrome(null);
+    }
+
+    /** @param target the screen to open, or null for Home */
+    private void bindNavItem(int viewId, Class<? extends Fragment> target, String tag) {
+        View item = findViewById(viewId);
+        if(item != null) item.setOnClickListener(v -> openTopLevel(target, tag));
+    }
+
+    private void openTopLevel(Class<? extends Fragment> target, String tag) {
+        FragmentManager manager = getSupportFragmentManager();
+        if(manager.isStateSaved()) return;
+        Fragment current = manager.findFragmentById(mFragmentView.getId());
+        if(target == null) {
+            if(!(current instanceof MainMenuFragment)) Tools.backToMainMenu(this);
+            return;
+        }
+        if(current != null && current.getClass() == target) return;
+        // Top-level screens replace each other instead of stacking, so Back always returns Home
+        if(!(current instanceof MainMenuFragment)) Tools.backToMainMenu(this);
+        Tools.swapFragment(this, target, tag, null);
+    }
+
+    /**
+     * Shows the bottom navigation on the five top-level screens and hides the global header on
+     * the ones that draw their own back header.
+     * @param fragment the fragment now in front, or null for the initial Home screen
+     */
+    private void updateChrome(Fragment fragment) {
+        int selected = 0;
+        boolean ownHeader = false;
+        if(fragment == null || fragment instanceof MainMenuFragment) {
+            selected = R.id.nav_home;
+        }else if(fragment instanceof AccountsFragment) {
+            selected = R.id.nav_accounts; ownHeader = true;
+        }else if(fragment instanceof WardrobeFragment) {
+            selected = R.id.nav_wardrobe; ownHeader = true;
+        }else if(fragment instanceof BrowseFragment) {
+            selected = R.id.nav_browse; ownHeader = true;
+        }else if(fragment instanceof AboutFragment) {
+            selected = R.id.nav_about; ownHeader = true;
+        }
+
+        if(mNavBar != null) {
+            mNavBar.setVisibility(selected != 0 ? View.VISIBLE : View.GONE);
+            for(int id : NAV_IDS) {
+                View item = findViewById(id);
+                if(item != null) item.setSelected(id == selected);
+            }
+        }
+        if(mHeaderGroup != null) {
+            mHeaderGroup.setVisibility(ownHeader ? View.GONE : View.VISIBLE);
+        }
     }
 }

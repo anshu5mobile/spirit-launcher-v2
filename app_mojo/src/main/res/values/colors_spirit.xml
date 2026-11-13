@@ -4,4 +4,9 @@
     <color name="spirit_card_stroke">#1E2619</color>
     <color name="spirit_text">#F2F7EA</color>
     <color name="spirit_text_dim">#B4BFAB</color>
+    <color name="spirit_chip">#1B2613</color>
+    <color name="spirit_nav">#0F130C</color>
+    <color name="spirit_scrim">#99000000</color>
+    <color name="spirit_input">#0F130C</color>
+    <color name="spirit_code_bg">#0A0C09</color>
 </resources>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="spirit_back">Back</string>
+    <string name="spirit_cancel">Cancel</string>
+    <string name="spirit_install">Install</string>
+    <string name="spirit_recommended">Recommended</string>
+
+    <!-- Bottom navigation -->
+    <string name="spirit_nav_home">Home</string>
+    <string name="spirit_nav_accounts">Accounts</string>
+    <string name="spirit_nav_about">About</string>
+
+    <!-- Accounts -->
+    <string name="spirit_accounts_title">Accounts</string>
+    <string name="spirit_add_new_account">Add new account</string>
+    <string name="spirit_accounts_empty">No accounts yet. Add one to start playing.</string>
+    <string name="spirit_account_selected">Selected</string>
+    <string name="spirit_account_badge_ms">Microsoft</string>
+    <string name="spirit_account_badge_ely">Ely.by</string>
+    <string name="spirit_account_badge_local">Offline</string>
+    <string name="spirit_account_sub_ms">Premium Minecraft</string>
+    <string name="spirit_account_sub_ely">Ely.by account</string>
+    <string name="spirit_account_sub_local">Works offline</string>
+    <string name="spirit_account_delete_hint">Long press an account to remove it</string>
+
+    <!-- New instance -->
+    <string name="spirit_new_instance_title">New instance</string>
+    <string name="spirit_new_instance_sub">Pick what you want to play.</string>
+    <string name="spirit_section_vanilla">Vanilla-like</string>
+    <string name="spirit_section_modded">Modded</string>
+    <string name="spirit_tag_best_sodium">BEST FOR SODIUM</string>
+
+    <!-- Home hero -->
+    <string name="spirit_chip_vanilla">Vanilla</string>
+    <string name="spirit_chip_ram">%1$s RAM</string>
+
+    <!-- Browse -->
+    <string name="spirit_browse_sodium_sub">Faster rendering</string>
+    <string name="spirit_browse_lithium_sub">Smoother game logic</string>
+    <string name="spirit_browse_ferrite_sub">Uses less RAM</string>
+    <string name="spirit_browse_empty">Nothing here yet. Coming soon.</string>
+</resources>

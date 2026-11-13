@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -38,6 +39,7 @@ import git.artdeell.mojo.extra.ExtraConstants;
 import git.artdeell.mojo.extra.ExtraCore;
 import git.artdeell.mojo.extra.ExtraListener;
 import git.artdeell.mojo.progresskeeper.ProgressKeeper;
+import git.artdeell.mojo.utils.SpiritAccountUi;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -127,7 +129,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
         setOnItemSelectedListener(this);
         reload();
 
-        setBackgroundColor(getResources().getColor(R.color.background_status_bar));
+        setBackgroundResource(R.drawable.spirit_pill_bg);
         mLoginBarPaint.setColor(getResources().getColor(R.color.minebutton_color));
         mLoginBarPaint.setStrokeWidth(getResources().getDimensionPixelOffset(R.dimen._2sdp));
         mLoginStepAnimator.addUpdateListener(this);
@@ -275,20 +277,61 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            if(convertView == null) {
-                convertView = mInflater.inflate(R.layout.item_account, parent, false);
+            if(convertView == null || convertView.findViewById(R.id.pill_badge) == null) {
+                convertView = mInflater.inflate(R.layout.item_account_pill, parent, false);
             }
-            populateView(convertView, position, false);
+            populatePill(convertView, position);
             return convertView;
         }
 
         @Override
         public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            if(convertView == null) {
+            if(convertView == null || convertView.findViewById(R.id.account_item) == null) {
                 convertView = mInflater.inflate(R.layout.item_account, parent, false);
             }
             populateView(convertView, position, true);
             return convertView;
+        }
+
+        /** Collapsed header view: skin head + auth badge, like the Spirit design. */
+        private void populatePill(View view, int position) {
+            ImageView avatar = view.findViewById(R.id.pill_avatar);
+            TextView badge = view.findViewById(R.id.pill_badge);
+            Resources resources = getResources();
+            // The view may be recycled: drop any click handler so the spinner gets the tap itself
+            view.setOnClickListener(null);
+            view.setClickable(false);
+
+            if(position == 0) {
+                // "Add account" entry (shown when there are no accounts)
+                avatar.setImageResource(R.drawable.ic_add);
+                avatar.setColorFilter(resources.getColor(R.color.spirit_lime));
+                badge.setText(R.string.main_add_account);
+                SpiritAccountUi.styleBadge(badge, false);
+                if(getCount() == 1) view.setOnClickListener(v-> createAccount());
+                return;
+            }
+
+            Account account = Objects.requireNonNull(getItem(position));
+            int headCacheHash = System.identityHashCode(account);
+            BitmapDrawable accountHead = mSkinHeadCache.get(headCacheHash);
+            if(accountHead == null) {
+                Bitmap face = account.getSkinFace();
+                if(face != null) {
+                    accountHead = new BitmapDrawable(resources, face);
+                    accountHead.setFilterBitmap(false);
+                    mSkinHeadCache.put(headCacheHash, accountHead);
+                }
+            }
+            if(accountHead != null) {
+                avatar.clearColorFilter();
+                avatar.setImageDrawable(accountHead);
+            } else {
+                // Offline accounts (or a skin that has not been downloaded yet) have no head
+                avatar.setImageResource(R.drawable.ic_spirit_nav_accounts);
+                avatar.setColorFilter(resources.getColor(R.color.spirit_lime));
+            }
+            SpiritAccountUi.bindBadge(badge, account.authType);
         }
 
         private void populateView(View view, int position, boolean isDropDown) {

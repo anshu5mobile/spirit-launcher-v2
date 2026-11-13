@@ -6,7 +6,11 @@ import static git.artdeell.mojo.Tools.shareLog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -24,9 +28,12 @@ import git.artdeell.mojo.Tools;
 import git.artdeell.mojo.contracts.OpenDocumentWithExtension;
 import git.artdeell.mojo.extra.ExtraConstants;
 import git.artdeell.mojo.extra.ExtraCore;
+import git.artdeell.mojo.instances.DisplayInstance;
 import git.artdeell.mojo.instances.Instance;
 import git.artdeell.mojo.instances.Instances;
+import git.artdeell.mojo.prefs.LauncherPreferences;
 import git.artdeell.mojo.utils.FileUtils;
+import git.artdeell.mojo.utils.SpiritVersionInfo;
 
 import java.io.File;
 
@@ -34,6 +41,8 @@ public class MainMenuFragment extends Fragment {
     public static final String TAG = "MainMenuFragment";
 
     private mcVersionSpinner mVersionSpinner;
+    private TextView mHeroSubtitle;
+    private ViewGroup mHeroChips;
 
     private final ActivityResultLauncher<Object> mModInstallerLauncher =
             registerForActivityResult(new OpenDocumentWithExtension("jar"), (data)->{
@@ -59,6 +68,13 @@ public class MainMenuFragment extends Fragment {
         View mEditProfileButton = view.findViewById(R.id.edit_profile_button);
         View mPlayButton = view.findViewById(R.id.play_button);
         mVersionSpinner = view.findViewById(R.id.mc_version_spinner);
+        mHeroSubtitle = view.findViewById(R.id.spirit_hero_subtitle);
+        mHeroChips = view.findViewById(R.id.spirit_hero_chips);
+        if(mHeroSubtitle != null && mHeroChips != null) {
+            // The spinner resets its text size on creation, so the big hero title is set here
+            mVersionSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+            mVersionSpinner.setSelectionListener(this::updateHero);
+        }
 
         if(mNewsButton != null) {
             mNewsButton.setOnClickListener(v -> Tools.openURL(requireActivity(), Tools.URL_HOME));
@@ -86,6 +102,40 @@ public class MainMenuFragment extends Fragment {
         View logo = requireActivity().findViewById(R.id.spirit_logo);
         if(logo != null) logo.setOnClickListener(v ->
                 Tools.swapFragment(requireActivity(), AboutFragment.class, AboutFragment.TAG, null));
+    }
+
+    /** Fills the hero card: instance name as title, version id as subtitle, plus version/loader/RAM chips. */
+    private void updateHero(DisplayInstance instance) {
+        if(mHeroSubtitle == null || mHeroChips == null || !isAdded()) return;
+        mHeroChips.removeAllViews();
+        if(instance == null) {
+            mHeroSubtitle.setVisibility(View.GONE);
+            return;
+        }
+
+        String name = Tools.validOrNullString(instance.name);
+        String versionId = Tools.validOrNullString(instance.versionId);
+        // The spinner shows "name - version"; the hero has the version on its own line instead
+        if(name != null) mVersionSpinner.setText(name);
+
+        String subtitle = versionId;
+        if(Instance.VERSION_LATEST_RELEASE.equalsIgnoreCase(versionId)) subtitle = getString(R.string.profiles_latest_release);
+        else if(Instance.VERSION_LATEST_SNAPSHOT.equalsIgnoreCase(versionId)) subtitle = getString(R.string.profiles_latest_snapshot);
+        mHeroSubtitle.setText(subtitle);
+        mHeroSubtitle.setVisibility(subtitle != null ? View.VISIBLE : View.GONE);
+
+        SpiritVersionInfo info = SpiritVersionInfo.parse(versionId);
+        boolean isAlias = subtitle != null && !subtitle.equals(versionId);
+        if(info.minecraftVersion != null && !isAlias && !info.minecraftVersion.equals(subtitle)) addChip(info.minecraftVersion);
+        addChip(info.loader != null ? info.loader : getString(R.string.spirit_chip_vanilla));
+        addChip(getString(R.string.spirit_chip_ram, SpiritVersionInfo.formatRam(LauncherPreferences.PREF_RAM_ALLOCATION)));
+    }
+
+    private void addChip(String text) {
+        TextView chip = (TextView) LayoutInflater.from(requireContext())
+                .inflate(R.layout.item_spirit_chip, mHeroChips, false);
+        chip.setText(text);
+        mHeroChips.addView(chip);
     }
 
     private void openGameDirectory(Context context) {

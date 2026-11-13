@@ -2,6 +2,7 @@ package git.artdeell.mojo.fragments;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,6 +11,7 @@ import androidx.fragment.app.Fragment;
 
 import git.artdeell.mojo.R;
 import git.artdeell.mojo.prefs.LauncherPreferences;
+import git.artdeell.mojo.utils.SpiritScreen;
 
 /** Wardrobe screen (skins + Auto Skin toggle). The toggle is stored now, the feature itself is coming soon. */
 public class WardrobeFragment extends Fragment {
@@ -22,6 +24,13 @@ public class WardrobeFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        SpiritScreen.bindBack(view, requireActivity());
+        // Skin sources are not wired up yet, say so instead of ignoring the tap
+        View.OnClickListener soon = v -> Toast.makeText(v.getContext(), R.string.spirit_coming_soon, Toast.LENGTH_SHORT).show();
+        view.findViewById(R.id.spirit_skin_username_card).setOnClickListener(soon);
+        view.findViewById(R.id.spirit_skin_url_card).setOnClickListener(soon);
+        view.findViewById(R.id.spirit_skin_library_card).setOnClickListener(soon);
+
         SwitchCompat autoSkin = view.findViewById(R.id.spirit_autoskin_switch);
         autoSkin.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, false));
         autoSkin.setOnCheckedChangeListener((b, checked) ->

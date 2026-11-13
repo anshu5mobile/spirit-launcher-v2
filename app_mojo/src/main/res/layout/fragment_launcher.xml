@@ -18,14 +18,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="10dp"
+            android:paddingStart="10dp"
+    android:paddingEnd="10dp"
             android:paddingBottom="16dp">
 
             <!-- Hero card: user's skin art, profile, play -->
             <FrameLayout
                 android:id="@+id/spirit_hero_card"
                 android:layout_width="match_parent"
-                android:layout_height="280dp"
+                android:layout_height="310dp"
                 android:layout_margin="6dp"
                 android:background="@drawable/spirit_hero_bg"
                 android:clipToOutline="true">
@@ -64,6 +65,8 @@
                         android:layout_width="0dp"
                         android:layout_height="@dimen/_52sdp"
                         android:background="@android:color/transparent"
+                        android:textColor="@color/spirit_text"
+                        android:textStyle="bold"
                         android:drawableEnd="@drawable/spinner_arrow"
                         app:drawableEndSize="@dimen/padding_heavy"
                         app:drawableStartIntegerScaling="true"
@@ -72,6 +75,30 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/spirit_ready_label" />
+
+                    <TextView
+                        android:id="@+id/spirit_hero_subtitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="17dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/spirit_text_dim"
+                        android:textSize="12sp"
+                        android:visibility="gone"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/mc_version_spinner" />
+
+                    <LinearLayout
+                        android:id="@+id/spirit_hero_chips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="17dp"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/spirit_hero_subtitle" />
 
                     <com.kdt.mcgui.MineButton
                         android:id="@+id/play_button"
@@ -179,7 +206,8 @@
                 android:gravity="center"
                 android:drawableStart="@drawable/ic_add"
                 android:drawablePadding="10dp"
-                android:paddingHorizontal="40dp"
+                android:paddingStart="40dp"
+    android:paddingEnd="40dp"
                 android:text="@string/create_instance"
                 android:textColor="@color/spirit_lime"
                 android:textSize="15sp"

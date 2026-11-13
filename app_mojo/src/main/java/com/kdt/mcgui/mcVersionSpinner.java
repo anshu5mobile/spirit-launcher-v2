@@ -62,6 +62,23 @@ public class mcVersionSpinner extends ExtendedTextView {
     private PopupWindow mPopupWindow = null;
     private Object mPopupAnimation;
     private int mSelectedIndex;
+    private SelectionListener mSelectionListener;
+
+    /** Notified whenever the displayed selection changes (null when the "create instance" row is shown). */
+    public interface SelectionListener {
+        void onSelectionChanged(@Nullable DisplayInstance instance);
+    }
+
+    public void setSelectionListener(@Nullable SelectionListener listener) {
+        mSelectionListener = listener;
+        dispatchSelection();
+    }
+
+    private void dispatchSelection() {
+        if(mSelectionListener == null) return;
+        Object item = mProfileAdapter.getItem(mSelectedIndex);
+        mSelectionListener.onSelectionChanged(item instanceof DisplayInstance ? (DisplayInstance) item : null);
+    }
 
     private final InstanceAdapter mProfileAdapter = new InstanceAdapter(new InstanceAdapterExtra[]{
             new InstanceAdapterExtra(VERSION_SPINNER_PROFILE_CREATE,
@@ -81,6 +98,7 @@ public class mcVersionSpinner extends ExtendedTextView {
         mProfileAdapter.setView(this, position, false);
         mSelectedIndex = position;
         mProfileAdapter.applySelectionIndex(mSelectedIndex);
+        dispatchSelection();
     }
 
     public void openProfileEditor(FragmentActivity fragmentActivity) {

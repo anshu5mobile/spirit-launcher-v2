@@ -6,40 +6,54 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
+    <!-- Header band. Hidden (via spirit_header_group) on screens that draw their own back header. -->
     <View
-        android:id="@+id/spirit_header_left"
+        android:id="@+id/spirit_header_bg"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="@dimen/_52sdp"
         android:background="@color/background_status_bar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/spirit_logo"
-        app:layout_constraintTop_toTopOf="@id/account_spinner"
-        app:layout_constraintBottom_toBottomOf="@id/account_spinner" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/spirit_logo"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_marginStart="12dp"
-        android:layout_marginEnd="6dp"
-        android:src="@mipmap/ic_spirit"
         android:contentDescription="@null"
+        android:src="@mipmap/ic_spirit"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/account_spinner"
-        app:layout_constraintBottom_toBottomOf="@id/account_spinner" />
+        app:layout_constraintTop_toTopOf="@id/spirit_header_bg"
+        app:layout_constraintBottom_toBottomOf="@id/spirit_header_bg" />
+
+    <TextView
+        android:id="@+id/spirit_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="6dp"
+        android:ellipsize="end"
+        android:letterSpacing="0.12"
+        android:maxLines="1"
+        android:text="@string/spirit_brand"
+        android:textColor="@color/spirit_text"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@id/spirit_logo"
+        app:layout_constraintEnd_toStartOf="@id/account_spinner"
+        app:layout_constraintTop_toTopOf="@id/spirit_header_bg"
+        app:layout_constraintBottom_toBottomOf="@id/spirit_header_bg" />
 
     <com.kdt.mcgui.AccountSpinner
         android:id="@+id/account_spinner"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/_52sdp"
-
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
         android:dropDownWidth="@dimen/_250sdp"
-        android:dropDownVerticalOffset="@dimen/_52sdp"
-        android:paddingEnd="@dimen/_52sdp"
-
-        app:layout_constraintStart_toEndOf="@id/spirit_logo"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:dropDownVerticalOffset="6dp"
+        app:layout_constraintEnd_toStartOf="@id/setting_button"
+        app:layout_constraintTop_toTopOf="@id/spirit_header_bg"
+        app:layout_constraintBottom_toBottomOf="@id/spirit_header_bg"
         tools:ignore="RtlSymmetry" />
 
     <ImageButton
@@ -47,11 +61,14 @@
         android:layout_width="@dimen/_52sdp"
         android:layout_height="@dimen/_52sdp"
         android:background="?attr/selectableItemBackground"
-        android:src="@drawable/ic_px_sliders"
+        android:contentDescription="@null"
+        android:paddingTop="@dimen/_8sdp"
+    android:paddingBottom="@dimen/_8sdp"
         android:scaleType="fitCenter"
-        android:paddingVertical="@dimen/_8sdp"
+        android:src="@drawable/ic_px_sliders"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/spirit_header_bg"
+        app:layout_constraintBottom_toBottomOf="@id/spirit_header_bg" />
 
     <!-- full-width lime line under the whole header -->
     <View
@@ -61,7 +78,13 @@
         android:background="@color/spirit_lime"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/account_spinner" />
+        app:layout_constraintBottom_toBottomOf="@id/spirit_header_bg" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/spirit_header_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="spirit_header_bg,spirit_logo,spirit_title,account_spinner,setting_button,spirit_header_line" />
 
     <!-- Holding most of the dynamic content -->
     <androidx.fragment.app.FragmentContainerView
@@ -69,8 +92,173 @@
         android:name="git.artdeell.mojo.fragments.MainMenuFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/progress_layout"
-        app:layout_constraintTop_toBottomOf="@+id/account_spinner" />
+        app:layout_constraintBottom_toTopOf="@+id/spirit_nav_bar"
+        app:layout_constraintTop_toBottomOf="@+id/spirit_header_bg" />
+
+    <!-- Bottom navigation, shown only on the five top-level screens -->
+    <LinearLayout
+        android:id="@+id/spirit_nav_bar"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@drawable/spirit_nav_bg"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/progress_layout">
+
+        <LinearLayout
+            android:id="@+id/nav_home"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:duplicateParentState="true"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_spirit_nav_home"
+                android:tint="@color/spirit_nav_tint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:duplicateParentState="true"
+                android:maxLines="1"
+                android:text="@string/spirit_nav_home"
+                android:textColor="@color/spirit_nav_tint"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_accounts"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:duplicateParentState="true"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_spirit_nav_accounts"
+                android:tint="@color/spirit_nav_tint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:duplicateParentState="true"
+                android:maxLines="1"
+                android:text="@string/spirit_nav_accounts"
+                android:textColor="@color/spirit_nav_tint"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_wardrobe"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:duplicateParentState="true"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_spirit_nav_wardrobe"
+                android:tint="@color/spirit_nav_tint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:duplicateParentState="true"
+                android:maxLines="1"
+                android:text="@string/spirit_wardrobe"
+                android:textColor="@color/spirit_nav_tint"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_browse"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:duplicateParentState="true"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_spirit_browse"
+                android:tint="@color/spirit_nav_tint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:duplicateParentState="true"
+                android:maxLines="1"
+                android:text="@string/spirit_browse"
+                android:textColor="@color/spirit_nav_tint"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_about"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:duplicateParentState="true"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_spirit_nav_about"
+                android:tint="@color/spirit_nav_tint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:duplicateParentState="true"
+                android:maxLines="1"
+                android:text="@string/spirit_nav_about"
+                android:textColor="@color/spirit_nav_tint"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
 
     <com.kdt.mcgui.ProgressLayout
         android:id="@+id/progress_layout"

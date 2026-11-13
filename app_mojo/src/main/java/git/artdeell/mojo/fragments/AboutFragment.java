@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment;
 import git.artdeell.mojo.BuildConfig;
 import git.artdeell.mojo.R;
 import git.artdeell.mojo.Tools;
+import git.artdeell.mojo.utils.SpiritScreen;
 
 public class AboutFragment extends Fragment {
     public static final String TAG = "SpiritAboutFragment";
@@ -23,6 +24,7 @@ public class AboutFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        SpiritScreen.bindBack(view, requireActivity());
         ((TextView) view.findViewById(R.id.spirit_about_version)).setText("Version " + BuildConfig.VERSION_NAME);
         view.findViewById(R.id.spirit_about_discord).setOnClickListener(v ->
                 Tools.openURL(requireActivity(), getString(R.string.social_media_invite)));
