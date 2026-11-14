@@ -67,6 +67,12 @@ public interface ControlInterface extends View.OnLongClickListener, PlatformGrab
     void handleReleased();
 
     /**
+     * Let go of everything this control may still be holding down (a pressed key, or a toggle that
+     * is switched on). Called when the layout is replaced, so no key stays stuck.
+     */
+    default void forceRelease() {}
+
+    /**
      * Load the values and hide non useful forms
      */
     void loadEditValues(EditControlSideDialog editControlDialog);

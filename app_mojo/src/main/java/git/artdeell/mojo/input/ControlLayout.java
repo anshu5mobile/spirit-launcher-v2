@@ -18,6 +18,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 
@@ -27,6 +28,7 @@ import com.kdt.pickafile.FileSelectedListener;
 
 import git.artdeell.mojo.game.GameView;
 
+import git.artdeell.mojo.MojoApplication;
 import git.artdeell.mojo.R;
 import git.artdeell.mojo.Tools;
 import git.artdeell.mojo.input.buttons.ControlButton;
@@ -64,6 +66,15 @@ public class ControlLayout extends FrameLayout {
 	private ControlButtonMenuListener mMenuListener;
 	public ActionRow mActionRow = null;
 	public String mLayoutFileName;
+	/** Absolute path of the layout file currently shown, null when unknown */
+	private String mLoadedPath;
+	/** Bumped on every {@link #switchLayout}, so a slow earlier switch cannot overwrite a newer one */
+	private int mSwitchGeneration = 0;
+
+	public interface SwitchCallback {
+		/** @param error null when the layout was switched successfully */
+		void onSwitched(String path, @Nullable Throwable error);
+	}
 
 	public ControlLayout(Context ctx) {
 		super(ctx);
@@ -80,6 +91,7 @@ public class ControlLayout extends FrameLayout {
             CustomControls layout = LayoutConverter.loadAndConvertIfNecessary(size, jsonPath);
             loadLayout(layout);
             updateLoadedFileName(jsonPath);
+            mLoadedPath = jsonPath;
         }catch (IOException | JsonSyntaxException e) {
             // Load an empty layout on exception to avoid breakage when adding buttons in the editor
             CustomControls customControls = new CustomControls();
@@ -106,7 +118,8 @@ public class ControlLayout extends FrameLayout {
 			mLayout = null;
 		}
 
-		System.gc();
+		// No System.gc() here: forcing a collection on the UI thread froze the game for a moment
+		// on every layout switch, and the collector frees the old buttons by itself anyway.
 		mapTable.clear();
 
 		// Cleanup buttons only when input layout is null
@@ -231,13 +244,55 @@ public class ControlLayout extends FrameLayout {
 
 
 	private void removeAllButtons() {
-		for(ControlInterface button : getButtonChildren()){
+		List<ControlInterface> old = new ArrayList<>(getButtonChildren());
+		for(ControlInterface button : old){
 			removeView(button.getControlView());
 		}
+		// removeView() already cancels fingers that were down. This also lets go of toggles that
+		// were switched on, otherwise e.g. a sneak toggle stays pressed after changing layouts.
+		for(ControlInterface button : old){
+			button.forceRelease();
+		}
+	}
 
-		System.gc();
-		//i wanna be sure that all the removed Views will be removed after a reload
-		//because if frames will slowly go down after many control changes it will be warm and bad
+	/** Absolute path of the layout file currently shown, or null when it is not from a file */
+	@Nullable
+	public String getLoadedPath() {
+		return mLoadedPath;
+	}
+
+	/**
+	 * Switches to another control layout without stalling the game: the file is read and parsed on
+	 * a background thread and only the view swap runs on the UI thread. Safe to call repeatedly,
+	 * only the most recent request is applied.
+	 */
+	public void switchLayout(String jsonPath, @Nullable SwitchCallback callback) {
+		final int generation = ++mSwitchGeneration;
+		final Point size = new Point(getWidth(), getHeight());
+		MojoApplication.sExecutorService.execute(() -> {
+			CustomControls parsed = null;
+			Throwable failure = null;
+			try {
+				parsed = LayoutConverter.loadAndConvertIfNecessary(size, jsonPath);
+			} catch (IOException | JsonSyntaxException e) {
+				failure = e;
+			} catch (Throwable t) {
+				failure = t;
+			}
+			final CustomControls result = parsed;
+			final Throwable error = failure;
+			post(() -> {
+				if(generation != mSwitchGeneration) return; // a newer switch took over
+				if(result != null) {
+					loadLayout(result);
+					updateLoadedFileName(jsonPath);
+					mLoadedPath = jsonPath;
+					// New buttons start visible; apply the in-game / in-menu rules right away
+					setControlVisible(mControlVisible);
+				}
+				if(callback != null) callback.onSwitched(jsonPath, error);
+			});
+		});
 	}
 
 	public void saveLayout(String path) throws Exception {

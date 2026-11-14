@@ -137,6 +137,8 @@ public class mcVersionSpinner extends ExtendedTextView {
         setPaddingRelative(startPadding, 0, endPadding, 0);
         setCompoundDrawablePadding(startPadding);
         addOnAttachStateChangeListener(new ExtraAttachListener());
+        // "Create new instance" has its own button on the home screen, keep it out of the dropdown
+        mProfileAdapter.setHideExtrasWhenPopulated(true);
         setSelection(0);
 
         // Popup window behavior

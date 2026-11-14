@@ -1,5 +1,6 @@
 package git.artdeell.mojo.prefs;
 
+import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_BUTTONSIZE;
 import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_BUTTON_TRANSPARENCY;
 import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_DISABLE_GESTURES;
 import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_ENABLE_GYRO;
@@ -14,8 +15,10 @@ import static git.artdeell.mojo.prefs.LauncherPreferences.PREF_SCALE_FACTOR;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.SwitchCompat;
@@ -26,6 +29,12 @@ import git.artdeell.mojo.R;
 import git.artdeell.mojo.Tools;
 import git.artdeell.mojo.utils.interfaces.SimpleSeekBarListener;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+
 /**
  * Side dialog for quick settings that you can change in game
  * The implementation has to take action on some preference changes
@@ -33,7 +42,20 @@ import git.artdeell.mojo.utils.interfaces.SimpleSeekBarListener;
 public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
     public static final String PREF_LIVE_STATS = "spiritLiveStats";
+    public static final String PREF_SUSTAINED = "sustainedPerformance";
     private static boolean sFpsBoost = false;
+
+    // Control layout switcher
+    private LinearLayout mControlChips;
+    private TextView mControlCurrent;
+    /** Layout the user picked in this dialog, used until the game confirms the switch */
+    private String mPickedControlPath;
+
+    private SwitchCompat mShowControlsSwitch, mSustainedSwitch;
+    private CustomSeekbar mButtonSizeBar;
+    private TextView mButtonSizeText;
+    private float mOriginalButtonSize;
+    private boolean mButtonSizeChanged;
 
     private SharedPreferences.Editor mEditor;
 
@@ -84,11 +106,8 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
                 onFpsBoosterChanged(on);
             });
         }
-        View switchControl = mDialogContent.findViewById(R.id.spirit_switch_control);
-        if(switchControl != null) switchControl.setOnClickListener(v -> {
-            disappear(true);
-            onSwitchControl();
-        });
+        bindControlSwitcher();
+        bindPerformanceExtras();
         // Bind layout elements
         mGyroSwitch = mDialogContent.findViewById(R.id.checkboxGyro);
         mGyroXSwitch = mDialogContent.findViewById(R.id.checkboxGyroX);
@@ -129,6 +148,7 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         mOriginalGestureDelay = PREF_LONGPRESS_TRIGGER;
         mOriginalResolution = PREF_SCALE_FACTOR;
         mOriginalTransparency = PREF_BUTTON_TRANSPARENCY;
+        mOriginalButtonSize = PREF_BUTTONSIZE;
 
         mGyroSwitch.setChecked(mOriginalGyroEnabled);
         mGyroXSwitch.setChecked(mOriginalGyroXEnabled);
@@ -218,6 +238,17 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         });
 
 
+        if(mButtonSizeBar != null && mButtonSizeText != null) {
+            mButtonSizeBar.setProgress((int) mOriginalButtonSize);
+            setSeekTextPercent(mButtonSizeText, mButtonSizeBar.getProgress());
+            mButtonSizeBar.setOnSeekBarChangeListener((SimpleSeekBarListener) (seekBar, progress, fromUser) -> {
+                PREF_BUTTONSIZE = progress;
+                mEditor.putInt("buttonscale", progress);
+                mButtonSizeChanged = true;
+                setSeekTextPercent(mButtonSizeText, progress);
+            });
+        }
+
         updateGyroVisibility(mOriginalGyroEnabled);
         updateGestureVisibility(mOriginalGestureDisabled);
         updateHotbarDropVisibility(mOriginalHotbarDrop);
@@ -249,6 +280,8 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         boolean isGyroAvailable = Tools.deviceSupportsGyro(mDialogContent.getContext());
         if (!isGyroAvailable) {
             mGyroSwitch.setVisibility(View.GONE);
+            View gyroSection = mDialogContent.findViewById(R.id.spirit_qs_gyro_section);
+            if(gyroSection != null) gyroSection.setVisibility(View.GONE);
             updateGestureVisibility(false);
         }
     }
@@ -281,12 +314,20 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         mGestureDelayBar.setOnSeekBarChangeListener(null);
         mResolutionBar.setOnSeekBarChangeListener(null);
         mTransparencyBar.setOnSeekBarChangeListener(null);
+        if(mButtonSizeBar != null) mButtonSizeBar.setOnSeekBarChangeListener(null);
+        if(mShowControlsSwitch != null) mShowControlsSwitch.setOnCheckedChangeListener(null);
+        if(mSustainedSwitch != null) mSustainedSwitch.setOnCheckedChangeListener(null);
     }
 
     private void setupCancelButton() {
         setStartButtonListener(android.R.string.cancel, v -> cancel());
         setEndButtonListener(android.R.string.ok, v -> {
             mEditor.apply();
+            // Button size needs the layout rebuilt, so it is applied once, here
+            if(mButtonSizeChanged) {
+                mButtonSizeChanged = false;
+                onButtonSizeApplied();
+            }
             disappear(true);
         });
     }
@@ -307,6 +348,8 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
             PREF_LONGPRESS_TRIGGER = mOriginalGestureDelay;
             PREF_SCALE_FACTOR = mOriginalResolution;
             PREF_BUTTON_TRANSPARENCY = mOriginalTransparency;
+            PREF_BUTTONSIZE = mOriginalButtonSize;
+            mButtonSizeChanged = false;
 
             onGyroStateChanged();
             onResolutionChanged();
@@ -331,8 +374,144 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
      */
     public abstract void onButtonTransparencyChanged();
 
-    /** Spirit: user tapped "Switch Control". Default does nothing. */
-    public void onSwitchControl() {}
+    /** Spirit: path of the control layout in use right now, or null when unknown. */
+    public String getCurrentControlPath() { return null; }
+
+    /** Spirit: the user picked a control layout; switch to it right away. */
+    public void onSelectControl(String path) {}
+
+    /** Spirit: whether the on-screen controls are currently shown. */
+    public boolean areControlsVisible() { return true; }
+
+    /** Spirit: "Show on-screen controls" toggled. */
+    public void onShowControlsChanged(boolean visible) {}
+
+    /** Spirit: the button size was changed and confirmed with OK, so the layout must be rebuilt. */
+    public void onButtonSizeApplied() {}
+
+    /** Spirit: sustained performance mode toggled. */
+    public void onSustainedPerformanceChanged(boolean enabled) {}
+
+    /** Spirit: false hides the sustained performance switch (not supported on this device). */
+    public boolean isSustainedPerformanceSupported() { return false; }
+
+    // ---------------- Spirit: instant control switching ----------------
+
+    private void bindControlSwitcher() {
+        mControlChips = mDialogContent.findViewById(R.id.spirit_control_chips);
+        mControlCurrent = mDialogContent.findViewById(R.id.spirit_control_current);
+
+        View switchControl = mDialogContent.findViewById(R.id.spirit_switch_control);
+        if(switchControl != null) switchControl.setOnClickListener(v -> selectNextControl());
+
+        mShowControlsSwitch = mDialogContent.findViewById(R.id.spirit_switch_show_controls);
+        if(mShowControlsSwitch != null) {
+            mShowControlsSwitch.setChecked(areControlsVisible());
+            mShowControlsSwitch.setOnCheckedChangeListener((b, on) -> onShowControlsChanged(on));
+        }
+
+        mButtonSizeBar = mDialogContent.findViewById(R.id.spirit_buttonsize_seekbar);
+        mButtonSizeText = mDialogContent.findViewById(R.id.spirit_buttonsize_textView_percent);
+
+        refreshControlChips();
+    }
+
+    private void bindPerformanceExtras() {
+        mSustainedSwitch = mDialogContent.findViewById(R.id.spirit_switch_sustained);
+        if(mSustainedSwitch == null) return;
+        if(!isSustainedPerformanceSupported()) {
+            mSustainedSwitch.setVisibility(View.GONE);
+            return;
+        }
+        mSustainedSwitch.setChecked(LauncherPreferences.PREF_SUSTAINED_PERFORMANCE);
+        mSustainedSwitch.setOnCheckedChangeListener((b, on) -> {
+            LauncherPreferences.PREF_SUSTAINED_PERFORMANCE = on;
+            LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_SUSTAINED, on).apply();
+            onSustainedPerformanceChanged(on);
+        });
+    }
+
+    /** All control layouts (*.json) in the controlmap folder, sorted by name. */
+    private static List<File> listControlLayouts() {
+        List<File> result = new ArrayList<>();
+        if(Tools.CTRLMAP_PATH == null) return result;
+        File[] files = new File(Tools.CTRLMAP_PATH).listFiles((dir, name) -> name.toLowerCase(Locale.ROOT).endsWith(".json"));
+        if(files == null) return result;
+        Arrays.sort(files, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        result.addAll(Arrays.asList(files));
+        return result;
+    }
+
+    private String displayName(File layout) {
+        String name = layout.getName();
+        name = name.substring(0, name.length() - ".json".length());
+        if(name.equalsIgnoreCase("default")) return mDialogContent.getContext().getString(R.string.spirit_qs_layout_default);
+        return name;
+    }
+
+    private String activeControlPath() {
+        return mPickedControlPath != null ? mPickedControlPath : getCurrentControlPath();
+    }
+
+    private static boolean samePath(String a, String b) {
+        return a != null && b != null && new File(a).getAbsoluteFile().equals(new File(b).getAbsoluteFile());
+    }
+
+    /** Rebuilds the row of layout chips; the layout in use is highlighted. */
+    private void refreshControlChips() {
+        if(mControlChips == null) return;
+        Context context = mDialogContent.getContext();
+        mControlChips.removeAllViews();
+
+        List<File> layouts = listControlLayouts();
+        if(layouts.isEmpty()) {
+            if(mControlCurrent != null) mControlCurrent.setText(R.string.spirit_qs_no_layouts);
+            return;
+        }
+
+        String active = activeControlPath();
+        String activeName = null;
+        LayoutInflater inflater = LayoutInflater.from(context);
+        for(File layout : layouts) {
+            boolean selected = samePath(active, layout.getAbsolutePath());
+            TextView chip = (TextView) inflater.inflate(R.layout.item_spirit_chip, mControlChips, false);
+            chip.setText(displayName(layout));
+            chip.setBackgroundResource(selected ? R.drawable.spirit_badge_fill : R.drawable.spirit_chip_bg);
+            chip.setTextColor(context.getResources().getColor(selected ? R.color.spirit_on_lime : R.color.spirit_lime));
+            chip.setOnClickListener(v -> selectControl(layout));
+            mControlChips.addView(chip);
+            if(selected) activeName = displayName(layout);
+        }
+
+        if(mControlCurrent != null) {
+            mControlCurrent.setText(activeName != null
+                    ? context.getString(R.string.spirit_qs_current_layout, activeName)
+                    : context.getString(R.string.spirit_qs_layouts_hint));
+        }
+    }
+
+    private void selectControl(File layout) {
+        String path = layout.getAbsolutePath();
+        if(samePath(activeControlPath(), path)) return;
+        mPickedControlPath = path;
+        onSelectControl(path);
+        refreshControlChips();
+    }
+
+    /** "Switch Control" button: jump to the next layout in the list, wrapping around. */
+    private void selectNextControl() {
+        List<File> layouts = listControlLayouts();
+        if(layouts.isEmpty()) return;
+        String active = activeControlPath();
+        int next = 0;
+        for(int i = 0; i < layouts.size(); i++) {
+            if(samePath(active, layouts.get(i).getAbsolutePath())) {
+                next = (i + 1) % layouts.size();
+                break;
+            }
+        }
+        selectControl(layouts.get(next));
+    }
 
     /** Spirit: Live RAM overlay toggled. */
     public void onLiveStatsChanged(boolean enabled) {}

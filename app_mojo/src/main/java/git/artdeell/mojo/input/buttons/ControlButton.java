@@ -151,6 +151,15 @@ public class ControlButton extends TextView implements ControlInterface {
         }
     }
 
+    @Override
+    public void forceRelease() {
+        // isActivated() is true while a key is held and while a toggle is switched on
+        if(isActivated()) {
+            mIsToggled = false;
+            sendKeyPresses(false);
+        }
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {

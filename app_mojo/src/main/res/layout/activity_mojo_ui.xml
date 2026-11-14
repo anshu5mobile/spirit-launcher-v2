@@ -27,30 +27,16 @@
         app:layout_constraintTop_toTopOf="@id/spirit_header_bg"
         app:layout_constraintBottom_toBottomOf="@id/spirit_header_bg" />
 
-    <TextView
-        android:id="@+id/spirit_title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="6dp"
-        android:ellipsize="end"
-        android:letterSpacing="0.12"
-        android:maxLines="1"
-        android:text="@string/spirit_brand"
-        android:textColor="@color/spirit_text"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@id/spirit_logo"
-        app:layout_constraintEnd_toStartOf="@id/account_spinner"
-        app:layout_constraintTop_toTopOf="@id/spirit_header_bg"
-        app:layout_constraintBottom_toBottomOf="@id/spirit_header_bg" />
 
     <com.kdt.mcgui.AccountSpinner
         android:id="@+id/account_spinner"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="40dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="4dp"
         android:dropDownWidth="@dimen/_250sdp"
         android:dropDownVerticalOffset="6dp"
+        app:layout_constraintStart_toEndOf="@id/spirit_logo"
         app:layout_constraintEnd_toStartOf="@id/setting_button"
         app:layout_constraintTop_toTopOf="@id/spirit_header_bg"
         app:layout_constraintBottom_toBottomOf="@id/spirit_header_bg"
@@ -84,7 +70,7 @@
         android:id="@+id/spirit_header_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="spirit_header_bg,spirit_logo,spirit_title,account_spinner,setting_button,spirit_header_line" />
+        app:constraint_referenced_ids="spirit_header_bg,spirit_logo,account_spinner,setting_button,spirit_header_line" />
 
     <!-- Holding most of the dynamic content -->
     <androidx.fragment.app.FragmentContainerView

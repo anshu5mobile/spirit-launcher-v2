@@ -277,7 +277,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            if(convertView == null || convertView.findViewById(R.id.pill_badge) == null) {
+            if(convertView == null || convertView.findViewById(R.id.pill_name) == null) {
                 convertView = mInflater.inflate(R.layout.item_account_pill, parent, false);
             }
             populatePill(convertView, position);
@@ -296,7 +296,8 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
         /** Collapsed header view: skin head + auth badge, like the Spirit design. */
         private void populatePill(View view, int position) {
             ImageView avatar = view.findViewById(R.id.pill_avatar);
-            TextView badge = view.findViewById(R.id.pill_badge);
+            TextView name = view.findViewById(R.id.pill_name);
+            ImageView type = view.findViewById(R.id.pill_type);
             Resources resources = getResources();
             // The view may be recycled: drop any click handler so the spinner gets the tap itself
             view.setOnClickListener(null);
@@ -306,8 +307,10 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
                 // "Add account" entry (shown when there are no accounts)
                 avatar.setImageResource(R.drawable.ic_add);
                 avatar.setColorFilter(resources.getColor(R.color.spirit_lime));
-                badge.setText(R.string.main_add_account);
-                SpiritAccountUi.styleBadge(badge, false);
+                name.setText(R.string.main_add_account);
+                name.setTextColor(resources.getColor(R.color.spirit_lime));
+                type.setImageResource(R.drawable.ic_add);
+                type.setColorFilter(resources.getColor(R.color.spirit_lime));
                 if(getCount() == 1) view.setOnClickListener(v-> createAccount());
                 return;
             }
@@ -331,7 +334,10 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
                 avatar.setImageResource(R.drawable.ic_spirit_nav_accounts);
                 avatar.setColorFilter(resources.getColor(R.color.spirit_lime));
             }
-            SpiritAccountUi.bindBadge(badge, account.authType);
+            name.setText(account.username);
+            name.setTextColor(resources.getColor(R.color.spirit_text));
+            type.clearColorFilter();
+            type.setImageResource(SpiritAccountUi.typeIcon(account.authType));
         }
 
         private void populateView(View view, int position, boolean isDropDown) {

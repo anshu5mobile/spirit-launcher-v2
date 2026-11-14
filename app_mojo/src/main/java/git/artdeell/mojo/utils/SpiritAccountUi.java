@@ -2,6 +2,7 @@ package git.artdeell.mojo.utils;
 
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
@@ -28,6 +29,16 @@ public final class SpiritAccountUi {
             case MICROSOFT: return R.string.spirit_account_sub_ms;
             case ELY_BY: return R.string.spirit_account_sub_ely;
             default: return R.string.spirit_account_sub_local;
+        }
+    }
+
+    /** Provider logo: Microsoft squares, Ely.by "E", or the offline plug. */
+    @DrawableRes
+    public static int typeIcon(@NonNull AuthType type) {
+        switch (type) {
+            case MICROSOFT: return R.drawable.ic_spirit_type_ms;
+            case ELY_BY: return R.drawable.ic_spirit_type_ely;
+            default: return R.drawable.ic_spirit_type_offline;
         }
     }
 

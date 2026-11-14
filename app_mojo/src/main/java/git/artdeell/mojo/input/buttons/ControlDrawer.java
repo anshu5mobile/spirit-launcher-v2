@@ -34,6 +34,12 @@ public class ControlDrawer extends ControlButton {
     }
 
 
+    @Override
+    public void forceRelease() {
+        super.forceRelease();
+        for(ControlSubButton button : buttons) button.forceRelease();
+    }
+
     public void addButton(ControlData properties){
         addButton(new ControlSubButton(parentLayout, properties, this));
     }

@@ -576,16 +576,49 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 }
 
                 @Override
-                public void onSwitchControl() {
-                    mControlLayout.openLoadDialog();
-                    // The new layout may or may not have its own menu button, re-check a few times
-                    // after the user picks a file so the side menu can always be reached.
-                    for(int delay : new int[]{800, 2000, 5000, 10000}) {
-                        mControlLayout.postDelayed(() -> {
-                            if(isInEditor) return;
-                            mDrawerPullButton.setVisibility(mControlLayout.hasMenuButton() ? View.GONE : View.VISIBLE);
-                        }, delay);
-                    }
+                public String getCurrentControlPath() {
+                    return mControlLayout.getLoadedPath();
+                }
+
+                @Override
+                public void onSelectControl(String path) {
+                    mControlLayout.switchLayout(path, (loaded, error) -> {
+                        if(error != null) {
+                            Toast.makeText(GameActivity.this, getString(R.string.spirit_qs_switch_failed), Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        String name = new java.io.File(loaded).getName().replaceAll("(?i)\\.json$", "");
+                        Toast.makeText(GameActivity.this, getString(R.string.spirit_qs_switched, name), Toast.LENGTH_SHORT).show();
+                        // The new layout may not have its own menu button, so keep the side menu reachable
+                        if(!isInEditor) mDrawerPullButton.setVisibility(mControlLayout.hasMenuButton() ? View.GONE : View.VISIBLE);
+                    });
+                }
+
+                @Override
+                public boolean areControlsVisible() {
+                    return mControlLayout.areControlVisible();
+                }
+
+                @Override
+                public void onShowControlsChanged(boolean visible) {
+                    mControlLayout.setControlVisible(visible);
+                }
+
+                @Override
+                public void onButtonSizeApplied() {
+                    String path = mControlLayout.getLoadedPath();
+                    if(path != null) mControlLayout.switchLayout(path, null);
+                }
+
+                @Override
+                public boolean isSustainedPerformanceSupported() {
+                    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
+                }
+
+                @Override
+                public void onSustainedPerformanceChanged(boolean enabled) {
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                        getWindow().setSustainedPerformanceMode(enabled);
                 }
             };
         }

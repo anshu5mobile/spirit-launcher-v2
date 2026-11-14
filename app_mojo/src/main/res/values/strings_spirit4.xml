@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Quick settings -->
+    <string name="spirit_qs_section_controls">Controls</string>
+    <string name="spirit_qs_section_display">Display and performance</string>
+    <string name="spirit_qs_section_mouse">Mouse and gestures</string>
+    <string name="spirit_qs_section_gyro">Gyroscope</string>
+    <string name="spirit_qs_current_layout">Current layout: %1$s</string>
+    <string name="spirit_qs_layouts_hint">Tap a layout to switch instantly</string>
+    <string name="spirit_qs_no_layouts">No control layouts found</string>
+    <string name="spirit_qs_show_controls">Show on-screen controls</string>
+    <string name="spirit_qs_button_size">Button size (applies on OK)</string>
+    <string name="spirit_qs_sustained">Sustained performance (less throttling)</string>
+    <string name="spirit_qs_layout_switched">Controls: %1$s</string>
+    <string name="spirit_qs_layout_default">Default</string>
+    <string name="spirit_qs_switched">Controls: %1$s</string>
+    <string name="spirit_qs_switch_failed">Could not load that control layout</string>
+</resources>

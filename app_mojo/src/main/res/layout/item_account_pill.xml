@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Collapsed (selected) view of the header account spinner -->
+<!-- Collapsed (selected) view of the header account spinner: head, name, account type icon -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="40dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingStart="5dp"
-    android:paddingEnd="10dp">
+    android:paddingEnd="12dp">
 
     <ImageView
         android:id="@+id/pill_avatar"
@@ -18,15 +18,22 @@
         android:scaleType="fitCenter" />
 
     <TextView
-        android:id="@+id/pill_badge"
-        android:layout_width="wrap_content"
+        android:id="@+id/pill_name"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
         android:maxLines="1"
-        android:paddingStart="8dp"
-    android:paddingEnd="8dp"
-        android:paddingTop="3dp"
-    android:paddingBottom="3dp"
-        android:textSize="11sp"
+        android:textColor="@color/spirit_text"
+        android:textSize="14sp"
         android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/pill_type"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="8dp"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter" />
 </LinearLayout>

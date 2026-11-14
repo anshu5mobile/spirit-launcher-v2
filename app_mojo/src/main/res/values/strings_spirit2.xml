@@ -10,7 +10,7 @@
     <string name="spirit_add_account_title">Add new account</string>
     <string name="spirit_add_account_sub">Choose how you want to sign in.</string>
     <string name="spirit_switch_control">Switch Control</string>
-    <string name="spirit_switch_control_sub">Change your control layout without leaving the game</string>
+    <string name="spirit_switch_control_sub">Jump to the next control layout, or pick one below</string>
     <string name="spirit_coming_soon_badge">COMING SOON</string>
     <string name="spirit_wardrobe_title">Wardrobe</string>
     <string name="spirit_wardrobe_intro">One place to change your skin, whatever account you use: local, Ely.by or Microsoft.</string>

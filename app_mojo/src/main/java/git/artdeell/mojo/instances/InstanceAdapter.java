@@ -22,6 +22,16 @@ public class InstanceAdapter extends BaseAdapter {
     private Instances mInstances;
     private int mSelectionIndex;
     private final InstanceAdapterExtra[] mExtraEntires;
+    private boolean mHideExtrasWhenPopulated = false;
+
+    /**
+     * When set, the extra rows (like "Create new instance") are only listed while there are no instances,
+     * so the dropdown does not repeat a button that already exists on the screen.
+     */
+    public void setHideExtrasWhenPopulated(boolean hide) {
+        mHideExtrasWhenPopulated = hide;
+        notifyDataSetChanged();
+    }
 
 
     public InstanceAdapter(InstanceAdapterExtra[] extraEntries) {
@@ -34,7 +44,9 @@ public class InstanceAdapter extends BaseAdapter {
     @Override
     public int getCount() {
         if(mInstances == null) return mExtraEntires.length;
-        return mInstances.list.size() + mExtraEntires.length;
+        int instanceCount = mInstances.list.size();
+        if(mHideExtrasWhenPopulated && instanceCount > 0) return instanceCount;
+        return instanceCount + mExtraEntires.length;
     }
     /**
      * Gets the adapter entry at a given index
