@@ -114,7 +114,8 @@ public class ControlJoystick extends JoystickView implements ControlInterface {
     }
 
     /** Joystick ko center karo aur saari direction keys chhod do. */
-    private void forceRelease() {
+    @Override
+    public void forceRelease() {
         if (mControlData == null) return; // constructor abhi poora nahi hua
 
         if (mTouching) {
