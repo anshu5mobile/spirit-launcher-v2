@@ -11,4 +11,27 @@
     <string name="spirit_compat_nolink">Not ready: this skin has no public link yet. Use a username or URL skin, or apply it once to make a link.</string>
     <string name="spirit_compat_microsoft">Premium account: servers already show your real skin. Auto Skin is only needed on offline-mode servers.</string>
     <string name="spirit_compat_ready">Ready. Works on servers with a skin plugin (SkinsRestorer style). Already done on %1$d server(s).</string>
+    <string name="spirit_editor_card_title">Skin editor</string>
+    <string name="spirit_editor_card_sub">Paint your own skin</string>
+    <string name="spirit_cape_card_title">Cape manager</string>
+    <string name="spirit_cape_card_sub">Wear or hide a cape</string>
+    <string name="spirit_editor_title">Skin editor</string>
+    <string name="spirit_editor_pen">Pen</string>
+    <string name="spirit_editor_eraser">Eraser</string>
+    <string name="spirit_editor_picker">Picker</string>
+    <string name="spirit_editor_fill">Fill</string>
+    <string name="spirit_editor_undo">Undo</string>
+    <string name="spirit_editor_redo">Redo</string>
+    <string name="spirit_editor_grid">Grid</string>
+    <string name="spirit_editor_done">Done</string>
+    <string name="spirit_editor_color">Color (hex)</string>
+    <string name="spirit_editor_badcolor">That is not a color. Use something like #A6F03A.</string>
+    <string name="spirit_editor_nofile">Could not open the skin.</string>
+    <string name="spirit_editor_need_skin">Pick or load a skin first, then edit it.</string>
+    <string name="spirit_cape_title">Capes</string>
+    <string name="spirit_cape_none">No cape</string>
+    <string name="spirit_cape_only_ms">Capes work with Microsoft accounts only.</string>
+    <string name="spirit_cape_empty">This account owns no capes.</string>
+    <string name="spirit_cape_done">Cape updated.</string>
+    <string name="spirit_cape_failed">Cape error: %1$s</string>
 </resources>

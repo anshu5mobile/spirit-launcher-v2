@@ -44,6 +44,10 @@
         android:enableOnBackInvokedCallback="false"
         tools:ignore="UnusedAttribute">
         <activity
+            android:name=".wardrobe.SkinEditorActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".MissingStorageActivity"
             android:exported="false" />
 

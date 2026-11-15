@@ -81,6 +81,20 @@ public class WardrobeFragment extends Fragment {
     private final ActivityResultLauncher<String> mGalleryLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(), this::onGalleryPicked);
 
+    private final ActivityResultLauncher<android.content.Intent> mEditorLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                if(result.getResultCode() != android.app.Activity.RESULT_OK || result.getData() == null || !isAdded()) return;
+                final boolean slim = result.getData().getBooleanExtra(git.artdeell.mojo.wardrobe.SkinEditorActivity.EXTRA_SLIM, false);
+                final File out = new File(Tools.DIR_CACHE, "spirit_editor_out.png");
+                final String name = mName == null ? getString(R.string.spirit_skin_unnamed) : mName;
+                MojoApplication.sExecutorService.execute(() -> {
+                    Bitmap edited = android.graphics.BitmapFactory.decodeFile(out.getAbsolutePath());
+                    if(edited == null) return;
+                    // The edited skin is a new picture: it has no public link until it is applied
+                    ui(() -> show(edited, slim, null, name, true));
+                });
+            });
+
     public WardrobeFragment() {
         super(R.layout.fragment_spirit_wardrobe);
     }
@@ -106,6 +120,8 @@ public class WardrobeFragment extends Fragment {
         view.findViewById(R.id.spirit_skin_library_card).setOnClickListener(v -> openLibrary());
         view.findViewById(R.id.spirit_skin_gallery_card).setOnClickListener(v -> mGalleryLauncher.launch("image/*"));
         view.findViewById(R.id.spirit_skin_apply).setOnClickListener(v -> applySkin());
+        view.findViewById(R.id.spirit_editor_card).setOnClickListener(v -> openEditor());
+        view.findViewById(R.id.spirit_cape_card).setOnClickListener(v -> openCapes());
         view.findViewById(R.id.spirit_skin_save).setOnClickListener(v -> saveToLibrary());
         mModel.setOnClickListener(v -> toggleModel());
         mOfflineInstall.setOnClickListener(v -> installSkinSupport());
@@ -721,5 +737,107 @@ public class WardrobeFragment extends Fragment {
             AutoSkin.setTemplate(text.isEmpty() ? AutoSkin.DEFAULT_CMD : text);
             refreshViews();
         });
+    }
+
+    // ---------------------------------------------------------------- editor
+
+    private void openEditor() {
+        final Bitmap bitmap = mBitmap;
+        if(bitmap == null) {
+            Toast.makeText(requireContext(), R.string.spirit_editor_need_skin, Toast.LENGTH_LONG).show();
+            return;
+        }
+        final boolean slim = mSlim;
+        MojoApplication.sExecutorService.execute(() -> {
+            try {
+                File in = new File(Tools.DIR_CACHE, "spirit_editor_in.png");
+                try(FileOutputStream out = new FileOutputStream(in)) {
+                    out.write(SkinStore.encodePng(bitmap));
+                }
+                android.content.Intent intent = new android.content.Intent(requireContext(), git.artdeell.mojo.wardrobe.SkinEditorActivity.class);
+                intent.putExtra(git.artdeell.mojo.wardrobe.SkinEditorActivity.EXTRA_IN, in.getAbsolutePath());
+                intent.putExtra(git.artdeell.mojo.wardrobe.SkinEditorActivity.EXTRA_OUT, new File(Tools.DIR_CACHE, "spirit_editor_out.png").getAbsolutePath());
+                intent.putExtra(git.artdeell.mojo.wardrobe.SkinEditorActivity.EXTRA_SLIM, slim);
+                ui(() -> mEditorLauncher.launch(intent));
+            } catch (IOException e) {
+                toast(messageOf(e));
+            }
+        });
+    }
+
+    // ---------------------------------------------------------------- capes
+
+    private interface CapeAction {
+        void run(Account account) throws IOException;
+    }
+
+    private void openCapes() {
+        final Account account = mAccount;
+        if(account == null || account.authType != git.artdeell.mojo.authenticator.AuthType.MICROSOFT) {
+            Toast.makeText(requireContext(), R.string.spirit_cape_only_ms, Toast.LENGTH_LONG).show();
+            return;
+        }
+        MojoApplication.sExecutorService.execute(() -> {
+            final java.util.List<SkinNet.Cape> capes = new ArrayList<>();
+            boolean ok = capeCall(account, acc -> { capes.clear(); capes.addAll(SkinNet.fetchCapes(acc)); }, null);
+            if(!ok) return;
+            ui(() -> showCapeDialog(account, capes));
+        });
+    }
+
+    private void showCapeDialog(Account account, java.util.List<SkinNet.Cape> capes) {
+        if(!isAdded()) return;
+        if(capes.isEmpty()) {
+            Toast.makeText(requireContext(), R.string.spirit_cape_empty, Toast.LENGTH_LONG).show();
+            return;
+        }
+        String[] names = new String[capes.size() + 1];
+        names[0] = getString(R.string.spirit_cape_none);
+        for(int i = 0; i < capes.size(); i++) names[i + 1] = (capes.get(i).active ? "\u2713 " : "") + capes.get(i).alias;
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_cape_title)
+                .setItems(names, (d, which) -> {
+                    final String id = which == 0 ? null : capes.get(which - 1).id;
+                    MojoApplication.sExecutorService.execute(() -> {
+                        boolean ok = capeCall(account, acc -> SkinNet.setCape(acc, id), null);
+                        if(ok) toast(getString(R.string.spirit_cape_done));
+                    });
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    /** Runs a Microsoft call off the main thread; when the token is stale, refreshes it once and retries. Returns success. */
+    private boolean capeCall(Account account, CapeAction action, @Nullable Account refreshed) {
+        Account use = refreshed != null ? refreshed : account.reload();
+        if(use == null) use = account;
+        try {
+            action.run(use);
+            return true;
+        } catch (IOException e) {
+            if("TOKEN_EXPIRED".equals(e.getMessage())) {
+                if(refreshed != null || !account.authType.requiresLogin()) {
+                    toast(getString(R.string.spirit_skin_token_expired));
+                    return false;
+                }
+                final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+                final Account[] fresh = new Account[1];
+                final Account base = use;
+                Tools.runOnUiThread(() -> account.authType.createAuth().refreshAccount(new LoginListener() {
+                    @Override public void onLoginDone(Account a) { fresh[0] = a; latch.countDown(); }
+                    @Override public void onLoginError(Throwable error) { latch.countDown(); }
+                    @Override public void onLoginProgress(int step) {}
+                    @Override public void setMaxLoginProgress(int max) {}
+                }, base));
+                try { latch.await(30, java.util.concurrent.TimeUnit.SECONDS); } catch (InterruptedException ignored) {}
+                if(fresh[0] == null) {
+                    toast(getString(R.string.spirit_skin_token_expired));
+                    return false;
+                }
+                return capeCall(account, action, fresh[0]);
+            }
+            toast(getString(R.string.spirit_cape_failed, messageOf(e)));
+            return false;
+        }
     }
 }

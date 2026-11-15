@@ -279,4 +279,45 @@ public final class SkinNet {
         }
         return link;
     }
+
+    // ---------------------------------------------------------------- capes (Microsoft accounts)
+
+    public static final class Cape {
+        public String id;
+        public String alias;
+        public boolean active;
+    }
+
+    public static java.util.List<Cape> fetchCapes(Account account) throws IOException {
+        Response response = get("https://api.minecraftservices.com/minecraft/profile", account.accessToken);
+        if(response.code == 401 || response.code == 403) throw new IOException("TOKEN_EXPIRED");
+        if(response.code != 200) throw new IOException("Could not read your capes (error " + response.code + ").");
+        java.util.List<Cape> result = new java.util.ArrayList<>();
+        JsonArray capes = new JsonParser().parse(response.text()).getAsJsonObject().getAsJsonArray("capes");
+        if(capes == null) return result;
+        for(JsonElement element : capes) {
+            JsonObject o = element.getAsJsonObject();
+            Cape c = new Cape();
+            c.id = o.get("id").getAsString();
+            c.alias = o.has("alias") ? o.get("alias").getAsString() : c.id;
+            c.active = o.has("state") && "ACTIVE".equals(o.get("state").getAsString());
+            result.add(c);
+        }
+        return result;
+    }
+
+    /** Wears the cape with this id, or hides the cape when id is null */
+    public static void setCape(Account account, @Nullable String id) throws IOException {
+        Response response;
+        if(id == null) {
+            response = request("DELETE", "https://api.minecraftservices.com/minecraft/profile/capes/active", account.accessToken, null, null);
+        } else {
+            byte[] body = ("{\"capeId\":\"" + id.replace("\"", "") + "\"}").getBytes(StandardCharsets.UTF_8);
+            response = request("PUT", "https://api.minecraftservices.com/minecraft/profile/capes/active", account.accessToken, "application/json", body);
+        }
+        if(response.code == 200 || response.code == 204) return;
+        if(response.code == 401 || response.code == 403) throw new IOException("TOKEN_EXPIRED");
+        if(response.code == 429) throw new IOException("Mojang says too many requests. Try again in a minute.");
+        throw new IOException("The cape could not be changed (error " + response.code + ").");
+    }
 }
