@@ -42,6 +42,7 @@ import java.util.Locale;
 public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
     public static final String PREF_LIVE_STATS = "spiritLiveStats";
+    public static final String PREF_SHOW_FPS = "spiritShowFps";
     public static final String PREF_SUSTAINED = "sustainedPerformance";
     private static boolean sFpsBoost = false;
 
@@ -92,6 +93,14 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
             liveStats.setOnCheckedChangeListener((b, on) -> {
                 LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_LIVE_STATS, on).apply();
                 onLiveStatsChanged(on);
+            });
+        }
+        androidx.appcompat.widget.SwitchCompat showFps = mDialogContent.findViewById(R.id.spirit_switch_show_fps);
+        if(showFps != null) {
+            showFps.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_SHOW_FPS, false));
+            showFps.setOnCheckedChangeListener((b, on) -> {
+                LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_SHOW_FPS, on).apply();
+                onShowFpsChanged(on);
             });
         }
         androidx.appcompat.widget.SwitchCompat fpsBoost = mDialogContent.findViewById(R.id.spirit_switch_fps_boost);
@@ -421,6 +430,9 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
     /** Spirit: Live RAM overlay toggled. */
     public void onLiveStatsChanged(boolean enabled) {}
+
+    /** Spirit: FPS overlay toggled. */
+    public void onShowFpsChanged(boolean enabled) {}
 
     /** Spirit: FPS booster toggled (this session only). */
     public void onFpsBoosterChanged(boolean enabled) {}

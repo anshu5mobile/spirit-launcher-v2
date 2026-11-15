@@ -58,6 +58,7 @@ public class TextureViewSurfaceProvider implements SurfaceProvider {
 
         @Override
         public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surfaceTexture) {
+            FpsMeter.frame();
 
         }
     }

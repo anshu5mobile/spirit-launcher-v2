@@ -195,6 +195,9 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
+        // The bar is only for a login in progress (or a failed one, drawn red). Idle, it would be a
+        // full lime line under the pill, doubling the header line.
+        if(mLoginStep >= mMaxSteps && mLoginBarPaint.getColor() != Color.RED) return;
         float bottom = getHeight() - mLoginBarPaint.getStrokeWidth()/2;
         float lineFillPercent = (mLoginStep / mMaxSteps);
         canvas.drawLine(0, bottom, lineFillPercent * getWidth(), bottom, mLoginBarPaint);

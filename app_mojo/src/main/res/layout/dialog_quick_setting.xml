@@ -179,6 +179,15 @@
             android:textSize="14sp" />
 
         <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/spirit_switch_show_fps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="42dp"
+            android:text="@string/spirit_show_fps"
+            android:textColor="@color/spirit_text"
+            android:textSize="14sp" />
+
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/spirit_switch_sustained"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

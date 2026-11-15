@@ -212,7 +212,10 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         MCOptionUtils.MCOptionListener optionListener = MCOptionUtils::getMcScale;
         MCOptionUtils.addMCOptionListener(optionListener);
         mControlLayout.setModifiable(false);
-        mControlLayout.post(() -> setLiveStatsEnabled(LauncherPreferences.DEFAULT_PREF.getBoolean(QuickSettingSideDialog.PREF_LIVE_STATS, false)));
+        mControlLayout.post(() -> {
+            setLiveStatsEnabled(LauncherPreferences.DEFAULT_PREF.getBoolean(QuickSettingSideDialog.PREF_LIVE_STATS, false));
+            setFpsEnabled(LauncherPreferences.DEFAULT_PREF.getBoolean(QuickSettingSideDialog.PREF_SHOW_FPS, false));
+        });
 
         // Set the activity for the executor. Must do this here, or else Tools.showErrorRemote() may not
         // execute the correct method
@@ -227,6 +230,8 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         mControlLayout.setMenuListener(this);
 
         mDrawerPullButton.setOnClickListener(v -> onClickedMenu());
+        OverlayDrag.attach(mDrawerPullButton, "spiritOverlayGear");
+        OverlayDrag.restore(mDrawerPullButton, "spiritOverlayGear");
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         launcherGLView.mCursorView.setCursorScale(LauncherPreferences.PREF_MOUSESCALE);
         weakCursor = new WeakReference<>(launcherGLView.mCursorView);
@@ -411,8 +416,9 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
                 mStatsView.setLayoutParams(lp);
                 mStatsView.setTranslationZ(5);
-                mStatsView.setClickable(false);
                 frame.addView(mStatsView);
+                OverlayDrag.attach(mStatsView, "spiritOverlayRam");
+                OverlayDrag.restore(mStatsView, "spiritOverlayRam");
             }
             mStatsView.setVisibility(View.VISIBLE);
             mStatsView.removeCallbacks(mStatsUpdater);
@@ -420,6 +426,51 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         } else if(mStatsView != null) {
             mStatsView.removeCallbacks(mStatsUpdater);
             mStatsView.setVisibility(View.GONE);
+        }
+    }
+
+    // ---------------- Spirit: FPS overlay ----------------
+    private TextView mFpsView;
+    private boolean mFpsEnabled = false;
+    private final Runnable mFpsUpdater = new Runnable() {
+        @Override
+        public void run() {
+            if(!mFpsEnabled || mFpsView == null) return;
+            int frames = git.artdeell.mojo.game.render.FpsMeter.drain();
+            mFpsView.setText("FPS " + frames);
+            mFpsView.postDelayed(this, 1000);
+        }
+    };
+
+    private void setFpsEnabled(boolean enabled) {
+        mFpsEnabled = enabled;
+        if(enabled) {
+            if(mFpsView == null) {
+                ViewGroup frame = findViewById(R.id.content_frame);
+                if(frame == null) return;
+                mFpsView = new TextView(this);
+                mFpsView.setTextColor(0xFFA6F03A);
+                mFpsView.setTextSize(11);
+                mFpsView.setBackgroundColor(0x990A0C09);
+                int pad = (int) (6 * getResources().getDisplayMetrics().density);
+                mFpsView.setPadding(pad, pad / 2, pad, pad / 2);
+                android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
+                mFpsView.setLayoutParams(lp);
+                mFpsView.setTranslationZ(5);
+                mFpsView.setText("FPS --");
+                frame.addView(mFpsView);
+                OverlayDrag.attach(mFpsView, "spiritOverlayFps");
+                OverlayDrag.restore(mFpsView, "spiritOverlayFps");
+            }
+            mFpsView.setVisibility(View.VISIBLE);
+            git.artdeell.mojo.game.render.FpsMeter.drain();
+            mFpsView.removeCallbacks(mFpsUpdater);
+            mFpsView.postDelayed(mFpsUpdater, 1000);
+        } else if(mFpsView != null) {
+            mFpsView.removeCallbacks(mFpsUpdater);
+            mFpsView.setVisibility(View.GONE);
         }
     }
 
@@ -617,6 +668,11 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 @Override
                 public void onLiveStatsChanged(boolean enabled) {
                     setLiveStatsEnabled(enabled);
+                }
+
+                @Override
+                public void onShowFpsChanged(boolean enabled) {
+                    setFpsEnabled(enabled);
                 }
 
                 @Override

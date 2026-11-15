@@ -16,6 +16,7 @@
         <item name="switchStyle">@style/MojoLauncher.Switch</item>
         <item name="buttonStyle">@style/MojoLauncher.Button</item>
         <item name="android:buttonStyleToggle">@style/MojoLauncher.Button.Toggle</item>
+        <item name="alertDialogTheme">@style/SpiritAlertDialog</item>
     </style>
 
     <style name="MojoLauncher.AppTheme" parent="MojoLauncher"/>
@@ -85,5 +86,28 @@
         <item name="android:windowAnimationStyle">@android:style/Animation.InputMethod</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/spirit_nav</item>
+    </style>
+
+    <!-- Spirit: every AlertDialog (permissions, prompts, lists) in the dark and lime look -->
+    <style name="SpiritAlertDialog" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/spirit_dialog_bg</item>
+        <item name="android:colorBackground">@color/spirit_card</item>
+        <item name="colorAccent">@color/spirit_lime</item>
+        <item name="colorControlNormal">@color/spirit_text_dim</item>
+        <item name="colorControlActivated">@color/spirit_lime</item>
+        <item name="colorControlHighlight">#33A6F03A</item>
+        <item name="android:textColorPrimary">@color/spirit_text</item>
+        <item name="android:textColorSecondary">@color/spirit_text_dim</item>
+        <item name="android:textColorHint">@color/spirit_text_dim</item>
+        <item name="textColorAlertDialogListItem">@color/spirit_text</item>
+        <item name="buttonBarButtonStyle">@style/SpiritDialogButton</item>
+        <item name="buttonBarPositiveButtonStyle">@style/SpiritDialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/SpiritDialogButton</item>
+        <item name="buttonBarNeutralButtonStyle">@style/SpiritDialogButton</item>
+    </style>
+
+    <style name="SpiritDialogButton" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/spirit_lime</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>
