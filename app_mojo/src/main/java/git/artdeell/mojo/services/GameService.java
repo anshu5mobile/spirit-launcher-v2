@@ -55,7 +55,16 @@ public class GameService extends Service {
 
         Notification notification = notificationBuilder.build();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NotificationUtils.NOTIFICATION_ID_GAME_SERVICE, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST);
+            int type = ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST;
+            boolean mic = checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+            if(Build.VERSION.SDK_INT >= 34) {
+                // The manifest also lists "microphone", which Android 14 refuses to start without the permission,
+                // so the type is picked here: specialUse always (1 << 30), microphone only when allowed.
+                type = (1 << 30) | (mic ? ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE : 0);
+            } else if(Build.VERSION.SDK_INT >= 30 && mic) {
+                type = ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+            }
+            startForeground(NotificationUtils.NOTIFICATION_ID_GAME_SERVICE, notification, type);
         } else {
             startForeground(NotificationUtils.NOTIFICATION_ID_GAME_SERVICE, notification);
         }

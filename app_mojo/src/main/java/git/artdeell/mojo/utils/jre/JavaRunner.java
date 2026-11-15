@@ -252,6 +252,33 @@ public class JavaRunner {
         return hasJavaAgent;
     }
 
+    private static boolean hasArg(List<String> args, String prefix) {
+        for(String a : args) if(a.startsWith(prefix)) return true;
+        return false;
+    }
+
+    /**
+     * Spirit: safe performance defaults. Anything the user or the version json already sets is left alone,
+     * and unknown flags are ignored by the VM, so a runtime without G1 cannot fail to start because of this.
+     */
+    private static void addPerformanceArgs(List<String> args) {
+        if(!hasArg(args, "-XX:+IgnoreUnrecognizedVMOptions")) args.add(0, "-XX:+IgnoreUnrecognizedVMOptions");
+        // No perf-data memory mapped file: faster start and less disk writing
+        if(!hasArg(args, "-XX:+UsePerfData") && !hasArg(args, "-XX:-UsePerfData")) args.add("-XX:-UsePerfData");
+        boolean customGc = false;
+        for(String a : args) {
+            if(a.startsWith("-XX:+Use") && a.endsWith("GC")) { customGc = true; break; }
+        }
+        if(!customGc && LauncherPreferences.PREF_RAM_ALLOCATION >= 1500) {
+            // Short, predictable GC pauses: fewer lag spikes in PvP, crystals and TNT
+            args.add("-XX:+UseG1GC");
+            if(!hasArg(args, "-XX:MaxGCPauseMillis")) args.add("-XX:MaxGCPauseMillis=40");
+            if(!hasArg(args, "-XX:G1NewSizePercent")) { args.add("-XX:+UnlockExperimentalVMOptions"); args.add("-XX:G1NewSizePercent=25"); }
+            if(!hasArg(args, "-XX:G1ReservePercent")) args.add("-XX:G1ReservePercent=15");
+            if(!hasArg(args, "-XX:+ParallelRefProcEnabled")) args.add("-XX:+ParallelRefProcEnabled");
+        }
+    }
+
     private static void addx86SignalWorkaround(List<String> args) {
         if(Build.VERSION.SDK_INT != 23) return;
         if(Architecture.getDeviceArchitecture() != Architecture.ARCH_X86) return;
@@ -284,6 +311,7 @@ public class JavaRunner {
         vmArgs.clear();
 
 
+        addPerformanceArgs(runtimeArgs);
         runtimeArgs.add("-XX:ActiveProcessorCount=" + java.lang.Runtime.getRuntime().availableProcessors());
         addx86SignalWorkaround(runtimeArgs);
         StringBuilder classpathBuilder = new StringBuilder().append("-Djava.class.path=");

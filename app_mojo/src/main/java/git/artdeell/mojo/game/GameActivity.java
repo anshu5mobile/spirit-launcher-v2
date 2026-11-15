@@ -133,6 +133,12 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         AsyncAssetManager.extractDefaultSettings(this, instance.getGameDirectory());
         MCOptionUtils.load(instance.getGameDirectory().getAbsolutePath());
 
+        // Voice chat mods need the microphone: ask now if it was never granted
+        if(android.os.Build.VERSION.SDK_INT >= 23 && checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 4242);
+        }
+
         Intent gameServiceIntent = new Intent(this, GameService.class);
         // Start the service a bit early
         ContextCompat.startForegroundService(this, gameServiceIntent);
