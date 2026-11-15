@@ -99,8 +99,7 @@
             android:theme="@style/Theme.AppCompat.DayNight.Dialog" />
         <activity
             android:name=".ExitActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
-            android:theme="@style/Theme.AppCompat.DayNight.Dialog" />
+            android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation" />
         <activity
             android:process=":gui_installer"
             android:name=".awt.AWTActivity"
