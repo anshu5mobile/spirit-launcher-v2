@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wardrobe -->
+    <string name="spirit_model_classic">Classic arms</string>
+    <string name="spirit_model_slim">Slim arms</string>
+    <string name="spirit_skin_apply">Apply</string>
+    <string name="spirit_skin_save">Save to library</string>
+    <string name="spirit_skin_gallery">Import from gallery</string>
+    <string name="spirit_skin_gallery_sub">Use a skin picture from your phone.</string>
+    <string name="spirit_skin_ok">OK</string>
+    <string name="spirit_skin_unnamed">Skin</string>
+    <string name="spirit_skin_loading">Loading…</string>
+    <string name="spirit_skin_placeholder">No skin to show yet</string>
+    <string name="spirit_skin_status_none">No skin yet. Pick one below.</string>
+    <string name="spirit_skin_status_wearing">Wearing: %1$s</string>
+    <string name="spirit_skin_status_preview">Preview: %1$s (not applied yet)</string>
+    <string name="spirit_skin_username_hint">Premium username</string>
+    <string name="spirit_skin_url_hint">https://…/skin.png</string>
+    <string name="spirit_skin_name_hint">Name</string>
+    <string name="spirit_skin_fetch_failed">Could not get the skin: %1$s</string>
+    <string name="spirit_skin_save_title">Name this skin</string>
+    <string name="spirit_skin_saved">Saved to your library</string>
+    <string name="spirit_skin_library_title">Skin library (tap to use, hold to delete)</string>
+    <string name="spirit_skin_library_empty">Your library is empty. Save a skin first.</string>
+    <string name="spirit_skin_delete_title">Delete this skin?</string>
+    <string name="spirit_skin_delete">Delete</string>
+    <string name="spirit_skin_deleted">Skin deleted</string>
+    <string name="spirit_skin_applying">Applying…</string>
+    <string name="spirit_skin_applied">Skin applied to %1$s</string>
+    <string name="spirit_skin_apply_failed">Could not apply the skin: %1$s</string>
+    <string name="spirit_skin_token_expired">Your Microsoft sign-in expired. Open Accounts, sign in again and retry.</string>
+    <string name="spirit_skin_ely_title">Ely.by skins</string>
+    <string name="spirit_skin_ely_body">Ely.by only changes skins on its website. Spirit saved the skin file here:\n\n%1$s\n\nOpen Ely.by, upload that file and it shows in game.</string>
+    <string name="spirit_skin_ely_open">Open Ely.by</string>
+
+    <string name="spirit_offline_title">Offline account</string>
+    <string name="spirit_offline_body">Servers cannot know the skin of an offline account, so Spirit shows it in your game with the CustomSkinLoader mod. Other players will not see it.</string>
+    <string name="spirit_offline_install">Install skin support</string>
+    <string name="spirit_offline_installed">Skin support is installed</string>
+    <string name="spirit_offline_installed_now">Skin support installed. Your skin shows next time you play.</string>
+    <string name="spirit_offline_vanilla">Skin support needs a mod loader. Create a Fabric, Forge or NeoForge instance first.</string>
+    <string name="spirit_offline_no_version">No skin support build exists for Minecraft %1$s.</string>
+
+    <!-- Auto Skin -->
+    <string name="spirit_autoskin_servers">Allowed servers</string>
+    <string name="spirit_autoskin_servers_title">Allowed servers (tap to remove)</string>
+    <string name="spirit_autoskin_servers_empty">No servers yet. Auto Skin never types anything on a server that is not in this list.</string>
+    <string name="spirit_autoskin_add_server">Add server</string>
+    <string name="spirit_autoskin_server_hint">play.example.com</string>
+    <string name="spirit_autoskin_close">Close</string>
+    <string name="spirit_autoskin_no_url">Auto Skin needs a skin that has a public link. Use a username or a URL.</string>
+</resources>

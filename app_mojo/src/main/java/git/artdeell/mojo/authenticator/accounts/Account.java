@@ -88,8 +88,28 @@ public class Account {
         }
      }
 
+    /**
+     * Rebuilds the head shown in the app from a skin we already have (Wardrobe changed it).
+     * Local accounts get their head this way too, since no server knows their skin.
+     */
+    public void updateFaceFromSkin(Bitmap skin) {
+        Bitmap copy = skin.copy(Bitmap.Config.ARGB_8888, false);
+        if(copy == null) return;
+        try {
+            Bitmap face = new SkinHeadRenderer().render(100, copy);
+            if(face == null) return;
+            try(FileOutputStream out = new FileOutputStream(getSkinFaceFile())) {
+                face.compress(Bitmap.CompressFormat.WEBP, 90, out);
+            }
+            mFaceCache = null;
+        } catch (IOException | RuntimeException e) {
+            Log.w("SkinLoader", "Could not update skin face from skin", e);
+        } finally {
+            copy.recycle();
+        }
+    }
+
     public Bitmap getSkinFace(){
-        if(isLocal()) return null;
         File skinFaceFile = getSkinFaceFile();
         if(!skinFaceFile.exists()) return null;
         if(mFaceCache == null) {
@@ -99,6 +119,10 @@ public class Account {
     }
 
     private File getSkinFaceFile() {
+        if(authType == AuthType.LOCAL) {
+            // Local accounts share one empty profile id, so they are told apart by name
+            return new File(Tools.DIR_CACHE, "skin-face-local-" + username.replaceAll("[^A-Za-z0-9_-]", "_") + ".webp");
+        }
         return new File(Tools.DIR_CACHE,  "skin-face-" + profileId +"-"+authType.name() + ".webp");
     }
 }

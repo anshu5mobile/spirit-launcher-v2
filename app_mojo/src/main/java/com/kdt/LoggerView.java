@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import git.artdeell.mojo.LogDispatcher;
 import git.artdeell.mojo.Logger;
 import git.artdeell.mojo.R;
 
@@ -60,10 +61,10 @@ public class LoggerView extends ConstraintLayout {
                 (compoundButton, isChecked) -> {
                     mLogTextView.setVisibility(isChecked ? VISIBLE : GONE);
                     if(isChecked) {
-                        Logger.setLogListener(mLogListener);
+                        LogDispatcher.setViewListener(mLogListener);
                     }else{
                         mLogTextView.setText("");
-                        Logger.setLogListener(null); // Makes the JNI code be able to skip expensive logger callbacks
+                        LogDispatcher.setViewListener(null); // Makes the JNI code be able to skip expensive logger callbacks
                         // NOTE: was tested by rapidly smashing the log on/off button, no sync issues found :)
                     }
                 });

@@ -236,6 +236,8 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             if(!latestLogFile.exists() && !latestLogFile.createNewFile())
                 throw new IOException("Failed to create a new log file");
             Logger.begin(latestLogFile.getAbsolutePath());
+            // Types the skin command after joining a server the user allowed (does nothing when off)
+            git.artdeell.mojo.wardrobe.AutoSkin.startForGame();
 
             Intent activityIntent = getIntent();
             Bundle extras = Objects.requireNonNull(activityIntent.getExtras());

@@ -50,35 +50,89 @@
         android:textColor="@color/spirit_text_dim"
         android:textSize="13sp" />
 
-    <!-- 3D preview placeholder -->
+    <!-- Skin preview: drag sideways to turn the player -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="210dp"
+        android:layout_height="260dp"
         android:layout_marginBottom="10dp"
         android:background="@drawable/spirit_card_bg">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <git.artdeell.mojo.wardrobe.SkinPreviewView
+            android:id="@+id/spirit_skin_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="28dp" />
+
+        <TextView
+            android:id="@+id/spirit_skin_status"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:layout_gravity="bottom"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="10dp"
+            android:text="@string/spirit_wardrobe_preview"
+            android:textColor="@color/spirit_text_dim"
+            android:textSize="12sp" />
 
-            <View
-                android:layout_width="72dp"
-                android:layout_height="116dp"
-                android:background="@drawable/spirit_dashed_bg" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/spirit_wardrobe_preview"
-                android:textColor="@color/spirit_text"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/spirit_skin_model"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="10dp"
+            android:background="@drawable/spirit_card_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/spirit_model_classic"
+            android:textColor="@color/spirit_lime"
+            android:textSize="12sp"
+            android:textStyle="bold" />
     </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/spirit_skin_actions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/spirit_skin_apply"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_marginEnd="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/spirit_button_background"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/spirit_skin_apply"
+            android:textColor="@color/spirit_on_lime"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/spirit_skin_save"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/spirit_card_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/spirit_skin_save"
+            android:textColor="@color/spirit_lime"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -173,6 +227,74 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/spirit_skin_gallery_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/spirit_card_bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/spirit_skin_gallery"
+            android:textColor="@color/spirit_text"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/spirit_skin_gallery_sub"
+            android:textColor="@color/spirit_text_dim"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/spirit_offline_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/spirit_card_bg"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/spirit_offline_title"
+            android:textColor="@color/spirit_text"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/spirit_offline_body"
+            android:textColor="@color/spirit_text_dim"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/spirit_offline_install"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/spirit_button_background"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/spirit_offline_install"
+            android:textColor="@color/spirit_on_lime"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
     <!-- Auto Skin -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -225,6 +347,7 @@
             android:textSize="13sp" />
 
         <TextView
+            android:id="@+id/spirit_autoskin_cmd"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -234,6 +357,20 @@
             android:text="@string/spirit_autoskin_cmd"
             android:textColor="@color/spirit_lime"
             android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/spirit_autoskin_servers"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/spirit_card_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/spirit_autoskin_servers"
+            android:textColor="@color/spirit_lime"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
