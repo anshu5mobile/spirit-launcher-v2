@@ -132,6 +132,8 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
         AsyncAssetManager.extractDefaultSettings(this, instance.getGameDirectory());
         MCOptionUtils.load(instance.getGameDirectory().getAbsolutePath());
+        VoiceChatConfig.applyDenoiser(instance.getGameDirectory(),
+                LauncherPreferences.DEFAULT_PREF.getBoolean("spiritVoiceDenoise", true));
 
         // Voice chat mods need the microphone: ask now if it was never granted
         if(android.os.Build.VERSION.SDK_INT >= 23 && checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="spirit_show_fps">Show FPS</string>
+    <string name="spirit_voice_denoise_title">Voice chat noise cancellation</string>
+    <string name="spirit_voice_denoise_desc">Turns on the denoiser of Simple Voice Chat when the game starts. It is off by default in the mod.</string>
 </resources>
