@@ -74,6 +74,8 @@ public class SkinPreviewView extends View {
         mTextPaint.setColor(Color.parseColor("#9FAB96"));
         mTextPaint.setTextAlign(Paint.Align.CENTER);
         mTextPaint.setTextSize(14f * context.getResources().getDisplayMetrics().scaledDensity);
+        // Drawn by the software renderer: skewed sub-rectangles of a bitmap are drawn the same on every GPU
+        setLayerType(LAYER_TYPE_SOFTWARE, null);
     }
 
     /** Text shown while there is no skin to draw */
@@ -84,6 +86,10 @@ public class SkinPreviewView extends View {
 
     /** @param skin a 64x64 (or HD multiple) skin, already converted from the legacy 64x32 layout */
     public void setSkin(@Nullable Bitmap skin, boolean slim) {
+        if(skin != null && skin.getWidth() == 64 && skin.getHeight() == 32) {
+            // An old 64x32 skin has no lower half: expand it, otherwise legs and left arm would be missing
+            try { skin = SkinStore.normalize(skin); } catch (java.io.IOException ignored) {}
+        }
         mSkin = skin;
         mSlim = slim;
         buildModel();

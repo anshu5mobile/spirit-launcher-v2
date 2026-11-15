@@ -3,4 +3,12 @@
     <string name="spirit_show_fps">Show FPS</string>
     <string name="spirit_voice_denoise_title">Voice chat noise cancellation</string>
     <string name="spirit_voice_denoise_desc">Turns on the denoiser of Simple Voice Chat when the game starts. It is off by default in the mod.</string>
+    <string name="spirit_skin_history">History</string>
+    <string name="spirit_skin_history_empty">No skins worn yet.</string>
+    <string name="spirit_skin_favorite">Add to favorites</string>
+    <string name="spirit_skin_unfavorite">Remove from favorites</string>
+    <string name="spirit_compat_off">Auto Skin is off. Turn it on to send the skin command on servers.</string>
+    <string name="spirit_compat_nolink">Not ready: this skin has no public link yet. Use a username or URL skin, or apply it once to make a link.</string>
+    <string name="spirit_compat_microsoft">Premium account: servers already show your real skin. Auto Skin is only needed on offline-mode servers.</string>
+    <string name="spirit_compat_ready">Ready. Works on servers with a skin plugin (SkinsRestorer style). Already done on %1$d server(s).</string>
 </resources>

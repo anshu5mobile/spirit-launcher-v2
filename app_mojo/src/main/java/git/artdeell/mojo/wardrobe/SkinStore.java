@@ -45,6 +45,18 @@ public final class SkinStore {
         @Nullable public String url;
         public boolean slim;
         public long added;
+        public boolean fav;
+        public boolean builtin;
+    }
+
+    /** One skin that was worn before */
+    @Keep
+    public static final class HistoryEntry {
+        public String id;
+        public String name;
+        @Nullable public String url;
+        public boolean slim;
+        public long time;
     }
 
     @Keep
@@ -106,6 +118,7 @@ public final class SkinStore {
                 for(Entry e : entries) {
                     if(e != null && e.id != null && pngFor(e.id).isFile()) valid.add(e);
                 }
+                java.util.Collections.sort(valid, (a, b) -> a.fav == b.fav ? 0 : (a.fav ? -1 : 1));
                 return valid;
             } catch (Exception e) {
                 return new ArrayList<>();
@@ -131,6 +144,9 @@ public final class SkinStore {
 
     public static void remove(String id) throws IOException {
         synchronized (LOCK) {
+            for(Entry e : list()) {
+                if(e.id.equals(id) && e.builtin) throw new IOException("Built-in skins cannot be deleted.");
+            }
             List<Entry> entries = list();
             List<Entry> kept = new ArrayList<>(entries.size());
             for(Entry e : entries) if(!e.id.equals(id)) kept.add(e);
@@ -138,6 +154,106 @@ public final class SkinStore {
             //noinspection ResultOfMethodCallIgnored
             pngFor(id).delete();
         }
+    }
+
+    public static void setFavorite(String id, boolean fav) throws IOException {
+        synchronized (LOCK) {
+            List<Entry> entries = list();
+            for(Entry e : entries) if(e.id.equals(id)) e.fav = fav;
+            writeIndex(entries);
+        }
+    }
+
+    /** Copies the two skins that ship with the launcher into the library, once */
+    public static void seedBuiltins(android.content.Context context) {
+        synchronized (LOCK) {
+            try {
+                List<Entry> entries = list();
+                String[][] items = {
+                        {"builtin_owner", "owner.png", "SPIRITY_PLAYZZ (Owner)"},
+                        {"builtin_dev", "developer.png", "ItsAnshuXD (Developer)"}
+                };
+                boolean changed = false;
+                for(String[] item : items) {
+                    boolean has = false;
+                    for(Entry e : entries) if(item[0].equals(e.id)) has = true;
+                    if(has) continue;
+                    Bitmap bmp;
+                    try(InputStream in = context.getAssets().open("spirit_skins/" + item[1])) {
+                        bmp = BitmapFactory.decodeStream(in);
+                    }
+                    if(bmp == null) continue;
+                    bmp = normalize(bmp);
+                    writePng(pngFor(item[0]), bmp);
+                    Entry entry = new Entry();
+                    entry.id = item[0];
+                    entry.name = item[2];
+                    entry.slim = detectSlim(bmp);
+                    entry.added = System.currentTimeMillis();
+                    entry.builtin = true;
+                    entries.add(entry);
+                    changed = true;
+                }
+                if(changed) writeIndex(entries);
+            } catch (IOException | RuntimeException ignored) {
+                // The library still works without the built-in skins
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- history
+
+    private static File historyDir() {
+        File dir = new File(root(), "history");
+        //noinspection ResultOfMethodCallIgnored
+        dir.mkdirs();
+        return dir;
+    }
+
+    private static final Type HISTORY_LIST = new TypeToken<List<HistoryEntry>>() {}.getType();
+
+    public static List<HistoryEntry> history() {
+        synchronized (LOCK) {
+            File index = new File(historyDir(), "index.json");
+            if(!index.isFile()) return new ArrayList<>();
+            try {
+                List<HistoryEntry> list = Tools.GLOBAL_GSON.fromJson(readText(index), HISTORY_LIST);
+                return list == null ? new ArrayList<>() : list;
+            } catch (Exception e) {
+                return new ArrayList<>();
+            }
+        }
+    }
+
+    public static void addHistory(Bitmap skin, @Nullable String name, @Nullable String url, boolean slim) {
+        synchronized (LOCK) {
+            try {
+                HistoryEntry h = new HistoryEntry();
+                h.id = UUID.randomUUID().toString();
+                h.name = name;
+                h.url = url;
+                h.slim = slim;
+                h.time = System.currentTimeMillis();
+                writePng(new File(historyDir(), h.id + ".png"), skin);
+                List<HistoryEntry> list = history();
+                list.add(0, h);
+                while(list.size() > 20) {
+                    HistoryEntry old = list.remove(list.size() - 1);
+                    //noinspection ResultOfMethodCallIgnored
+                    new File(historyDir(), old.id + ".png").delete();
+                }
+                try(Writer writer = new OutputStreamWriter(new FileOutputStream(new File(historyDir(), "index.json")), StandardCharsets.UTF_8)) {
+                    writer.write(Tools.GLOBAL_GSON.toJson(list, HISTORY_LIST));
+                }
+            } catch (IOException | RuntimeException ignored) {
+                // History is a convenience only
+            }
+        }
+    }
+
+    @Nullable
+    public static Bitmap loadHistory(HistoryEntry h) {
+        return BitmapFactory.decodeFile(new File(historyDir(), h.id + ".png").getAbsolutePath());
     }
 
     @Nullable

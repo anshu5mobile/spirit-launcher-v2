@@ -114,6 +114,7 @@ public class WardrobeFragment extends Fragment {
         autoSkin.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, false));
         autoSkin.setOnCheckedChangeListener((b, checked) -> {
             LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_AUTO_SKIN, checked).apply();
+            refreshCompat();
             if(checked && (mUrl == null || mUrl.isEmpty())) {
                 Toast.makeText(requireContext(), R.string.spirit_autoskin_no_url, Toast.LENGTH_LONG).show();
             }
@@ -204,6 +205,22 @@ public class WardrobeFragment extends Fragment {
         else if(mPending) mStatus.setText(getString(R.string.spirit_skin_status_preview, shownName));
         else mStatus.setText(getString(R.string.spirit_skin_status_wearing, shownName));
         mCommand.setText(mUrl != null && !mUrl.isEmpty() ? AutoSkin.commandFor(mUrl) : getString(R.string.spirit_autoskin_cmd));
+        refreshCompat();
+    }
+
+    /** Plain-words state of Auto Skin so the player knows what will happen on a server */
+    private void refreshCompat() {
+        View root = getView();
+        if(root == null) return;
+        TextView view = root.findViewById(R.id.spirit_autoskin_status);
+        if(view == null) return;
+        boolean on = LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, false);
+        int text;
+        if(!on) text = R.string.spirit_compat_off;
+        else if(mUrl == null || mUrl.isEmpty()) text = R.string.spirit_compat_nolink;
+        else if(mAccount != null && mAccount.authType == git.artdeell.mojo.authenticator.AuthType.MICROSOFT) text = R.string.spirit_compat_microsoft;
+        else text = R.string.spirit_compat_ready;
+        view.setText(getString(text, AutoSkin.servers().size()));
     }
 
     private void toggleModel() {
@@ -332,28 +349,74 @@ public class WardrobeFragment extends Fragment {
     }
 
     private void openLibrary() {
+        final Context appContext = requireContext().getApplicationContext();
         MojoApplication.sExecutorService.execute(() -> {
+            SkinStore.seedBuiltins(appContext);
             final List<SkinStore.Entry> entries = SkinStore.list();
             ui(() -> {
-                if(entries.isEmpty()) {
-                    Toast.makeText(requireContext(), R.string.spirit_skin_library_empty, Toast.LENGTH_LONG).show();
-                    return;
-                }
                 String[] names = new String[entries.size()];
                 for(int i = 0; i < names.length; i++) {
                     SkinStore.Entry e = entries.get(i);
-                    names[i] = e.name + (e.slim ? "  (slim)" : "");
+                    names[i] = (e.fav ? "\u2605 " : "") + e.name + (e.slim ? "  (slim)" : "");
                 }
                 AlertDialog dialog = new AlertDialog.Builder(requireContext())
                         .setTitle(R.string.spirit_skin_library_title)
                         .setItems(names, (d, which) -> useEntry(entries.get(which)))
+                        .setNeutralButton(R.string.spirit_skin_history, (d, w) -> openHistory())
                         .setNegativeButton(android.R.string.cancel, null)
                         .create();
                 dialog.show();
                 dialog.getListView().setOnItemLongClickListener((parent, v, position, id) -> {
-                    confirmDelete(entries.get(position), dialog);
+                    entryMenu(entries.get(position), dialog);
                     return true;
                 });
+            });
+        });
+    }
+
+    private void entryMenu(SkinStore.Entry entry, AlertDialog libraryDialog) {
+        String favLabel = getString(entry.fav ? R.string.spirit_skin_unfavorite : R.string.spirit_skin_favorite);
+        String[] items = entry.builtin ? new String[]{favLabel} : new String[]{favLabel, getString(R.string.spirit_skin_delete)};
+        new AlertDialog.Builder(requireContext())
+                .setTitle(entry.name)
+                .setItems(items, (d, which) -> {
+                    if(which == 0) {
+                        MojoApplication.sExecutorService.execute(() -> {
+                            try { SkinStore.setFavorite(entry.id, !entry.fav); } catch (IOException e) { toast(messageOf(e)); }
+                            ui(() -> { libraryDialog.dismiss(); openLibrary(); });
+                        });
+                    } else {
+                        confirmDelete(entry, libraryDialog);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void openHistory() {
+        MojoApplication.sExecutorService.execute(() -> {
+            final List<SkinStore.HistoryEntry> list = SkinStore.history();
+            ui(() -> {
+                if(list.isEmpty()) {
+                    Toast.makeText(requireContext(), R.string.spirit_skin_history_empty, Toast.LENGTH_LONG).show();
+                    return;
+                }
+                java.text.DateFormat df = java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT);
+                String[] names = new String[list.size()];
+                for(int i = 0; i < names.length; i++) {
+                    SkinStore.HistoryEntry h = list.get(i);
+                    names[i] = (h.name == null ? getString(R.string.spirit_skin_unnamed) : h.name) + "\n" + df.format(new java.util.Date(h.time));
+                }
+                new AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.spirit_skin_history)
+                        .setItems(names, (d, which) -> MojoApplication.sExecutorService.execute(() -> {
+                            SkinStore.HistoryEntry h = list.get(which);
+                            Bitmap bitmap = SkinStore.loadHistory(h);
+                            if(bitmap == null) { toast(getString(R.string.spirit_skin_fetch_failed, "file missing")); return; }
+                            ui(() -> show(bitmap, h.slim, h.url, h.name, true));
+                        }))
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show();
             });
         });
     }
@@ -498,6 +561,7 @@ public class WardrobeFragment extends Fragment {
                     out.write(SkinStore.encodePng(bitmap));
                 }
                 SkinStore.saveActive(account, bitmap, name, url, slim);
+            SkinStore.addHistory(bitmap, name, url, slim);
             } catch (IOException e) {
                 toast(getString(R.string.spirit_skin_apply_failed, messageOf(e)));
                 return;
