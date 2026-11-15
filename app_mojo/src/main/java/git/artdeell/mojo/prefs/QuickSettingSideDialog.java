@@ -46,10 +46,6 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
     private static boolean sFpsBoost = false;
 
     // Control layout switcher
-    private LinearLayout mControlChips;
-    private TextView mControlCurrent;
-    /** Layout the user picked in this dialog, used until the game confirms the switch */
-    private String mPickedControlPath;
 
     private SwitchCompat mShowControlsSwitch, mSustainedSwitch;
     private CustomSeekbar mButtonSizeBar;
@@ -398,12 +394,6 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
     // ---------------- Spirit: instant control switching ----------------
 
     private void bindControlSwitcher() {
-        mControlChips = mDialogContent.findViewById(R.id.spirit_control_chips);
-        mControlCurrent = mDialogContent.findViewById(R.id.spirit_control_current);
-
-        View switchControl = mDialogContent.findViewById(R.id.spirit_switch_control);
-        if(switchControl != null) switchControl.setOnClickListener(v -> selectNextControl());
-
         mShowControlsSwitch = mDialogContent.findViewById(R.id.spirit_switch_show_controls);
         if(mShowControlsSwitch != null) {
             mShowControlsSwitch.setChecked(areControlsVisible());
@@ -412,8 +402,6 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
         mButtonSizeBar = mDialogContent.findViewById(R.id.spirit_buttonsize_seekbar);
         mButtonSizeText = mDialogContent.findViewById(R.id.spirit_buttonsize_textView_percent);
-
-        refreshControlChips();
     }
 
     private void bindPerformanceExtras() {
@@ -429,88 +417,6 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
             LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_SUSTAINED, on).apply();
             onSustainedPerformanceChanged(on);
         });
-    }
-
-    /** All control layouts (*.json) in the controlmap folder, sorted by name. */
-    private static List<File> listControlLayouts() {
-        List<File> result = new ArrayList<>();
-        if(Tools.CTRLMAP_PATH == null) return result;
-        File[] files = new File(Tools.CTRLMAP_PATH).listFiles((dir, name) -> name.toLowerCase(Locale.ROOT).endsWith(".json"));
-        if(files == null) return result;
-        Arrays.sort(files, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
-        result.addAll(Arrays.asList(files));
-        return result;
-    }
-
-    private String displayName(File layout) {
-        String name = layout.getName();
-        name = name.substring(0, name.length() - ".json".length());
-        if(name.equalsIgnoreCase("default")) return mDialogContent.getContext().getString(R.string.spirit_qs_layout_default);
-        return name;
-    }
-
-    private String activeControlPath() {
-        return mPickedControlPath != null ? mPickedControlPath : getCurrentControlPath();
-    }
-
-    private static boolean samePath(String a, String b) {
-        return a != null && b != null && new File(a).getAbsoluteFile().equals(new File(b).getAbsoluteFile());
-    }
-
-    /** Rebuilds the row of layout chips; the layout in use is highlighted. */
-    private void refreshControlChips() {
-        if(mControlChips == null) return;
-        Context context = mDialogContent.getContext();
-        mControlChips.removeAllViews();
-
-        List<File> layouts = listControlLayouts();
-        if(layouts.isEmpty()) {
-            if(mControlCurrent != null) mControlCurrent.setText(R.string.spirit_qs_no_layouts);
-            return;
-        }
-
-        String active = activeControlPath();
-        String activeName = null;
-        LayoutInflater inflater = LayoutInflater.from(context);
-        for(File layout : layouts) {
-            boolean selected = samePath(active, layout.getAbsolutePath());
-            TextView chip = (TextView) inflater.inflate(R.layout.item_spirit_chip, mControlChips, false);
-            chip.setText(displayName(layout));
-            chip.setBackgroundResource(selected ? R.drawable.spirit_badge_fill : R.drawable.spirit_chip_bg);
-            chip.setTextColor(context.getResources().getColor(selected ? R.color.spirit_on_lime : R.color.spirit_lime));
-            chip.setOnClickListener(v -> selectControl(layout));
-            mControlChips.addView(chip);
-            if(selected) activeName = displayName(layout);
-        }
-
-        if(mControlCurrent != null) {
-            mControlCurrent.setText(activeName != null
-                    ? context.getString(R.string.spirit_qs_current_layout, activeName)
-                    : context.getString(R.string.spirit_qs_layouts_hint));
-        }
-    }
-
-    private void selectControl(File layout) {
-        String path = layout.getAbsolutePath();
-        if(samePath(activeControlPath(), path)) return;
-        mPickedControlPath = path;
-        onSelectControl(path);
-        refreshControlChips();
-    }
-
-    /** "Switch Control" button: jump to the next layout in the list, wrapping around. */
-    private void selectNextControl() {
-        List<File> layouts = listControlLayouts();
-        if(layouts.isEmpty()) return;
-        String active = activeControlPath();
-        int next = 0;
-        for(int i = 0; i < layouts.size(); i++) {
-            if(samePath(active, layouts.get(i).getAbsolutePath())) {
-                next = (i + 1) % layouts.size();
-                break;
-            }
-        }
-        selectControl(layouts.get(next));
     }
 
     /** Spirit: Live RAM overlay toggled. */
