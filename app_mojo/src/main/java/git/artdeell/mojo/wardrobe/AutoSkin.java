@@ -36,10 +36,23 @@ public final class AutoSkin {
 
     private AutoSkin() {}
 
-    public static String commandFor(String skinUrl) {
-        return "/skin set " + skinUrl;
+    public static final String PREF_CMD = "spiritAutoSkinCmd";
+    public static final String DEFAULT_CMD = "/skin set {url}";
+
+    public static String template() {
+        String t = LauncherPreferences.DEFAULT_PREF.getString(PREF_CMD, DEFAULT_CMD);
+        return t == null || t.trim().isEmpty() ? DEFAULT_CMD : t.trim();
     }
 
+    public static void setTemplate(String t) {
+        LauncherPreferences.DEFAULT_PREF.edit().putString(PREF_CMD, t == null ? DEFAULT_CMD : t.trim()).apply();
+    }
+
+    public static String commandFor(String skinUrl) {
+        return template().replace("{url}", skinUrl);
+    }
+
+    /** Servers (host|skin link) the command was already sent to. A new skin link means every server is fresh again. */
     public static Set<String> servers() {
         Set<String> stored = LauncherPreferences.DEFAULT_PREF.getStringSet(PREF_SERVERS, null);
         return stored == null ? new HashSet<>() : new HashSet<>(stored);
@@ -49,7 +62,7 @@ public final class AutoSkin {
         LauncherPreferences.DEFAULT_PREF.edit().putStringSet(PREF_SERVERS, new HashSet<>(servers)).apply();
     }
 
-    /** Lower-cases and strips a port or spaces from what the user typed */
+    /** Lower-cases and strips a port or spaces */
     public static String cleanHost(String input) {
         String host = input == null ? "" : input.trim().toLowerCase(Locale.ROOT);
         int colon = host.indexOf(':');
@@ -57,41 +70,36 @@ public final class AutoSkin {
         return host;
     }
 
-    private static boolean isAllowed(Set<String> allowed, String host) {
-        for(String entry : allowed) {
-            if(host.equals(entry) || host.endsWith("." + entry)) return true;
-        }
-        return false;
-    }
-
     /** Call when the game starts. Does nothing unless Auto Skin is on and the skin has a public link. */
     public static void startForGame() {
         LogDispatcher.setAutoListener(null);
         if(!LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_ENABLED, false)) return;
-        Set<String> allowed = servers();
-        if(allowed.isEmpty()) return;
         Account account = Accounts.getCurrent();
         if(account == null) return;
         SkinStore.Active active = SkinStore.loadActive(account);
         if(active == null || active.url == null || active.url.isEmpty()) return;
-        String command = commandFor(active.url);
+        final String url = active.url;
+        final String command = commandFor(url);
 
         LogDispatcher.setAutoListener(line -> {
             Matcher matcher = CONNECTING.matcher(line);
             if(!matcher.find()) return;
             String host = cleanHost(matcher.group(1));
-            if(!isAllowed(allowed, host)) return;
-            schedule(command);
+            if(host.isEmpty()) return;
+            String key = host + "|" + url;
+            Set<String> done = servers();
+            if(done.contains(key)) return; // SkinsRestorer-style plugins keep the skin, once is enough
+            schedule(command, key);
         });
     }
 
-    private static void schedule(String command) {
+    private static void schedule(String command, String key) {
         synchronized (AutoSkin.class) {
             // One command per join: further connect lines before it was sent are the same join
             if(sPending) return;
             sPending = true;
         }
-        HANDLER.postDelayed(() -> send(command), JOIN_DELAY_MS);
+        HANDLER.postDelayed(() -> { send(command); Set<String> done = servers(); done.add(key); setServers(done); }, JOIN_DELAY_MS);
     }
 
     private static void send(String command) {

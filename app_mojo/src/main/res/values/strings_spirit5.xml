@@ -42,11 +42,15 @@
     <string name="spirit_offline_no_version">No skin support build exists for Minecraft %1$s.</string>
 
     <!-- Auto Skin -->
-    <string name="spirit_autoskin_servers">Allowed servers</string>
-    <string name="spirit_autoskin_servers_title">Allowed servers (tap to remove)</string>
-    <string name="spirit_autoskin_servers_empty">No servers yet. Auto Skin never types anything on a server that is not in this list.</string>
-    <string name="spirit_autoskin_add_server">Add server</string>
-    <string name="spirit_autoskin_server_hint">play.example.com</string>
+    <string name="spirit_autoskin_servers">Servers done</string>
+    <string name="spirit_autoskin_servers_title">Servers already done (tap to forget one)</string>
+    <string name="spirit_autoskin_servers_empty">Nothing sent yet. Auto Skin types the command once on every server you join, then remembers it.</string>
     <string name="spirit_autoskin_close">Close</string>
     <string name="spirit_autoskin_no_url">Auto Skin needs a skin that has a public link. Use a username or a URL.</string>
+    <string name="spirit_autoskin_reset">Reset all</string>
+    <string name="spirit_autoskin_reset_done">Auto Skin will send the command again on every server.</string>
+    <string name="spirit_autoskin_cmd_title">Skin command (tap to edit)</string>
+    <string name="spirit_autoskin_cmd_hint">/skin set {url}</string>
+    <string name="spirit_skin_uploading">Making a link for your skin…</string>
+    <string name="spirit_skin_upload_failed">Could not make a link (%1$s). Auto Skin will not work with this skin.</string>
 </resources>

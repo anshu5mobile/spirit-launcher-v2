@@ -289,4 +289,63 @@ public final class SkinStore {
             return new String(out.toByteArray(), StandardCharsets.UTF_8);
         }
     }
+
+    // ---------------------------------------------------------------- default skin override (offline accounts)
+
+    private static final String PACK_NAME = "SpiritSkin.zip";
+
+    /**
+     * Writes a resource pack that replaces every default (Steve/Alex/...) skin with the chosen one and turns it on
+     * in options.txt. Offline accounts have no skin of their own, the game shows a default one, so this is what
+     * makes the skin visible in worlds and everywhere else.
+     */
+    public static void installDefaultSkinPack(File gameDir, Bitmap skin) throws IOException {
+        File packs = new File(gameDir, "resourcepacks");
+        if(!packs.isDirectory() && !packs.mkdirs()) throw new IOException("Could not create " + packs);
+        byte[] png = encodePng(skin);
+        String[] names = {"steve", "alex", "ari", "efe", "kai", "makena", "noor", "sunny", "zuri"};
+        try(java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(new FileOutputStream(new File(packs, PACK_NAME)))) {
+            putEntry(zip, "pack.mcmeta", ("{\"pack\":{\"pack_format\":15,\"description\":\"Spirit Launcher skin\","
+                    + "\"supported_formats\":{\"min_inclusive\":0,\"max_inclusive\":999}}}").getBytes(StandardCharsets.UTF_8));
+            for(String n : names) {
+                putEntry(zip, "assets/minecraft/textures/entity/player/wide/" + n + ".png", png);
+                putEntry(zip, "assets/minecraft/textures/entity/player/slim/" + n + ".png", png);
+            }
+            putEntry(zip, "assets/minecraft/textures/entity/steve.png", png);
+            putEntry(zip, "assets/minecraft/textures/entity/alex.png", png);
+        }
+        enablePack(new File(gameDir, "options.txt"));
+    }
+
+    private static void putEntry(java.util.zip.ZipOutputStream zip, String name, byte[] data) throws IOException {
+        zip.putNextEntry(new java.util.zip.ZipEntry(name));
+        zip.write(data);
+        zip.closeEntry();
+    }
+
+    private static void enablePack(File options) throws IOException {
+        String entry = "\"file/" + PACK_NAME + "\"";
+        List<String> lines = new ArrayList<>();
+        if(options.isFile()) {
+            for(String l : readText(options).split("\r?\n")) lines.add(l);
+        }
+        boolean found = false;
+        for(int i = 0; i < lines.size(); i++) {
+            String l = lines.get(i);
+            if(!l.startsWith("resourcePacks:")) continue;
+            found = true;
+            if(l.contains(entry)) break;
+            int end = l.lastIndexOf(']');
+            if(end < 0) { lines.set(i, "resourcePacks:[\"vanilla\"," + entry + "]"); break; }
+            String head = l.substring(0, end);
+            lines.set(i, head + (head.endsWith("[") ? "" : ",") + entry + "]");
+            break;
+        }
+        if(!found) lines.add("resourcePacks:[\"vanilla\"," + entry + "]");
+        StringBuilder sb = new StringBuilder();
+        for(String l : lines) if(!l.isEmpty()) sb.append(l).append('\n');
+        try(Writer writer = new OutputStreamWriter(new FileOutputStream(options), StandardCharsets.UTF_8)) {
+            writer.write(sb.toString());
+        }
+    }
 }

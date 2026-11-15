@@ -258,4 +258,25 @@ public final class SkinNet {
         if(response.code == 429) throw new IOException("Mojang says too many requests. Try again in a minute.");
         throw new IOException("Microsoft refused the skin (error " + response.code + ").");
     }
+
+    // ---------------------------------------------------------------- public link
+
+    /** Uploads the skin PNG to a free public file host and returns a direct https link to it. */
+    public static String uploadPublic(Bitmap skin) throws IOException {
+        byte[] png = SkinStore.encodePng(skin);
+        String boundary = "----SpiritUp" + System.nanoTime();
+        ByteArrayOutputStream body = new ByteArrayOutputStream();
+        body.write(("--" + boundary + "\r\nContent-Disposition: form-data; name=\"reqtype\"\r\n\r\nfileupload\r\n"
+                + "--" + boundary + "\r\nContent-Disposition: form-data; name=\"fileToUpload\"; filename=\"skin.png\"\r\n"
+                + "Content-Type: image/png\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+        body.write(png);
+        body.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+        Response response = request("POST", "https://catbox.moe/user/api.php", null,
+                "multipart/form-data; boundary=" + boundary, body.toByteArray());
+        String link = response.text().trim();
+        if(response.code != 200 || !link.startsWith("https://")) {
+            throw new IOException("Could not create a link for this skin (error " + response.code + ").");
+        }
+        return link;
+    }
 }

@@ -119,6 +119,7 @@ public class WardrobeFragment extends Fragment {
             }
         });
         view.findViewById(R.id.spirit_autoskin_servers).setOnClickListener(v -> openServers());
+        mCommand.setOnClickListener(v -> editCommand());
 
         loadCurrent();
     }
@@ -395,7 +396,26 @@ public class WardrobeFragment extends Fragment {
             return;
         }
         final boolean slim = mSlim;
-        final String url = mUrl, name = mName;
+        final String name = mName;
+        if(mUrl == null && LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, false)) {
+            // A skin from the gallery has no link yet: make one so Auto Skin can use it on servers
+            if(mStatus != null) mStatus.setText(R.string.spirit_skin_uploading);
+            MojoApplication.sExecutorService.execute(() -> {
+                String made = null;
+                try {
+                    made = SkinNet.uploadPublic(bitmap);
+                } catch (IOException e) {
+                    toast(getString(R.string.spirit_skin_upload_failed, messageOf(e)));
+                }
+                final String link = made;
+                ui(() -> { if(link != null) mUrl = link; applyWith(account, bitmap, slim, link, name); });
+            });
+            return;
+        }
+        applyWith(account, bitmap, slim, mUrl, name);
+    }
+
+    private void applyWith(Account account, Bitmap bitmap, boolean slim, @Nullable String url, @Nullable String name) {
         switch(account.authType) {
             case MICROSOFT:
                 applyMicrosoft(account, bitmap, slim, url, name, true);
@@ -502,7 +522,10 @@ public class WardrobeFragment extends Fragment {
         MojoApplication.sExecutorService.execute(() -> {
             try {
                 BrowseTarget target = BrowseTarget.forSelectedInstance();
-                if(target != null) writeLocalSkin(target, account, bitmap);
+                if(target != null) {
+                    writeLocalSkin(target, account, bitmap);
+                    SkinStore.installDefaultSkinPack(new File(target.gameDir.toString()), bitmap);
+                }
                 finishApplied(account, bitmap, slim, url, name);
             } catch (IOException e) {
                 toast(getString(R.string.spirit_skin_apply_failed, messageOf(e)));
@@ -608,26 +631,31 @@ public class WardrobeFragment extends Fragment {
         final Set<String> servers = AutoSkin.servers();
         List<String> sorted = new ArrayList<>(servers);
         Collections.sort(sorted);
+        List<String> labels = new ArrayList<>();
+        for(String k : sorted) labels.add(k.contains("|") ? k.substring(0, k.indexOf('|')) : k);
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.spirit_autoskin_servers_title)
-                .setPositiveButton(R.string.spirit_autoskin_add_server, (d, w) ->
-                        promptText(R.string.spirit_autoskin_add_server, R.string.spirit_autoskin_server_hint, InputType.TYPE_TEXT_VARIATION_URI, null, host -> {
-                            String clean = AutoSkin.hostOf(host);
-                            if(clean == null) return;
-                            servers.add(clean);
-                            AutoSkin.setServers(servers);
-                            openServers();
-                        }))
+                .setNeutralButton(R.string.spirit_autoskin_reset, (d, w) -> {
+                    AutoSkin.setServers(new java.util.HashSet<>());
+                    Toast.makeText(requireContext(), R.string.spirit_autoskin_reset_done, Toast.LENGTH_SHORT).show();
+                })
                 .setNegativeButton(R.string.spirit_autoskin_close, null);
         if(sorted.isEmpty()) {
             builder.setMessage(R.string.spirit_autoskin_servers_empty);
         } else {
-            builder.setItems(sorted.toArray(new String[0]), (d, which) -> {
+            builder.setItems(labels.toArray(new String[0]), (d, which) -> {
                 servers.remove(sorted.get(which));
                 AutoSkin.setServers(servers);
                 openServers();
             });
         }
         builder.show();
+    }
+
+    private void editCommand() {
+        promptText(R.string.spirit_autoskin_cmd_title, R.string.spirit_autoskin_cmd_hint, InputType.TYPE_CLASS_TEXT, AutoSkin.template(), text -> {
+            AutoSkin.setTemplate(text.isEmpty() ? AutoSkin.DEFAULT_CMD : text);
+            refreshViews();
+        });
     }
 }
