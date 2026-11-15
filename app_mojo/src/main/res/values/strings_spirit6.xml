@@ -34,4 +34,15 @@
     <string name="spirit_cape_empty">This account owns no capes.</string>
     <string name="spirit_cape_done">Cape updated.</string>
     <string name="spirit_cape_failed">Cape error: %1$s</string>
+    <string name="spirit_browse_filters">Filters</string>
+    <string name="spirit_filter_auto">Auto (instance)</string>
+    <string name="spirit_filter_any">Any</string>
+    <string name="spirit_filter_loader">Loader: %1$s</string>
+    <string name="spirit_filter_version">Version: %1$s</string>
+    <string name="spirit_filter_category">Category: %1$s</string>
+    <string name="spirit_filter_reset">Reset filters</string>
+    <string name="spirit_filter_loader_title">Loader</string>
+    <string name="spirit_filter_version_title">Minecraft version</string>
+    <string name="spirit_filter_version_hint">Type a version like 1.21.1, or pick Any.</string>
+    <string name="spirit_filter_category_title">Category</string>
 </resources>

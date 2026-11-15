@@ -74,6 +74,12 @@ public final class ModrinthClient {
     /** @param sort one of "relevance", "downloads", "updated" */
     public static List<Project> search(String projectType, String query, @Nullable String mcVersion,
                                        @Nullable List<String> loaders, String sort, int offset) throws IOException {
+        return search(projectType, query, mcVersion, loaders, null, sort, offset);
+    }
+
+    public static List<Project> search(String projectType, String query, @Nullable String mcVersion,
+                                       @Nullable List<String> loaders, @Nullable String category,
+                                       String sort, int offset) throws IOException {
         JsonArray facets = new JsonArray();
         facets.add(group("project_type:" + projectType));
         if(mcVersion != null && !mcVersion.isEmpty()) facets.add(group("versions:" + mcVersion));
@@ -82,6 +88,7 @@ public final class ModrinthClient {
             for(String l : loaders) any.add("categories:" + l);
             facets.add(any);
         }
+        if(category != null && !category.isEmpty()) facets.add(group("categories:" + category));
         String url = BASE + "/search?query=" + enc(query == null ? "" : query)
                 + "&facets=" + enc(facets.toString())
                 + "&index=" + enc(sort)

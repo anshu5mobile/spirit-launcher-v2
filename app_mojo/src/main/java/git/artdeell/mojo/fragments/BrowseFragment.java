@@ -77,6 +77,10 @@ public class BrowseFragment extends Fragment {
     private int mGeneration = 0;
     private boolean mTargetLoaded = false;
     @Nullable private BrowseTarget mTarget;
+    // Filters chosen by the player. null = follow the selected instance, "any" = no filter.
+    @Nullable private String mLoaderOverride;
+    @Nullable private String mVersionOverride;
+    @Nullable private String mCategory;
     @Nullable private CurseWorlds mCurse;
 
     public BrowseFragment() {
@@ -126,6 +130,7 @@ public class BrowseFragment extends Fragment {
             reload();
         });
         mMore.setOnClickListener(v -> searchPage());
+        view.findViewById(R.id.spirit_browse_filters).setOnClickListener(v -> openFilters());
         mUpdateAll.setOnClickListener(v -> updateAllMods());
         mEmpty.setOnClickListener(v -> reload()); // tap to retry after an error
 
@@ -246,6 +251,7 @@ public class BrowseFragment extends Fragment {
         final int offset = mOffset;
         final BrowseTarget target = mTarget;
         final CurseWorlds curse = mCurse;
+        final String category = mCategory;
         mProgress.setVisibility(View.VISIBLE);
         mMore.setVisibility(View.GONE);
         mEmpty.setVisibility(View.GONE);
@@ -253,12 +259,12 @@ public class BrowseFragment extends Fragment {
         MojoApplication.sExecutorService.execute(() -> {
             List<ModrinthClient.Project> found = null;
             try {
-                String mc = target != null ? target.mcVersion : null;
+                String mc = effectiveVersion(target);
                 if(kind == BrowseKind.WORLDS) {
                     found = curse.search(query, mc, sort, offset);
                 } else {
-                    List<String> loaders = kind == BrowseKind.MODS && target != null && !target.isVanilla() ? target.loaders : null;
-                    found = ModrinthClient.search(kind.modrinthType, query, mc, loaders, sort, offset);
+                    List<String> loaders = effectiveLoaders(kind, target);
+                    found = ModrinthClient.search(kind.modrinthType, query, mc, loaders, category, sort, offset);
                 }
             } catch (IOException | RuntimeException e) {
                 found = null;
@@ -278,6 +284,118 @@ public class BrowseFragment extends Fragment {
                 mMore.setVisibility(result.size() >= ModrinthClient.PAGE_SIZE ? View.VISIBLE : View.GONE);
             });
         });
+    }
+
+    // ---------------------------------------------------------------- filters
+
+    @Nullable
+    private String effectiveVersion(@Nullable BrowseTarget target) {
+        if(mVersionOverride != null) return "any".equals(mVersionOverride) ? null : mVersionOverride;
+        return target != null ? target.mcVersion : null;
+    }
+
+    @Nullable
+    private List<String> effectiveLoaders(BrowseKind kind, @Nullable BrowseTarget target) {
+        if(kind != BrowseKind.MODS) return null;
+        if(mLoaderOverride != null) {
+            if("any".equals(mLoaderOverride)) return null;
+            List<String> one = new ArrayList<>();
+            one.add(mLoaderOverride);
+            return one;
+        }
+        return target != null && !target.isVanilla() ? target.loaders : null;
+    }
+
+    private static final String[] MOD_CATEGORIES = {"adventure", "decoration", "economy", "equipment", "food",
+            "game-mechanics", "library", "magic", "management", "mobs", "optimization", "social", "storage",
+            "technology", "transportation", "utility", "worldgen"};
+    private static final String[] PACK_CATEGORIES = {"combat", "decoration", "entities", "environment", "gui",
+            "items", "realistic", "simplistic", "themed", "tweaks", "utility", "vanilla-like", "16x", "32x", "64x", "128x"};
+    private static final String[] SHADER_CATEGORIES = {"cartoon", "fantasy", "realistic", "semi-realistic",
+            "vanilla-like", "atmosphere", "bloom", "colored-lighting", "foliage", "pbr", "reflections", "shadows"};
+    private static final String[] LOADERS = {"fabric", "forge", "neoforge", "quilt"};
+
+    private String[] categoriesFor(BrowseKind kind) {
+        if(kind == BrowseKind.MODS) return MOD_CATEGORIES;
+        if(kind == BrowseKind.PACKS) return PACK_CATEGORIES;
+        if(kind == BrowseKind.SHADERS) return SHADER_CATEGORIES;
+        return new String[0];
+    }
+
+    private String describeFilter(@Nullable String value) {
+        return value == null ? getString(R.string.spirit_filter_auto) : "any".equals(value) ? getString(R.string.spirit_filter_any) : value;
+    }
+
+    private void openFilters() {
+        if(!isAlive()) return;
+        final boolean mods = mKind == BrowseKind.MODS;
+        final boolean worlds = mKind == BrowseKind.WORLDS;
+        List<String> rows = new ArrayList<>();
+        if(mods) rows.add(getString(R.string.spirit_filter_loader, describeFilter(mLoaderOverride)));
+        rows.add(getString(R.string.spirit_filter_version, describeFilter(mVersionOverride)));
+        if(!worlds) rows.add(getString(R.string.spirit_filter_category, mCategory == null ? getString(R.string.spirit_filter_any) : mCategory));
+        rows.add(getString(R.string.spirit_filter_reset));
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_browse_filters)
+                .setItems(rows.toArray(new String[0]), (d, which) -> {
+                    // Map the tapped row back to what it is, rows can be hidden
+                    int i = 0;
+                    String what = null;
+                    if(mods) { if(which == i++) what = "loader"; }
+                    if(what == null) { if(which == i++) what = "version"; }
+                    if(what == null && !worlds) { if(which == i++) what = "category"; }
+                    if(what == null) what = "reset";
+                    switch(what) {
+                        case "loader": pickLoader(); break;
+                        case "version": pickVersion(); break;
+                        case "category": pickCategory(); break;
+                        default: mLoaderOverride = null; mVersionOverride = null; mCategory = null; reload();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void pickLoader() {
+        final String[] values = new String[LOADERS.length + 2];
+        final String[] labels = new String[values.length];
+        values[0] = null; labels[0] = getString(R.string.spirit_filter_auto);
+        values[1] = "any"; labels[1] = getString(R.string.spirit_filter_any);
+        for(int i = 0; i < LOADERS.length; i++) { values[i + 2] = LOADERS[i]; labels[i + 2] = LOADERS[i]; }
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_filter_loader_title)
+                .setItems(labels, (d, which) -> { mLoaderOverride = values[which]; reload(); })
+                .show();
+    }
+
+    private void pickVersion() {
+        final android.widget.EditText input = new android.widget.EditText(requireContext());
+        input.setHint("1.21.1");
+        input.setSingleLine();
+        if(mVersionOverride != null && !"any".equals(mVersionOverride)) input.setText(mVersionOverride);
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_filter_version_title)
+                .setMessage(R.string.spirit_filter_version_hint)
+                .setView(input)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    String t = input.getText().toString().trim();
+                    mVersionOverride = t.isEmpty() ? null : t;
+                    reload();
+                })
+                .setNeutralButton(R.string.spirit_filter_any, (d, w) -> { mVersionOverride = "any"; reload(); })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void pickCategory() {
+        final String[] cats = categoriesFor(mKind);
+        final String[] labels = new String[cats.length + 1];
+        labels[0] = getString(R.string.spirit_filter_any);
+        System.arraycopy(cats, 0, labels, 1, cats.length);
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_filter_category_title)
+                .setItems(labels, (d, which) -> { mCategory = which == 0 ? null : cats[which - 1]; reload(); })
+                .show();
     }
 
     private void showEmpty(String text) {
