@@ -121,24 +121,107 @@
         </LinearLayout>
     </HorizontalScrollView>
 
-    <TextView
-        android:id="@+id/spirit_browse_search"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="8dp"
         android:background="@drawable/spirit_input_bg"
-        android:clickable="true"
-        android:drawableStart="@drawable/ic_spirit_search"
-        android:drawablePadding="10dp"
-        app:drawableTint="@color/spirit_text_dim"
-        android:focusable="true"
         android:gravity="center_vertical"
-        android:minHeight="50dp"
+        android:orientation="horizontal"
         android:paddingStart="14dp"
-    android:paddingEnd="14dp"
-        android:text="@string/spirit_browse_search"
-        android:textColor="@color/spirit_text_dim"
-        android:textSize="14sp" />
+        android:paddingEnd="6dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_spirit_search"
+            android:tint="@color/spirit_text_dim" />
+
+        <EditText
+            android:id="@+id/spirit_browse_input"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="@string/spirit_browse_search"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:minHeight="50dp"
+            android:textColor="@color/spirit_text"
+            android:textColorHint="@color/spirit_text_dim"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/spirit_browse_sort"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="@string/spirit_sort_relevance"
+            android:textColor="@color/spirit_lime"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/spirit_browse_target"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/spirit_text_dim"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/spirit_browse_installed_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/spirit_card_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/spirit_browse_installed"
+            android:textColor="@color/spirit_text"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/spirit_browse_update_all"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/spirit_button_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="@string/spirit_browse_update_all"
+        android:textColor="@color/spirit_on_lime"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/spirit_browse_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone" />
 
     <LinearLayout
         android:id="@+id/spirit_browse_list"
@@ -147,13 +230,26 @@
         android:orientation="vertical" />
 
     <TextView
+        android:id="@+id/spirit_browse_more"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/spirit_card_bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="@string/spirit_browse_load_more"
+        android:textColor="@color/spirit_lime"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/spirit_browse_empty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-    android:layout_marginBottom="24dp"
+        android:layout_marginBottom="24dp"
         android:gravity="center"
-        android:text="@string/spirit_browse_empty"
         android:textColor="@color/spirit_text_dim"
         android:textSize="14sp"
         android:visibility="gone" />

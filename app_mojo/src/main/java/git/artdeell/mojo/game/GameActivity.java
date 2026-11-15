@@ -251,15 +251,20 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             populateLoadingScreen(version);
 
             // Menu
+            // "Switch Control" is the first row of the side drawer, the rest keeps its order
+            java.util.List<String> drawerItems = new java.util.ArrayList<>(
+                    java.util.Arrays.asList(getResources().getStringArray(R.array.menu_ingame)));
+            drawerItems.add(0, getString(R.string.spirit_switch_control));
             gameActionArrayAdapter = new ArrayAdapter<>(this,
-                    android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.menu_ingame));
+                    android.R.layout.simple_list_item_1, drawerItems);
             gameActionClickListener = (parent, view, position, id) -> {
                 switch(position) {
-                     case 0: dialogForceClose(GameActivity.this); break;
-                     case 1: openLogOutput(); break;
-                     case 2: dialogSendCustomKey(); break;
-                     case 3: openQuickSettings(); break;
-                     case 4: openCustomControls(); break;
+                     case 0: openSwitchControl(); break;
+                     case 1: dialogForceClose(GameActivity.this); break;
+                     case 2: openLogOutput(); break;
+                     case 3: dialogSendCustomKey(); break;
+                     case 4: openQuickSettings(); break;
+                     case 5: openCustomControls(); break;
                 }
                 drawerLayout.closeDrawers();
             };
@@ -285,6 +290,48 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         } catch (Throwable e) {
             Tools.showError(this, e, true);
         }
+    }
+
+    private void updateDrawerPullButton() {
+        if(!isInEditor) mDrawerPullButton.setVisibility(mControlLayout.hasMenuButton() ? View.GONE : View.VISIBLE);
+    }
+
+    /** Drawer "Switch Control": pick one of the saved layouts, applied right away without leaving the game. */
+    private void openSwitchControl() {
+        java.io.File[] files = Tools.CTRLMAP_PATH == null ? null
+                : new java.io.File(Tools.CTRLMAP_PATH).listFiles((d, n) -> n.toLowerCase(java.util.Locale.ROOT).endsWith(".json"));
+        if(files == null || files.length == 0) {
+            Toast.makeText(this, R.string.spirit_qs_no_layouts, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        java.util.Arrays.sort(files, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        String current = mControlLayout.getLoadedPath();
+        String[] names = new String[files.length];
+        int checked = -1;
+        for(int i = 0; i < files.length; i++) {
+            String n = files[i].getName();
+            n = n.substring(0, n.length() - ".json".length());
+            names[i] = n.equalsIgnoreCase("default") ? getString(R.string.spirit_qs_layout_default) : n;
+            if(current != null && files[i].getAbsoluteFile().equals(new java.io.File(current).getAbsoluteFile())) checked = i;
+        }
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(R.string.spirit_switch_control)
+                .setSingleChoiceItems(names, checked, (dialog, which) -> {
+                    dialog.dismiss();
+                    String path = files[which].getAbsolutePath();
+                    if(path.equals(current)) return;
+                    mControlLayout.switchLayout(path, (loaded, error) -> {
+                        if(error != null) {
+                            Toast.makeText(this, R.string.spirit_qs_switch_failed, Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        Toast.makeText(this, getString(R.string.spirit_qs_switched, names[which]), Toast.LENGTH_SHORT).show();
+                        // The new layout may not have a menu button; keep the drawer reachable
+                        updateDrawerPullButton();
+                    });
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void populateLoadingScreen(String versionId) {
@@ -590,7 +637,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                         String name = new java.io.File(loaded).getName().replaceAll("(?i)\\.json$", "");
                         Toast.makeText(GameActivity.this, getString(R.string.spirit_qs_switched, name), Toast.LENGTH_SHORT).show();
                         // The new layout may not have its own menu button, so keep the side menu reachable
-                        if(!isInEditor) mDrawerPullButton.setVisibility(mControlLayout.hasMenuButton() ? View.GONE : View.VISIBLE);
+                        updateDrawerPullButton();
                     });
                 }
 
