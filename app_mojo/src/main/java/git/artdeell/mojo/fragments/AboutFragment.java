@@ -28,7 +28,36 @@ public class AboutFragment extends Fragment {
         ((TextView) view.findViewById(R.id.spirit_about_version)).setText("Version " + BuildConfig.VERSION_NAME);
         view.findViewById(R.id.spirit_about_discord).setOnClickListener(v ->
                 Tools.openURL(requireActivity(), getString(R.string.social_media_invite)));
+        view.findViewById(R.id.spirit_about_donate).setOnClickListener(v -> showDonate());
         view.findViewById(R.id.spirit_about_license).setOnClickListener(v -> Tools.openURL(requireActivity(), LICENSE_URL));
         view.findViewById(R.id.spirit_about_source).setOnClickListener(v -> Tools.openURL(requireActivity(), SOURCE_URL));
+    }
+
+    /** UPI QR (PhonePe, Google Pay, Paytm... all scan it). Donations are optional and unlock nothing. */
+    private void showDonate() {
+        android.content.Context c = requireContext();
+        int pad = (int) (16 * c.getResources().getDisplayMetrics().density);
+        android.widget.LinearLayout box = new android.widget.LinearLayout(c);
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        box.setPadding(pad, pad / 2, pad, 0);
+        android.widget.TextView msg = new android.widget.TextView(c);
+        msg.setText(R.string.spirit_donate_msg);
+        msg.setTextColor(0xFFEAF2E0);
+        msg.setTextSize(14);
+        box.addView(msg);
+        android.widget.ImageView qr = new android.widget.ImageView(c);
+        qr.setImageResource(R.drawable.spirit_donate_qr);
+        qr.setAdjustViewBounds(true);
+        android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = pad / 2;
+        box.addView(qr, lp);
+        android.widget.ScrollView scroll = new android.widget.ScrollView(c);
+        scroll.addView(box);
+        new androidx.appcompat.app.AlertDialog.Builder(c)
+                .setTitle(R.string.spirit_donate_title)
+                .setView(scroll)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 }

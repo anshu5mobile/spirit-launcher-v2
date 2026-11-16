@@ -87,4 +87,7 @@
     <string name="spirit_ingame_skin">Change skin</string>
     <string name="spirit_ingame_skin_online">This account keeps its skin on the server, so change it from the launcher Wardrobe. For offline accounts you can pick a skin here.</string>
     <string name="spirit_ingame_skin_done">Skin "%1$s" set. Press F3 + T in game to reload it.</string>
+    <string name="spirit_donate_title">Support Spirit Launcher</string>
+    <string name="spirit_donate_sub">Donate if you can. It helps us put the app on the Play Store.</string>
+    <string name="spirit_donate_msg">Spirit Launcher is free and always will be. If you can, donate any amount with UPI (PhonePe, Google Pay, Paytm...) by scanning this code. Once we have enough money for the Play Store developer account, we will publish the app there. Thank you!</string>
 </resources>
