@@ -41,6 +41,7 @@ public class SkinEditorView extends View {
     private final ScaleGestureDetector mScale;
     private final float[] mPt = new float[2];
 
+    @Nullable private Runnable mOnChange;
     private int mTool = PEN;
     private int mColor = Color.parseColor("#A6F03A");
     private boolean mShowGrid = true;
@@ -70,6 +71,19 @@ public class SkinEditorView extends View {
         });
     }
 
+    /** Called every time pixels change, so another view showing the same bitmap can redraw. */
+    public void setOnChange(@Nullable Runnable r) { mOnChange = r; }
+    /** The live bitmap being edited (64x64). Do not recycle it. */
+    public Bitmap getBitmapRef() { return mBitmap; }
+    public int getTool() { return mTool; }
+    /** Start of a stroke made from outside (the 3D view). */
+    public void beginStroke() { if(mTool == PEN || mTool == ERASER || mTool == FILL) pushUndo(); }
+    public void endStroke() { if(mListener != null) mListener.onHistoryChanged(); }
+    /** Applies the current tool on one skin pixel. */
+    public void paintTexel(int x, int y) {
+        if(x < 0 || y < 0 || x >= SIZE || y >= SIZE) return;
+        applyPixel(x, y);
+    }
     public void setListener(@Nullable Listener l) { mListener = l; }
     public void setTool(int tool) { mTool = tool; }
     public void setColor(int color) { mColor = color | 0xFF000000; }
@@ -116,6 +130,7 @@ public class SkinEditorView extends View {
 
     private void changed() {
         invalidate();
+        if(mOnChange != null) mOnChange.run();
         if(mListener != null) mListener.onHistoryChanged();
     }
 
@@ -191,7 +206,10 @@ public class SkinEditorView extends View {
 
     private void apply(float sx, float sy) {
         if(!toPixel(sx, sy, mXY)) return;
-        int x = mXY[0], y = mXY[1];
+        applyPixel(mXY[0], mXY[1]);
+    }
+
+    private void applyPixel(int x, int y) {
         switch(mTool) {
             case PEN: mBitmap.setPixel(x, y, mColor); break;
             case ERASER: mBitmap.setPixel(x, y, Color.TRANSPARENT); break;
@@ -206,6 +224,7 @@ public class SkinEditorView extends View {
             case FILL: floodFill(x, y); break;
         }
         invalidate();
+        if(mOnChange != null) mOnChange.run();
     }
 
     private void floodFill(int sx, int sy) {

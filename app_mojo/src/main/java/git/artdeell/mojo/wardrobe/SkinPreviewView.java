@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 /**
  * Rotatable 3D preview of a Minecraft skin, drawn with plain Canvas maths (no GL).
  * With an orthographic camera every box face turns into a parallelogram, so each face is just the skin
@@ -45,6 +47,28 @@ public class SkinPreviewView extends View {
     private float mPitch = 12f;
     private boolean mAutoSpin = true;
     private float mLastX, mLastY;
+
+    // ---- 3D editing
+    /** Body parts, in the order used by setPartEnabled */
+    public static final int HEAD = 0, BODY = 1, RIGHT_ARM = 2, LEFT_ARM = 3, RIGHT_LEG = 4, LEFT_LEG = 5;
+    /** Which skin layer a touch edits: both (what you see), base only, or only the outer layer */
+    public static final int LAYER_BOTH = 0, LAYER_BASE = 1, LAYER_OUTER = 2;
+
+    public interface EditListener {
+        void onStrokeStart();
+        void onPaint(int texelX, int texelY);
+        void onStrokeEnd();
+    }
+
+    private final boolean[] mPartOn = {true, true, true, true, true, true};
+    private final List<Face> mVisible = new ArrayList<>();
+    private final Matrix mInv = new Matrix();
+    private final float[] mTouchPt = new float[2];
+    private int mLayerMode = LAYER_BOTH;
+    private float mZoom = 1f;
+    private boolean mEditMode, mMulti, mPainting;
+    private float mLastDist;
+    @Nullable private EditListener mEditListener;
     private long mLastFrame;
 
     private static final class Face implements Comparable<Face> {
@@ -52,6 +76,7 @@ public class SkinPreviewView extends View {
         float ox, oy, oz, ux, uy, uz, vx, vy, vz;
         float nx, ny, nz;
         int sx, sy, sw, sh;
+        int part, layer;
         // Filled in per frame
         float depth;
         float[] screen = new float[6];
@@ -103,6 +128,137 @@ public class SkinPreviewView extends View {
         invalidate();
     }
 
+    public void setPartEnabled(int part, boolean on) {
+        if(part < 0 || part >= mPartOn.length) return;
+        mPartOn[part] = on;
+        invalidate();
+    }
+
+    public boolean isPartEnabled(int part) {
+        return mPartOn[part];
+    }
+
+    public void setLayerMode(int mode) {
+        mLayerMode = mode;
+        invalidate();
+    }
+
+    public int getLayerMode() {
+        return mLayerMode;
+    }
+
+    public void resetView() {
+        mYaw = -28f;
+        mPitch = 12f;
+        mZoom = 1f;
+        invalidate();
+    }
+
+    /** In edit mode one finger paints and two fingers rotate / zoom the model. */
+    public void setEditMode(boolean edit, @Nullable EditListener listener) {
+        mEditMode = edit;
+        mEditListener = listener;
+        if(edit) mAutoSpin = false;
+        invalidate();
+    }
+
+    /**
+     * Finds the skin pixel under a screen point, front-most face first. Transparent pixels of the outer layer let
+     * the touch through to what is below, unless only the outer layer is being edited.
+     */
+    private boolean pick(float x, float y, int[] out) {
+        if(mSkin == null) return false;
+        float scaleTex = mSkin.getWidth() / 64f;
+        for(int i = mVisible.size() - 1; i >= 0; i--) {
+            Face f = mVisible.get(i);
+            if(mLayerMode == LAYER_OUTER && f.layer == 0) continue;
+            int sw = Math.max(1, Math.round(f.sw * scaleTex)), sh = Math.max(1, Math.round(f.sh * scaleTex));
+            mSrcPts[0] = 0;  mSrcPts[1] = 0;
+            mSrcPts[2] = sw; mSrcPts[3] = 0;
+            mSrcPts[4] = 0;  mSrcPts[5] = sh;
+            System.arraycopy(f.screen, 0, mDstPts, 0, 6);
+            if(!mMatrix.setPolyToPoly(mSrcPts, 0, mDstPts, 0, 3) || !mMatrix.invert(mInv)) continue;
+            mTouchPt[0] = x; mTouchPt[1] = y;
+            mInv.mapPoints(mTouchPt);
+            if(mTouchPt[0] < 0 || mTouchPt[1] < 0 || mTouchPt[0] >= sw || mTouchPt[1] >= sh) continue;
+            int tx = Math.round(f.sx * scaleTex) + (int) mTouchPt[0];
+            int ty = Math.round(f.sy * scaleTex) + (int) mTouchPt[1];
+            if(tx >= mSkin.getWidth() || ty >= mSkin.getHeight()) continue;
+            if(mLayerMode != LAYER_OUTER && f.layer == 1 && Color.alpha(mSkin.getPixel(tx, ty)) == 0) continue;
+            out[0] = (int) (tx / scaleTex);
+            out[1] = (int) (ty / scaleTex);
+            return true;
+        }
+        return false;
+    }
+
+    private final int[] mTexel = new int[2];
+
+    private void paintAt(float x, float y) {
+        if(mEditListener != null && pick(x, y, mTexel)) mEditListener.onPaint(mTexel[0], mTexel[1]);
+    }
+
+    private boolean onEditTouch(MotionEvent e) {
+        switch(e.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                if(getParent() != null) getParent().requestDisallowInterceptTouchEvent(true);
+                mMulti = false;
+                mPainting = true;
+                mLastX = e.getX(); mLastY = e.getY();
+                if(mEditListener != null) mEditListener.onStrokeStart();
+                paintAt(mLastX, mLastY);
+                return true;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                mMulti = true;
+                mPainting = false;
+                mLastX = avgX(e); mLastY = avgY(e);
+                mLastDist = spread(e);
+                return true;
+            case MotionEvent.ACTION_MOVE:
+                if(mMulti && e.getPointerCount() >= 2) {
+                    float ax = avgX(e), ay = avgY(e), d = spread(e);
+                    mYaw += (ax - mLastX) * 0.6f;
+                    mPitch = Math.max(-80f, Math.min(80f, mPitch + (ay - mLastY) * 0.4f));
+                    if(mLastDist > 8f && d > 8f) mZoom = Math.max(0.6f, Math.min(5f, mZoom * d / mLastDist));
+                    mLastX = ax; mLastY = ay; mLastDist = d;
+                    invalidate();
+                } else if(mPainting) {
+                    float dx = e.getX() - mLastX, dy = e.getY() - mLastY;
+                    int steps = (int) Math.max(1, Math.max(Math.abs(dx), Math.abs(dy)) / 3f);
+                    for(int i = 1; i <= steps; i++) paintAt(mLastX + dx * i / steps, mLastY + dy * i / steps);
+                    mLastX = e.getX(); mLastY = e.getY();
+                }
+                return true;
+            case MotionEvent.ACTION_POINTER_UP: {
+                int keep = e.getActionIndex() == 0 ? 1 : 0;
+                if(e.getPointerCount() > keep) { mLastX = e.getX(keep); mLastY = e.getY(keep); }
+                mLastDist = 0;
+                return true;
+            }
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                if(mPainting && mEditListener != null) mEditListener.onStrokeEnd();
+                mPainting = false;
+                mMulti = false;
+                if(getParent() != null) getParent().requestDisallowInterceptTouchEvent(false);
+                return true;
+        }
+        return true;
+    }
+
+    private static float avgX(MotionEvent e) {
+        float s = 0; for(int i = 0; i < e.getPointerCount(); i++) s += e.getX(i); return s / e.getPointerCount();
+    }
+
+    private static float avgY(MotionEvent e) {
+        float s = 0; for(int i = 0; i < e.getPointerCount(); i++) s += e.getY(i); return s / e.getPointerCount();
+    }
+
+    private static float spread(MotionEvent e) {
+        if(e.getPointerCount() < 2) return 0;
+        return (float) Math.hypot(e.getX(0) - e.getX(1), e.getY(0) - e.getY(1));
+    }
+
     public boolean isSlim() {
         return mSlim;
     }
@@ -116,17 +272,33 @@ public class SkinPreviewView extends View {
         for(int layer = 0; layer < 2; layer++) {
             float g = layer == 0 ? 0f : 0.5f;
             // head
+            int start = faces.size();
             addBox(faces, -4, 24, -4, 8, 8, 8, layer == 0 ? 0 : 32, 0, g);
+            tag(faces, start, HEAD, layer);
             // body
+            start = faces.size();
             addBox(faces, -4, 12, -2, 8, 12, 4, 16, layer == 0 ? 16 : 32, g);
+            tag(faces, start, BODY, layer);
             // right arm (on the viewer's left), left arm
+            start = faces.size();
             addBox(faces, -4 - armW, 12, -2, armW, 12, 4, 40, layer == 0 ? 16 : 32, g);
+            tag(faces, start, RIGHT_ARM, layer);
+            start = faces.size();
             addBox(faces, 4, 12, -2, armW, 12, 4, layer == 0 ? 32 : 48, 48, g);
+            tag(faces, start, LEFT_ARM, layer);
             // right leg, left leg
+            start = faces.size();
             addBox(faces, -4, 0, -2, 4, 12, 4, 0, layer == 0 ? 16 : 32, g);
+            tag(faces, start, RIGHT_LEG, layer);
+            start = faces.size();
             addBox(faces, 0, 0, -2, 4, 12, 4, layer == 0 ? 16 : 0, 48, g);
+            tag(faces, start, LEFT_LEG, layer);
         }
         mFaces = faces;
+    }
+
+    private static void tag(List<Face> faces, int from, int part, int layer) {
+        for(int i = from; i < faces.size(); i++) { faces.get(i).part = part; faces.get(i).layer = layer; }
     }
 
     /**
@@ -183,15 +355,17 @@ public class SkinPreviewView extends View {
 
         float scaleTex = mSkin.getWidth() / 64f;
         // The model is 32 units tall and 16 wide; fit it with a little margin
-        float unit = Math.min(getHeight() / 36f, getWidth() / 24f);
+        float unit = Math.min(getHeight() / 36f, getWidth() / 24f) * mZoom;
         float cx = getWidth() / 2f, cy = getHeight() / 2f + 16f * unit;
 
         double yaw = Math.toRadians(mYaw), pitch = Math.toRadians(mPitch);
         float cosY = (float) Math.cos(yaw), sinY = (float) Math.sin(yaw);
         float cosP = (float) Math.cos(pitch), sinP = (float) Math.sin(pitch);
 
-        List<Face> visible = new ArrayList<>(mFaces.size());
+        List<Face> visible = mVisible;
+        visible.clear();
         for(Face f : mFaces) {
+            if(!mPartOn[f.part] || (mLayerMode == LAYER_BASE && f.layer == 1)) continue;
             // Rotate the normal first, faces that look away are skipped
             float nz = rotZ(f.nx, f.ny, f.nz, cosY, sinY, cosP, sinP);
             if(nz <= 0.0001f) continue;
@@ -247,6 +421,7 @@ public class SkinPreviewView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if(mEditMode) return onEditTouch(event);
         switch(event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 mAutoSpin = false;

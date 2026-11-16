@@ -66,4 +66,21 @@
     <string name="spirit_render_saved">Saved in Movies/SpiritLauncher.</string>
     <string name="spirit_render_save_failed">Could not save: %1$s</string>
     <string name="spirit_render_confirm_delete">Delete this video file? This cannot be undone.</string>
+    <string name="spirit_editor_2d">2D Skin</string>
+    <string name="spirit_editor_3d">3D Skin</string>
+    <string name="spirit_editor_parts">PARTS</string>
+    <string name="spirit_editor_part_head">Head</string>
+    <string name="spirit_editor_part_body">Chest</string>
+    <string name="spirit_editor_part_rarm">Right arm</string>
+    <string name="spirit_editor_part_larm">Left arm</string>
+    <string name="spirit_editor_part_rleg">Right leg</string>
+    <string name="spirit_editor_part_lleg">Left leg</string>
+    <string name="spirit_editor_layer_both">Layer: both</string>
+    <string name="spirit_editor_layer_base">Layer: base</string>
+    <string name="spirit_editor_layer_outer">Layer: outer</string>
+    <string name="spirit_editor_reset_view">Reset view</string>
+    <string name="spirit_editor_hint3d">1 finger paints. 2 fingers rotate and zoom. Turn a part off to reach what is behind it.</string>
+    <string name="spirit_editor_hue">Hue</string>
+    <string name="spirit_editor_sat">Saturation</string>
+    <string name="spirit_editor_val">Brightness</string>
 </resources>
