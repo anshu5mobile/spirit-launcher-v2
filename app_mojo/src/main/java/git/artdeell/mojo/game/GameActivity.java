@@ -132,6 +132,16 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
         AsyncAssetManager.extractDefaultSettings(this, instance.getGameDirectory());
         MCOptionUtils.load(instance.getGameDirectory().getAbsolutePath());
+        if(LauncherPreferences.DEFAULT_PREF.getBoolean(QuickSettingSideDialog.PREF_PERF_MODE, false)) {
+            // Performance mode: shorter entity/simulation distance and lighter effects, so TNT, minecarts and mobs cost less
+            try {
+                git.artdeell.mojo.perf.DeviceInfo device = git.artdeell.mojo.perf.DeviceInfo.read(this);
+                git.artdeell.mojo.perf.OptionsFile.apply(new File(instance.getGameDirectory(), "options.txt"),
+                        git.artdeell.mojo.perf.PerfProfile.PERFORMANCE.options(device));
+            } catch (Exception ignored) {
+                // No options.txt yet (first start) or unreadable: the game then runs with its own options
+            }
+        }
         VoiceChatConfig.applyDenoiser(instance.getGameDirectory(),
                 LauncherPreferences.DEFAULT_PREF.getBoolean("spiritVoiceDenoise", true));
 
@@ -223,6 +233,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         mControlLayout.post(() -> {
             setLiveStatsEnabled(LauncherPreferences.DEFAULT_PREF.getBoolean(QuickSettingSideDialog.PREF_LIVE_STATS, false));
             setFpsEnabled(LauncherPreferences.DEFAULT_PREF.getBoolean(QuickSettingSideDialog.PREF_SHOW_FPS, false));
+            if(LauncherPreferences.DEFAULT_PREF.getBoolean(QuickSettingSideDialog.PREF_PERF_MODE, false)) applyFpsBooster(true);
         });
 
         // Set the activity for the executor. Must do this here, or else Tools.showErrorRemote() may not
@@ -485,10 +496,13 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     private void applyFpsBooster(boolean enabled) {
         if(enabled) {
             if(mOriginalScaleBeforeBoost < 0) mOriginalScaleBeforeBoost = LauncherPreferences.PREF_SCALE_FACTOR;
-            LauncherPreferences.PREF_SCALE_FACTOR = Math.min(LauncherPreferences.PREF_SCALE_FACTOR, 0.6f);
+            LauncherPreferences.PREF_SCALE_FACTOR = Math.min(LauncherPreferences.PREF_SCALE_FACTOR, 0.7f);
+            // Steady clocks instead of short bursts: fewer frame-time spikes in long sessions
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) getWindow().setSustainedPerformanceMode(true);
         } else if(mOriginalScaleBeforeBoost > 0) {
             LauncherPreferences.PREF_SCALE_FACTOR = mOriginalScaleBeforeBoost;
             mOriginalScaleBeforeBoost = -1f;
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) getWindow().setSustainedPerformanceMode(PREF_SUSTAINED_PERFORMANCE);
         }
         launcherGLView.refreshSize();
         mHotbarView.onResolutionChanged();

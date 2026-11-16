@@ -18,17 +18,11 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
-import com.kdt.mcgui.ProgressLayout;
-
 import git.artdeell.mojo.MojoApplication;
 import git.artdeell.mojo.R;
 import git.artdeell.mojo.Tools;
-import git.artdeell.mojo.browse.BrowseInstaller;
-import git.artdeell.mojo.browse.BrowseKind;
 import git.artdeell.mojo.browse.BrowseTarget;
-import git.artdeell.mojo.browse.ModrinthClient;
 import git.artdeell.mojo.perf.DeviceInfo;
-import git.artdeell.mojo.perf.OptimizationPack;
 import git.artdeell.mojo.perf.OptionsFile;
 import git.artdeell.mojo.perf.PerfProfile;
 import git.artdeell.mojo.prefs.LauncherPreferences;
@@ -36,13 +30,11 @@ import git.artdeell.mojo.utils.SpiritScreen;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Performance Center: reads the phone, recommends a profile, applies it to the selected instance and can install
- * the optimization mods that fit that instance. Everything it changes is listed to the player and can be restored.
+ * Performance Center: reads the phone, recommends a profile, applies it to the selected instance. Everything it changes is listed to the player and can be restored.
  */
 public class PerformanceFragment extends Fragment {
     public static final String TAG = "SpiritPerformanceFragment";
@@ -264,12 +256,6 @@ public class PerformanceFragment extends Fragment {
         line(cur, getString(R.string.spirit_perf_instance), mTarget != null ? mTarget.instanceName + (mTarget.mcVersion != null ? " · " + mTarget.mcVersion : "") : "-");
         mBody.addView(cur);
 
-        // --- mods
-        LinearLayout mods = card(getString(R.string.spirit_perf_mods));
-        mods.addView(text(getString(R.string.spirit_perf_mods_d), 12, DIM, false));
-        mods.addView(button(getString(R.string.spirit_perf_mods_install), false, v -> openPack()));
-        mBody.addView(mods);
-
         // --- tips
         LinearLayout tips = card(getString(R.string.spirit_perf_tips));
         tips.addView(text(getString(R.string.spirit_perf_tips_body), 13, TEXT, false));
@@ -368,87 +354,6 @@ public class PerformanceFragment extends Fragment {
                 Toast.makeText(requireContext(), restored ? R.string.spirit_perf_restored_all : R.string.spirit_perf_restored, Toast.LENGTH_LONG).show();
                 render();
             });
-        });
-    }
-
-    // ---------------------------------------------------------------- optimization mods
-
-    private void openPack() {
-        final BrowseTarget target = mTarget;
-        if(target == null) {
-            Toast.makeText(requireContext(), R.string.spirit_browse_no_instance, Toast.LENGTH_LONG).show();
-            return;
-        }
-        if(target.isVanilla() || target.mcVersion == null) {
-            Toast.makeText(requireContext(), R.string.spirit_perf_mods_vanilla, Toast.LENGTH_LONG).show();
-            return;
-        }
-        Toast.makeText(requireContext(), R.string.spirit_perf_mods_checking, Toast.LENGTH_SHORT).show();
-        MojoApplication.sExecutorService.execute(() -> {
-            final List<OptimizationPack.Entry> entries = new ArrayList<>();
-            final List<ModrinthClient.Version> versions = new ArrayList<>();
-            File[] installed = new File(target.gameDir, "mods").listFiles((dir, n) -> n.endsWith(".jar"));
-            for(OptimizationPack.Entry e : OptimizationPack.forLoaders(target.loaders)) {
-                String key = e.slug.replaceAll("[^a-z0-9]", "");
-                boolean have = false;
-                if(installed != null) for(File f : installed) {
-                    if(f.getName().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "").contains(key)) have = true;
-                }
-                if(have) continue;
-                try {
-                    List<ModrinthClient.Version> v = ModrinthClient.versions(e.slug, target.mcVersion, target.loaders);
-                    if(!v.isEmpty()) { entries.add(e); versions.add(v.get(0)); }
-                } catch (IOException | RuntimeException ignored) {
-                    // Not available for this version: simply not offered
-                }
-            }
-            Tools.runOnUiThread(() -> { if(isAdded()) showPack(target, entries, versions); });
-        });
-    }
-
-    private void showPack(final BrowseTarget target, final List<OptimizationPack.Entry> entries, final List<ModrinthClient.Version> versions) {
-        if(entries.isEmpty()) {
-            Toast.makeText(requireContext(), R.string.spirit_perf_mods_none, Toast.LENGTH_LONG).show();
-            return;
-        }
-        final boolean modernGl = OptimizationPack.rendererSupportsModernGl(LauncherPreferences.PREF_RENDERER);
-        final String[] labels = new String[entries.size()];
-        final boolean[] checked = new boolean[entries.size()];
-        for(int i = 0; i < labels.length; i++) {
-            OptimizationPack.Entry e = entries.get(i);
-            labels[i] = e.slug + " - " + e.what + (e.needsModernGl && !modernGl ? "  (needs Zink)" : "");
-            checked[i] = !e.needsModernGl || modernGl;
-        }
-        new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.spirit_perf_mods)
-                .setMultiChoiceItems(labels, checked, (d, which, on) -> checked[which] = on)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(R.string.spirit_perf_install, (d, w) -> {
-                    List<ModrinthClient.Version> chosen = new ArrayList<>();
-                    for(int i = 0; i < checked.length; i++) if(checked[i]) chosen.add(versions.get(i));
-                    installPack(target, chosen);
-                })
-                .show();
-    }
-
-    private void installPack(final BrowseTarget target, final List<ModrinthClient.Version> chosen) {
-        if(chosen.isEmpty()) return;
-        if(!ProgressLayout.ensureNoOngoingTasks(requireContext())) return;
-        ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.global_waiting);
-        final android.content.Context app = requireContext().getApplicationContext();
-        MojoApplication.sExecutorService.execute(() -> {
-            int added = 0;
-            try {
-                for(ModrinthClient.Version v : chosen) {
-                    added += BrowseInstaller.install(target, BrowseKind.MODS, v).added.size();
-                }
-            } catch (IOException | RuntimeException e) {
-                ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
-                Tools.showErrorRemote(app, R.string.spirit_browse_install_failed, e);
-                return;
-            }
-            final int count = added;
-            Tools.runOnUiThread(() -> Toast.makeText(app, app.getString(R.string.spirit_perf_mods_done, count), Toast.LENGTH_LONG).show());
         });
     }
 }

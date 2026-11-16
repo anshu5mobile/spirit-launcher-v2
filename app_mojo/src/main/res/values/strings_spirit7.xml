@@ -40,20 +40,12 @@
     <string name="spirit_perf_nothing">The options already matched, nothing changed in options.txt.</string>
     <string name="spirit_perf_applied">Profile applied</string>
     <string name="spirit_perf_applied_d">RAM %1$d MB, resolution %2$d %%. Changes in options.txt:</string>
-    <string name="spirit_perf_mods">OPTIMIZATION MODS</string>
-    <string name="spirit_perf_mods_d">Mods that really raise FPS and cut lag with many entities (TNT, minecarts, mobs). Only versions that fit your instance are offered.</string>
-    <string name="spirit_perf_mods_install">Choose optimization mods</string>
-    <string name="spirit_perf_mods_vanilla">This instance has no mod loader. Create a Fabric or NeoForge instance first.</string>
-    <string name="spirit_perf_mods_checking">Checking what fits your instance…</string>
-    <string name="spirit_perf_mods_none">Nothing to add: everything is installed or not available for this version.</string>
-    <string name="spirit_perf_mods_done">%1$d mod file(s) installed.</string>
     <string name="spirit_perf_tips">HOW TO GET MORE FPS</string>
-    <string name="spirit_perf_tips_body">• Lower Simulation distance: fewer entities and TNT are calculated.\n• Lower Entity distance and Particles for big explosions and many minecarts.\n• Lower the resolution scale: the biggest FPS gain on phones.\n• Keep RAM near the advised value. More is not faster on Android.\n• Sodium-type mods need the Zink renderer; Lithium, EntityCulling, FerriteCore and ModernFix work everywhere.</string>
+    <string name="spirit_perf_tips_body">• Lower Simulation distance: fewer entities and TNT are calculated.\n• Lower Entity distance and Particles for big explosions and many minecarts.\n• Lower the resolution scale: the biggest FPS gain on phones.\n• Keep RAM near the advised value. More is not faster on Android.\n• In the game, Quick settings has Performance mode: 70 % resolution and the Performance profile.</string>
     <string name="spirit_perf_restore_title">RESTORE</string>
     <string name="spirit_perf_restore_d">Puts back options.txt from before the profile and resets RAM, resolution and custom JVM arguments to the launcher defaults.</string>
     <string name="spirit_perf_restore">Restore defaults</string>
     <string name="spirit_perf_restore_confirm">Restore the saved options.txt and the launcher defaults for RAM, resolution and JVM arguments?</string>
     <string name="spirit_perf_restored_all">Restored options.txt and launcher defaults.</string>
     <string name="spirit_perf_restored">Launcher defaults restored. There was no saved options.txt.</string>
-    <string name="spirit_perf_install">Install</string>
 </resources>

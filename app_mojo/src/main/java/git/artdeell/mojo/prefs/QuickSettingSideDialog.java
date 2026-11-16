@@ -43,6 +43,8 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
     public static final String PREF_LIVE_STATS = "spiritLiveStats";
     public static final String PREF_SHOW_FPS = "spiritShowFps";
+    /** Performance mode: 70 % resolution + the Performance profile's game options on the next start */
+    public static final String PREF_PERF_MODE = "spiritPerfMode";
     public static final String PREF_SUSTAINED = "sustainedPerformance";
     private static boolean sFpsBoost = false;
 
@@ -105,9 +107,10 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         }
         androidx.appcompat.widget.SwitchCompat fpsBoost = mDialogContent.findViewById(R.id.spirit_switch_fps_boost);
         if(fpsBoost != null) {
-            fpsBoost.setChecked(sFpsBoost);
+            fpsBoost.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_PERF_MODE, false));
             fpsBoost.setOnCheckedChangeListener((b, on) -> {
                 sFpsBoost = on;
+                LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_PERF_MODE, on).apply();
                 onFpsBoosterChanged(on);
             });
         }
