@@ -451,12 +451,16 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     // ---------------- Spirit: FPS overlay ----------------
     private TextView mFpsView;
     private boolean mFpsEnabled = false;
+    private long mFpsLastNs = 0;
     private final Runnable mFpsUpdater = new Runnable() {
         @Override
         public void run() {
             if(!mFpsEnabled || mFpsView == null) return;
+            long now = System.nanoTime();
             int frames = git.artdeell.mojo.game.render.FpsMeter.drain();
-            mFpsView.setText("FPS " + frames);
+            float seconds = mFpsLastNs == 0 ? 1f : (now - mFpsLastNs) / 1_000_000_000f;
+            mFpsLastNs = now;
+            mFpsView.setText("Screen FPS " + Math.round(frames / Math.max(0.5f, seconds)));
             mFpsView.postDelayed(this, 1000);
         }
     };
@@ -485,6 +489,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             }
             mFpsView.setVisibility(View.VISIBLE);
             git.artdeell.mojo.game.render.FpsMeter.drain();
+            mFpsLastNs = 0;
             mFpsView.removeCallbacks(mFpsUpdater);
             mFpsView.postDelayed(mFpsUpdater, 1000);
         } else if(mFpsView != null) {
@@ -642,7 +647,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     private void dialogSendCustomKey() {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        androidx.appcompat.app.AlertDialog.Builder dialog = new androidx.appcompat.app.AlertDialog.Builder(this);
         dialog.setTitle(R.string.control_customkey);
         dialog.setItems(KeycodeUtils.generateKeyName(), (dInterface, position) -> KeycodeUtils.execKeyIndex(position));
         dialog.show();

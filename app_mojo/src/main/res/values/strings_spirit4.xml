@@ -52,7 +52,7 @@
     <string name="spirit_browse_enable">Enable</string>
     <string name="spirit_browse_disable">Disable</string>
     <string name="spirit_browse_remove">Remove</string>
-    <string name="spirit_browse_confirm_remove">Remove this from the instance?</string>
+    <string name="spirit_browse_confirm_remove">Delete this from the instance? This cannot be undone.</string>
     <string name="spirit_browse_all_up_to_date">All mods are up to date.</string>
     <string name="spirit_browse_updated">Updated: %s\n\nOld versions were moved to the .spirit_backup folder of the instance.</string>
 </resources>

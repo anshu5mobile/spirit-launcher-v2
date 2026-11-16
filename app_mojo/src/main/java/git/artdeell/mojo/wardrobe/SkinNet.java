@@ -170,7 +170,9 @@ public final class SkinNet {
         return skin;
     }
 
-    private static Skin download(String url) throws IOException {
+    private static Skin download(String original) throws IOException {
+        // Mojang's profile data hands out http:// links, but Android blocks plain http. The host also speaks https.
+        String url = original.startsWith("http://") ? "https://" + original.substring(7) : original;
         Response response;
         try {
             response = get(url, null);

@@ -82,6 +82,7 @@ public final class AutoSkin {
         final String command = commandFor(url);
 
         LogDispatcher.setAutoListener(line -> {
+            if(!line.contains("Connecting to")) return;
             Matcher matcher = CONNECTING.matcher(line);
             if(!matcher.find()) return;
             String host = cleanHost(matcher.group(1));

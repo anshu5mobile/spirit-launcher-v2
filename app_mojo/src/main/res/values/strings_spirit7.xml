@@ -48,4 +48,22 @@
     <string name="spirit_perf_restore_confirm">Restore the saved options.txt and the launcher defaults for RAM, resolution and JVM arguments?</string>
     <string name="spirit_perf_restored_all">Restored options.txt and launcher defaults.</string>
     <string name="spirit_perf_restored">Launcher defaults restored. There was no saved options.txt.</string>
+    <string name="spirit_browse_delete">Delete</string>
+    <string name="spirit_perf_sub_short">FPS profiles</string>
+    <string name="spirit_render_title">Render</string>
+    <string name="spirit_render_sub">Replay Mod videos</string>
+    <string name="spirit_render_plugin">FFMPEG PLUGIN</string>
+    <string name="spirit_render_plugin_ok">Installed</string>
+    <string name="spirit_render_plugin_ok_d">Replay Mod can export videos. The launcher gives the game the path to FFmpeg when it starts.</string>
+    <string name="spirit_render_plugin_missing">Not installed</string>
+    <string name="spirit_render_plugin_missing_d">Replay Mod needs the FFmpeg plugin app (package git.mojo.ffmpeg) to export. Install that plugin APK, then start the game again.</string>
+    <string name="spirit_render_how">HOW TO EXPORT</string>
+    <string name="spirit_render_how_body">1. Install the Replay Mod for your Minecraft version (Browse → Mods).\n2. Record in game, open the replay and choose Render.\n3. Wait for the render to finish. Keep the screen on and the phone cool: rendering is heavy.\n4. Come back here and save the video to your gallery.</string>
+    <string name="spirit_render_videos">EXPORTED VIDEOS</string>
+    <string name="spirit_render_none">No videos yet in this instance (folder replay_videos).</string>
+    <string name="spirit_render_save">Save to gallery</string>
+    <string name="spirit_render_saving">Saving…</string>
+    <string name="spirit_render_saved">Saved in Movies/SpiritLauncher.</string>
+    <string name="spirit_render_save_failed">Could not save: %1$s</string>
+    <string name="spirit_render_confirm_delete">Delete this video file? This cannot be undone.</string>
 </resources>

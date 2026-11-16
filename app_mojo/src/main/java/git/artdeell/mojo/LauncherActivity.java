@@ -398,7 +398,8 @@ public class LauncherActivity extends BaseActivity {
             selected = R.id.nav_browse; ownHeader = true;
         }else if(fragment instanceof AboutFragment) {
             selected = R.id.nav_about; ownHeader = true;
-        }else if(fragment instanceof git.artdeell.mojo.fragments.PerformanceFragment) {
+        }else if(fragment instanceof git.artdeell.mojo.fragments.PerformanceFragment
+                || fragment instanceof git.artdeell.mojo.fragments.RenderFragment) {
             ownHeader = true;
         }
 

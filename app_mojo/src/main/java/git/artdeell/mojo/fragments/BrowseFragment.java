@@ -596,7 +596,10 @@ public class BrowseFragment extends Fragment {
         ((TextView) entry.findViewById(R.id.spirit_entry_name)).setText(item.displayName);
         TextView sub = entry.findViewById(R.id.spirit_entry_sub);
         TextView action = entry.findViewById(R.id.spirit_entry_install);
+        TextView delete = entry.findViewById(R.id.spirit_entry_delete);
         if(kind == BrowseKind.MODS) {
+            delete.setVisibility(View.VISIBLE);
+            delete.setOnClickListener(v -> confirmRemove(item));
             sub.setText(item.enabled ? R.string.spirit_browse_enabled : R.string.spirit_browse_disabled);
             action.setText(item.enabled ? R.string.spirit_browse_disable : R.string.spirit_browse_enable);
             action.setOnClickListener(v -> {

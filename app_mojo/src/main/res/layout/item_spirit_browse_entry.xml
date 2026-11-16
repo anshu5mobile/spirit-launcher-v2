@@ -46,6 +46,23 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/spirit_entry_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/spirit_card_bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:text="@string/spirit_browse_delete"
+        android:textColor="#FF6B5E"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/spirit_entry_install"
         android:layout_width="wrap_content"
         android:layout_height="38dp"
