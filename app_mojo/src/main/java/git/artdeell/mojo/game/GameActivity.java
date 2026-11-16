@@ -502,12 +502,10 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         if(enabled) {
             if(mOriginalScaleBeforeBoost < 0) mOriginalScaleBeforeBoost = LauncherPreferences.PREF_SCALE_FACTOR;
             LauncherPreferences.PREF_SCALE_FACTOR = Math.min(LauncherPreferences.PREF_SCALE_FACTOR, 0.7f);
-            // Steady clocks instead of short bursts: fewer frame-time spikes in long sessions
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) getWindow().setSustainedPerformanceMode(true);
+            // No sustained-performance mode here: it caps peak clocks, so it can only lower FPS. It stays a separate switch.
         } else if(mOriginalScaleBeforeBoost > 0) {
             LauncherPreferences.PREF_SCALE_FACTOR = mOriginalScaleBeforeBoost;
             mOriginalScaleBeforeBoost = -1f;
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) getWindow().setSustainedPerformanceMode(PREF_SUSTAINED_PERFORMANCE);
         }
         launcherGLView.refreshSize();
         mHotbarView.onResolutionChanged();
