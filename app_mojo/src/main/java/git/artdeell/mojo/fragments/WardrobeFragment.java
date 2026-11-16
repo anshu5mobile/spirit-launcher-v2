@@ -113,12 +113,12 @@ public class WardrobeFragment extends Fragment {
         mPreview.setPlaceholder(getString(R.string.spirit_skin_placeholder));
         mStatus.setText(R.string.spirit_skin_loading);
 
-        view.findViewById(R.id.spirit_skin_username_card).setOnClickListener(v ->
-                promptText(R.string.spirit_skin_username, R.string.spirit_skin_username_hint, InputType.TYPE_CLASS_TEXT, null, this::fetchByUsername));
-        view.findViewById(R.id.spirit_skin_url_card).setOnClickListener(v ->
-                promptText(R.string.spirit_skin_url, R.string.spirit_skin_url_hint, InputType.TYPE_TEXT_VARIATION_URI, null, this::fetchByUrl));
+        view.findViewById(R.id.spirit_skin_username_card).setOnClickListener(v -> { mAddOnly = false;
+                promptText(R.string.spirit_skin_username, R.string.spirit_skin_username_hint, InputType.TYPE_CLASS_TEXT, null, this::fetchByUsername); });
+        view.findViewById(R.id.spirit_skin_url_card).setOnClickListener(v -> { mAddOnly = false;
+                promptText(R.string.spirit_skin_url, R.string.spirit_skin_url_hint, InputType.TYPE_TEXT_VARIATION_URI, null, this::fetchByUrl); });
         view.findViewById(R.id.spirit_skin_library_card).setOnClickListener(v -> openLibrary());
-        view.findViewById(R.id.spirit_skin_gallery_card).setOnClickListener(v -> mGalleryLauncher.launch("image/*"));
+        view.findViewById(R.id.spirit_skin_gallery_card).setOnClickListener(v -> { mAddOnly = false; mGalleryLauncher.launch("image/*"); });
         view.findViewById(R.id.spirit_skin_apply).setOnClickListener(v -> applySkin());
         view.findViewById(R.id.spirit_editor_card).setOnClickListener(v -> openEditor());
         view.findViewById(R.id.spirit_cape_card).setOnClickListener(v -> openCapes());
@@ -286,7 +286,7 @@ public class WardrobeFragment extends Fragment {
         MojoApplication.sExecutorService.execute(() -> {
             try {
                 SkinNet.Skin skin = SkinNet.fetchByUsername(name);
-                ui(() -> show(skin.bitmap, skin.slim, skin.url, skin.name, true));
+                ui(() -> deliver(skin.bitmap, skin.slim, skin.url, skin.name));
             } catch (IOException | RuntimeException e) {
                 failedFetch(e);
             }
@@ -299,14 +299,53 @@ public class WardrobeFragment extends Fragment {
         MojoApplication.sExecutorService.execute(() -> {
             try {
                 SkinNet.Skin skin = SkinNet.fetchByUrl(url);
-                ui(() -> show(skin.bitmap, skin.slim, skin.url, skin.name, true));
+                ui(() -> deliver(skin.bitmap, skin.slim, skin.url, skin.name));
             } catch (IOException | RuntimeException e) {
                 failedFetch(e);
             }
         });
     }
 
+    /** True while the skin being fetched should go straight into the library instead of the preview */
+    private boolean mAddOnly;
+
+    private void deliver(Bitmap bitmap, boolean slim, @Nullable String url, @Nullable String name) {
+        if(!mAddOnly) {
+            show(bitmap, slim, url, name, true);
+            return;
+        }
+        mAddOnly = false;
+        promptText(R.string.spirit_skin_save_title, R.string.spirit_skin_name_hint, InputType.TYPE_CLASS_TEXT, name, text -> {
+            final String finalName = text.isEmpty() ? getString(R.string.spirit_skin_unnamed) : text;
+            MojoApplication.sExecutorService.execute(() -> {
+                try {
+                    SkinStore.add(finalName, bitmap, url, slim);
+                    toast(getString(R.string.spirit_skin_saved));
+                    ui(this::openLibrary);
+                } catch (IOException e) {
+                    toast(getString(R.string.spirit_skin_fetch_failed, messageOf(e)));
+                }
+            });
+        });
+    }
+
+    /** Library "Add skin": pick where the skin comes from, it is saved without being applied */
+    private void addSkinToLibrary() {
+        String[] items = {getString(R.string.spirit_skin_gallery), getString(R.string.spirit_skin_username), getString(R.string.spirit_skin_url)};
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_skin_add)
+                .setItems(items, (d, which) -> {
+                    mAddOnly = true;
+                    if(which == 0) mGalleryLauncher.launch("image/*");
+                    else if(which == 1) promptText(R.string.spirit_skin_username, R.string.spirit_skin_username_hint, InputType.TYPE_CLASS_TEXT, null, this::fetchByUsername);
+                    else promptText(R.string.spirit_skin_url, R.string.spirit_skin_url_hint, InputType.TYPE_TEXT_VARIATION_URI, null, this::fetchByUrl);
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
     private void failedFetch(Exception e) {
+        mAddOnly = false;
         ui(() -> {
             refreshViews();
             Toast.makeText(requireContext(), getString(R.string.spirit_skin_fetch_failed, messageOf(e)), Toast.LENGTH_LONG).show();
@@ -319,7 +358,7 @@ public class WardrobeFragment extends Fragment {
     }
 
     private void onGalleryPicked(@Nullable Uri uri) {
-        if(uri == null || !isAdded()) return;
+        if(uri == null || !isAdded()) { mAddOnly = false; return; }
         final Context context = requireContext().getApplicationContext();
         final ContentResolver resolver = context.getContentResolver();
         MojoApplication.sExecutorService.execute(() -> {
@@ -337,7 +376,7 @@ public class WardrobeFragment extends Fragment {
                 String name = fileName == null ? "Imported skin" : fileName.replaceFirst("\\.[A-Za-z0-9]+$", "");
                 boolean slim = SkinStore.detectSlim(skin);
                 // A file on the phone has no public link, so Auto Skin cannot use it
-                ui(() -> show(skin, slim, null, name, true));
+                ui(() -> deliver(skin, slim, null, name));
             } catch (IOException | RuntimeException e) {
                 failedFetch(e);
             }
@@ -378,6 +417,7 @@ public class WardrobeFragment extends Fragment {
                 AlertDialog dialog = new AlertDialog.Builder(requireContext())
                         .setTitle(R.string.spirit_skin_library_title)
                         .setItems(names, (d, which) -> useEntry(entries.get(which)))
+                        .setPositiveButton(R.string.spirit_skin_add, (d, w) -> addSkinToLibrary())
                         .setNeutralButton(R.string.spirit_skin_history, (d, w) -> openHistory())
                         .setNegativeButton(android.R.string.cancel, null)
                         .create();

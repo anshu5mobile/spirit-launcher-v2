@@ -703,6 +703,11 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 }
 
                 @Override
+                public File getSkinGameDir() {
+                    return instance.getGameDirectory();
+                }
+
+                @Override
                 public void onFpsBoosterChanged(boolean enabled) {
                     applyFpsBooster(enabled);
                 }

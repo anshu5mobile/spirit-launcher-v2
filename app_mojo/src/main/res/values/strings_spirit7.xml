@@ -83,4 +83,8 @@
     <string name="spirit_editor_hue">Hue</string>
     <string name="spirit_editor_sat">Saturation</string>
     <string name="spirit_editor_val">Brightness</string>
+    <string name="spirit_skin_add">Add skin</string>
+    <string name="spirit_ingame_skin">Change skin</string>
+    <string name="spirit_ingame_skin_online">This account keeps its skin on the server, so change it from the launcher Wardrobe. For offline accounts you can pick a skin here.</string>
+    <string name="spirit_ingame_skin_done">Skin "%1$s" set. Press F3 + T in game to reload it.</string>
 </resources>
