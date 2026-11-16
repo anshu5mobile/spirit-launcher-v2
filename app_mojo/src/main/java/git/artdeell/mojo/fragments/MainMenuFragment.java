@@ -64,6 +64,7 @@ public class MainMenuFragment extends Fragment {
         View mCreateInstanceButton = view.findViewById(R.id.create_instance_button);
         View mWardrobeButton = view.findViewById(R.id.spirit_wardrobe_button);
         View mBrowseButton = view.findViewById(R.id.spirit_browse_button);
+        View mPerfButton = view.findViewById(R.id.spirit_perf_button);
 
         View mEditProfileButton = view.findViewById(R.id.edit_profile_button);
         View mPlayButton = view.findViewById(R.id.play_button);
@@ -95,6 +96,8 @@ public class MainMenuFragment extends Fragment {
 
         if(mWardrobeButton != null) mWardrobeButton.setOnClickListener(v ->
                 Tools.swapFragment(requireActivity(), WardrobeFragment.class, WardrobeFragment.TAG, null));
+        if(mPerfButton != null) mPerfButton.setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), PerformanceFragment.class, PerformanceFragment.TAG, null));
         if(mBrowseButton != null) mBrowseButton.setOnClickListener(v ->
                 Tools.swapFragment(requireActivity(), BrowseFragment.class, BrowseFragment.TAG, null));
 
