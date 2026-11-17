@@ -119,7 +119,7 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         View changeSkin = mDialogContent.findViewById(R.id.spirit_qs_change_skin);
         if(changeSkin != null) {
             if(getSkinGameDir() == null) changeSkin.setVisibility(View.GONE);
-            else changeSkin.setOnClickListener(v -> git.artdeell.mojo.wardrobe.InGameSkin.show((android.app.Activity) mDialogContent.getContext(), getSkinGameDir()));
+            else changeSkin.setOnClickListener(v -> git.artdeell.mojo.wardrobe.InGameSkin.show((android.app.Activity) mDialogContent.getContext(), getSkinGameDir(), getSkinAccount()));
         }
         // Bind layout elements
         mGyroSwitch = mDialogContent.findViewById(R.id.checkboxGyro);
@@ -405,6 +405,10 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
     /** Spirit: the instance folder used by the in-game skin change, null hides the button. */
     @androidx.annotation.Nullable
     public java.io.File getSkinGameDir() { return null; }
+
+    /** Spirit: the account the running game was started with */
+    @androidx.annotation.Nullable
+    public git.artdeell.mojo.authenticator.accounts.Account getSkinAccount() { return null; }
 
     /** Spirit: sustained performance mode toggled. */
     public void onSustainedPerformanceChanged(boolean enabled) {}

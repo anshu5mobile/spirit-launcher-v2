@@ -30,6 +30,7 @@ import git.artdeell.mojo.Tools;
 import git.artdeell.mojo.browse.BrowseTarget;
 import git.artdeell.mojo.utils.SpiritScreen;
 import git.artdeell.mojo.utils.plugins.LibraryPlugin;
+import git.artdeell.mojo.utils.plugins.PluginInstaller;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,6 +51,7 @@ public class RenderFragment extends Fragment {
     private static final int BG = 0xFF0A0C09, CARD = 0xFF141812, LIME = 0xFFA6F03A, TEXT = 0xFFEAF2E0, DIM = 0xFF9FAB96, WARN = 0xFFFFC857;
 
     private LinearLayout mBody;
+    private TextView mInstall;
 
     @Nullable
     @Override
@@ -152,7 +154,21 @@ public class RenderFragment extends Fragment {
         status.addView(text(plugin ? getString(R.string.spirit_render_plugin_ok) : getString(R.string.spirit_render_plugin_missing),
                 17, plugin ? LIME : WARN, true));
         status.addView(text(plugin ? getString(R.string.spirit_render_plugin_ok_d) : getString(R.string.spirit_render_plugin_missing_d), 13, DIM, false));
+        if(!plugin) {
+            mInstall = button(getString(R.string.spirit_render_install), true, LIME, v -> confirmInstall());
+            LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(44));
+            ip.topMargin = dp(10);
+            status.addView(mInstall, ip);
+        }
         mBody.addView(status);
+
+        LinearLayout control = card(getString(R.string.spirit_render_control));
+        control.addView(text(getString(R.string.spirit_render_control_d), 13, DIM, false));
+        TextView installControl = button(getString(R.string.spirit_render_control_install), false, LIME, v -> confirmControl());
+        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(44));
+        cp.topMargin = dp(10);
+        control.addView(installControl, cp);
+        mBody.addView(control);
 
         LinearLayout how = card(getString(R.string.spirit_render_how));
         how.addView(text(getString(R.string.spirit_render_how_body), 13, TEXT, false));
@@ -181,6 +197,75 @@ public class RenderFragment extends Fragment {
             list.addView(row);
         }
         mBody.addView(list);
+    }
+
+    private void confirmInstall() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_render_plugin)
+                .setMessage(R.string.spirit_render_install_confirm)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.spirit_render_install, (d, w) -> downloadPlugin())
+                .show();
+    }
+
+    private void downloadPlugin() {
+        final android.app.Activity activity = requireActivity();
+        if(mInstall != null) { mInstall.setEnabled(false); mInstall.setText(R.string.spirit_render_downloading); }
+        MojoApplication.sExecutorService.execute(() -> {
+            File apk = null;
+            String error = null;
+            try {
+                apk = PluginInstaller.download(activity, PluginInstaller.FFMPEG_URL, "ffmpeg-plugin.apk", percent -> Tools.runOnUiThread(() -> {
+                    if(mInstall != null) mInstall.setText(getString(R.string.spirit_render_downloading_pct, percent));
+                }));
+            } catch (IOException | RuntimeException e) {
+                error = String.valueOf(e.getMessage());
+            }
+            final File file = apk;
+            final String message = error;
+            Tools.runOnUiThread(() -> {
+                if(mInstall != null) { mInstall.setEnabled(true); mInstall.setText(R.string.spirit_render_install); }
+                if(file == null) {
+                    if(isAdded()) new AlertDialog.Builder(activity)
+                            .setTitle(R.string.spirit_render_plugin)
+                            .setMessage(getString(R.string.spirit_render_download_failed, message))
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .setPositiveButton(R.string.spirit_render_open_page, (d, w) -> Tools.openURL(activity, PluginInstaller.FFMPEG_PAGE))
+                            .show();
+                    return;
+                }
+                if(!PluginInstaller.install(activity, file)) {
+                    Toast.makeText(activity, R.string.spirit_render_allow_installs, Toast.LENGTH_LONG).show();
+                }
+            });
+        });
+    }
+
+    private void confirmControl() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_render_control)
+                .setMessage(R.string.spirit_render_control_confirm)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.spirit_render_control_install, (d, w) -> installControl())
+                .show();
+    }
+
+    private void installControl() {
+        final Context app = requireContext().getApplicationContext();
+        MojoApplication.sExecutorService.execute(() -> {
+            String message;
+            try {
+                // Replaces the file of the same name, so installing again gives the original layout back
+                File target = new File(Tools.CTRLMAP_PATH, "Replay_Control.json");
+                if(target.exists() && !target.delete()) throw new IOException("Could not replace the old file");
+                Tools.copyAssetFile(app, "Replay_Control.json", Tools.CTRLMAP_PATH, false);
+                message = app.getString(R.string.spirit_render_control_done);
+            } catch (IOException | RuntimeException e) {
+                message = app.getString(R.string.spirit_render_control_failed, String.valueOf(e.getMessage()));
+            }
+            final String m = message;
+            Tools.runOnUiThread(() -> Toast.makeText(app, m, Toast.LENGTH_LONG).show());
+        });
     }
 
     private void confirmDelete(final File video) {

@@ -263,6 +263,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             Logger.begin(latestLogFile.getAbsolutePath());
             // Types the skin command after joining a server the user allowed (does nothing when off)
             git.artdeell.mojo.wardrobe.AutoSkin.startForGame();
+            git.artdeell.mojo.crash.GameErrorWatcher.start(this);
 
             Intent activityIntent = getIntent();
             Bundle extras = Objects.requireNonNull(activityIntent.getExtras());
@@ -704,6 +705,11 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 @Override
                 public File getSkinGameDir() {
                     return instance.getGameDirectory();
+                }
+
+                @Override
+                public git.artdeell.mojo.authenticator.accounts.Account getSkinAccount() {
+                    return account;
                 }
 
                 @Override

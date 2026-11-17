@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public final class CrashAnalyzer {
     private CrashAnalyzer() {}
 
-    public enum Fix { NONE, MORE_RAM, DISABLE_MOD, DISABLE_ALL_MODS, OPEN_SETTINGS, UPDATE_LOADER }
+    public enum Fix { NONE, MORE_RAM, DISABLE_MOD, DISABLE_ALL_MODS, OPEN_SETTINGS, UPDATE_LOADER, INSTALL_MOD, UPDATE_MODS }
 
     public static final class Finding {
         public final String id;
@@ -37,6 +37,17 @@ public final class CrashAnalyzer {
     // "requires version 0.20.1 or later of mod 'Fabric Loader'"
     private static final Pattern LOADER_REPLACE = Pattern.compile("Replace mod '(?:Fabric|Quilt) Loader'[^\\n]*? with version ([0-9][A-Za-z0-9_.+\\-]*)");
     private static final Pattern LOADER_REQUIRES = Pattern.compile("requires version ([0-9][A-Za-z0-9_.+\\-]*) or later of mod '(?:Fabric|Quilt) Loader'");
+
+    // Fabric's own suggestions: "Install walksylib, version 2.0.0 or later." and
+    // "Replace mod 'Sodium' (sodium) 0.5.0 with version 0.6.0 or later."
+    private static final Pattern INSTALL_SOLUTION = Pattern.compile("Install ([A-Za-z0-9_.\\-]+), (?:any version|version [^\\s,]+)");
+    private static final Pattern REPLACE_SOLUTION = Pattern.compile("Replace mod '[^']*' \\(([A-Za-z0-9_.\\-]+)\\) [^\\n]*? with version");
+    private static final Pattern REQUIRES_WRONG = Pattern.compile("requires version [^\\n]*? of mod '[^']*' \\(([A-Za-z0-9_.\\-]+)\\)");
+
+    private static boolean isCore(String id) {
+        return id.equals("minecraft") || id.equals("java") || id.equals("fabricloader") || id.equals("fabric-loader")
+                || id.equals("quilt_loader") || id.equals("quilt-loader") || id.equals("forge") || id.equals("neoforge");
+    }
 
     /** The loader version a crash log asks for, or null when it does not ask for a newer loader */
     public static String requiredLoaderVersion(String log) {
@@ -69,7 +80,25 @@ public final class CrashAnalyzer {
         if(lower.contains("no space left on device")) {
             out.add(new Finding("storage", Fix.NONE, null));
         }
-        if(loaderNeeded == null && (lower.contains("incompatible mod set") || lower.contains("missing or unsupported mandatory dependencies")
+        // Missing and outdated mods: these can be fixed by installing or updating, not by turning mods off
+        Set<String> toInstall = new LinkedHashSet<>();
+        Matcher inst = INSTALL_SOLUTION.matcher(log);
+        while(inst.find()) if(!isCore(inst.group(1))) toInstall.add(inst.group(1));
+        Set<String> outdated = new LinkedHashSet<>();
+        Matcher rep = REPLACE_SOLUTION.matcher(log);
+        while(rep.find()) if(!isCore(rep.group(1))) outdated.add(rep.group(1));
+        Matcher wrong = REQUIRES_WRONG.matcher(log);
+        while(wrong.find()) if(!isCore(wrong.group(1)) && !toInstall.contains(wrong.group(1))) outdated.add(wrong.group(1));
+        int shown = 0;
+        for(String id : toInstall) {
+            out.add(new Finding("dep_missing", Fix.INSTALL_MOD, id));
+            if(++shown >= 4) break;
+        }
+        if(!outdated.isEmpty()) {
+            out.add(new Finding("mods_old", Fix.UPDATE_MODS, join(outdated)));
+        }
+        boolean fixableByInstall = !toInstall.isEmpty() || !outdated.isEmpty();
+        if(loaderNeeded == null && !fixableByInstall && (lower.contains("incompatible mod set") || lower.contains("missing or unsupported mandatory dependencies")
                 || FABRIC_REQUIRES.matcher(log).find() && lower.contains("requires"))) {
             out.add(new Finding("dependency", Fix.NONE, null));
         }
@@ -91,7 +120,7 @@ public final class CrashAnalyzer {
         mods.remove("java");
         int count = 0;
         // When the loader itself is too old, disabling the mods that need the newer one would be wrong advice
-        if(loaderNeeded != null) mods.clear();
+        if(loaderNeeded != null || fixableByInstall) mods.clear();
         for(String mod : mods) {
             out.add(new Finding("mod", Fix.DISABLE_MOD, mod));
             if(++count >= 3) break;
@@ -109,6 +138,12 @@ public final class CrashAnalyzer {
             out.add(new Finding("unknown", Fix.DISABLE_ALL_MODS, null));
         }
         return out;
+    }
+
+    private static String join(Set<String> items) {
+        StringBuilder sb = new StringBuilder();
+        for(String i : items) { if(sb.length() > 0) sb.append(", "); sb.append(i); }
+        return sb.toString();
     }
 
     private static void collect(Pattern p, String log, int group, Set<String> into) {

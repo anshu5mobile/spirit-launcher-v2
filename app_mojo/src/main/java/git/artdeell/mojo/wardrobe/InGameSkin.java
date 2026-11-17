@@ -22,13 +22,14 @@ import java.util.List;
 public final class InGameSkin {
     private InGameSkin() {}
 
-    public static void show(final Activity activity, final File gameDir) {
-        final Account account = Accounts.getCurrent();
+    public static void show(final Activity activity, final File gameDir, final Account launched) {
+        // The game runs as the account it was started with: switching account in the launcher later changes nothing in it
+        final Account account = launched != null ? launched : Accounts.getCurrent();
         if(account == null || account.authType != AuthType.LOCAL) {
             // Online accounts keep their skin on the server: that is changed from the launcher's Wardrobe
             new AlertDialog.Builder(activity)
                     .setTitle(R.string.spirit_ingame_skin)
-                    .setMessage(R.string.spirit_ingame_skin_online)
+                    .setMessage(activity.getString(R.string.spirit_ingame_skin_online, account == null ? "?" : account.username))
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
             return;

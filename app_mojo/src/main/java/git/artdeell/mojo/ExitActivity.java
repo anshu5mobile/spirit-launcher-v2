@@ -26,6 +26,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import git.artdeell.mojo.browse.BrowseTarget;
 import git.artdeell.mojo.crash.CrashAnalyzer;
+import git.artdeell.mojo.crash.CrashFixer;
 import git.artdeell.mojo.prefs.LauncherPreferences;
 
 import java.io.File;
@@ -37,6 +38,10 @@ public class ExitActivity extends AppCompatActivity {
     private static final int BG = 0xFF0A0C09, CARD = 0xFF141812, LIME = 0xFFA6F03A, TEXT = 0xFFEAF2E0, DIM = 0xFF9FAB96, RED = 0xFFFF6B5E;
 
     private LinearLayout mFindings;
+    private TextView mAuto;
+    private boolean mAutoRunning, mHasInstallOrUpdate;
+    private List<CrashAnalyzer.Finding> mFindingList = new java.util.ArrayList<>();
+    private final java.util.Map<CrashAnalyzer.Finding, TextView> mButtons = new java.util.HashMap<>();
     private String mLogText = "";
     @Nullable private BrowseTarget mTarget;
 
@@ -53,50 +58,69 @@ public class ExitActivity extends AppCompatActivity {
         }
         final boolean signal = isSignal;
 
-        ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(BG);
-        scroll.setFillViewport(true);
+        // Landscape, one screen: summary and buttons on the left, what the Crash Doctor found on the right
         LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
+        root.setOrientation(LinearLayout.HORIZONTAL);
+        root.setBackgroundColor(BG);
         int pad = dp(16);
-        root.setPadding(pad, dp(28), pad, pad);
-        scroll.addView(root);
+        root.setPadding(pad, dp(12), pad, dp(12));
 
-        TextView badge = text(getString(R.string.spirit_crash_badge), 12, RED, true);
-        root.addView(badge);
+        ScrollView leftScroll = new ScrollView(this);
+        leftScroll.setFillViewport(true);
+        leftScroll.setVerticalScrollBarEnabled(false);
+        LinearLayout left = new LinearLayout(this);
+        left.setOrientation(LinearLayout.VERTICAL);
+        leftScroll.addView(left);
+        root.addView(leftScroll, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0.9f));
+
+        left.addView(text(getString(R.string.spirit_crash_badge), 12, RED, true));
         TextView title = text(getString(R.string.spirit_crash_title), 24, TEXT, true);
-        title.setPadding(0, dp(4), 0, dp(4));
-        root.addView(title);
+        title.setPadding(0, dp(2), 0, dp(2));
+        left.addView(title);
         String message = isSignal ? getString(R.string.mcn_abort_title) : getString(R.string.mcn_exit_title, code);
-        root.addView(text(message, 13, DIM, false));
+        left.addView(text(message, 12, DIM, false));
 
-        TextView doctor = text(getString(R.string.spirit_crash_doctor), 13, LIME, true);
-        doctor.setPadding(0, dp(20), 0, dp(8));
-        root.addView(doctor);
-        mFindings = new LinearLayout(this);
-        mFindings.setOrientation(LinearLayout.VERTICAL);
-        root.addView(mFindings);
-        mFindings.addView(card(getString(R.string.spirit_crash_reading), null, null));
+        View grow = new View(this);
+        left.addView(grow, new LinearLayout.LayoutParams(1, 0, 1f));
 
-        LinearLayout row1 = new LinearLayout(this);
-        row1.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        rp.topMargin = dp(16);
-        row1.setLayoutParams(rp);
-        row1.addView(button(getString(R.string.main_share_logs), false, v -> shareLog(this)), weight());
-        row1.addView(button(getString(R.string.spirit_crash_copy), false, v -> copyLog()), weight());
-        root.addView(row1);
-        LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(52));
-        pp.topMargin = dp(8);
+        mAuto = button(getString(R.string.spirit_crash_auto), true, v -> runAutoFix());
+        mAuto.setVisibility(View.GONE);
+        LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46));
+        ap.topMargin = dp(10);
+        left.addView(mAuto, ap);
+        LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46));
+        bp.topMargin = dp(8);
         TextView play = button(getString(R.string.spirit_crash_back), true, v -> {
             Tools.restartLauncherActivity(this);
             finish();
         });
-        root.addView(play, pp);
-        TextView close = button(getString(R.string.spirit_crash_close), false, v -> finish());
-        root.addView(close, pp);
+        left.addView(play, bp);
+        LinearLayout row1 = new LinearLayout(this);
+        row1.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(42));
+        rp.topMargin = dp(8);
+        row1.addView(button(getString(R.string.main_share_logs), false, v -> shareLog(this)), weight());
+        row1.addView(button(getString(R.string.spirit_crash_copy), false, v -> copyLog()), weight());
+        left.addView(row1, rp);
+        left.addView(button(getString(R.string.spirit_crash_close), false, v -> finish()), bp);
 
-        setContentView(scroll);
+        LinearLayout right = new LinearLayout(this);
+        right.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams rightP = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.1f);
+        rightP.leftMargin = dp(16);
+        root.addView(right, rightP);
+        TextView doctor = text(getString(R.string.spirit_crash_doctor), 13, LIME, true);
+        doctor.setPadding(0, 0, 0, dp(8));
+        right.addView(doctor);
+        ScrollView rightScroll = new ScrollView(this);
+        rightScroll.setVerticalScrollBarEnabled(false);
+        mFindings = new LinearLayout(this);
+        mFindings.setOrientation(LinearLayout.VERTICAL);
+        rightScroll.addView(mFindings);
+        right.addView(rightScroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        mFindings.addView(card(getString(R.string.spirit_crash_reading), null, null));
+
+        setContentView(root);
 
         MojoApplication.sExecutorService.execute(() -> {
             String log = readTail(new File(Tools.DIR_GAME_HOME, "latestlog.txt"), 600 * 1024);
@@ -201,8 +225,15 @@ public class ExitActivity extends AppCompatActivity {
 
     private void showFindings(List<CrashAnalyzer.Finding> findings) {
         mFindings.removeAllViews();
-        final List<View> fixers = new java.util.ArrayList<>();
+        mFindingList = findings;
+        mButtons.clear();
+        boolean hasInstallOrUpdate = false;
         for(CrashAnalyzer.Finding f : findings) {
+            if(f.fix == CrashAnalyzer.Fix.INSTALL_MOD || f.fix == CrashAnalyzer.Fix.UPDATE_MODS || f.fix == CrashAnalyzer.Fix.UPDATE_LOADER) hasInstallOrUpdate = true;
+        }
+        mHasInstallOrUpdate = hasInstallOrUpdate;
+        boolean anyAuto = false;
+        for(final CrashAnalyzer.Finding f : findings) {
             String title, detail;
             switch(f.id) {
                 case "oom": title = getString(R.string.spirit_crash_oom); detail = getString(R.string.spirit_crash_oom_d); break;
@@ -211,21 +242,27 @@ public class ExitActivity extends AppCompatActivity {
                 case "dependency": title = getString(R.string.spirit_crash_dep); detail = getString(R.string.spirit_crash_dep_d); break;
                 case "graphics": title = getString(R.string.spirit_crash_gl); detail = getString(R.string.spirit_crash_gl_d); break;
                 case "loader_old": title = getString(R.string.spirit_crash_loader, f.arg); detail = getString(R.string.spirit_crash_loader_d); break;
+                case "dep_missing": title = getString(R.string.spirit_crash_dep_missing, f.arg); detail = getString(R.string.spirit_crash_dep_missing_d); break;
+                case "mods_old": title = getString(R.string.spirit_crash_mods_old); detail = getString(R.string.spirit_crash_mods_old_d, f.arg); break;
                 case "mod": title = getString(R.string.spirit_crash_mod, f.arg); detail = getString(R.string.spirit_crash_mod_d); break;
                 case "signal": title = getString(R.string.spirit_crash_signal); detail = getString(R.string.spirit_crash_signal_d); break;
                 default: title = getString(R.string.spirit_crash_unknown); detail = getString(R.string.spirit_crash_unknown_d);
             }
-            View action = null;
+            TextView action = null;
             switch(f.fix) {
-                case MORE_RAM: action = button(getString(R.string.spirit_crash_fix_ram), true, v -> fixRam((TextView) v)); break;
-                case UPDATE_LOADER:
-                    action = button(getString(R.string.spirit_crash_fix_loader), true, v -> fixLoader(f.arg, (TextView) v));
+                case MORE_RAM: action = button(getString(R.string.spirit_crash_fix_ram), true, v -> runOne(f)); break;
+                case UPDATE_LOADER: action = button(getString(R.string.spirit_crash_fix_loader), true, v -> runOne(f)); break;
+                case INSTALL_MOD:
+                    if(mTarget != null) action = button(getString(R.string.spirit_crash_fix_install), true, v -> runOne(f));
+                    break;
+                case UPDATE_MODS:
+                    if(mTarget != null) action = button(getString(R.string.spirit_crash_fix_update), true, v -> runOne(f));
                     break;
                 case DISABLE_MOD:
-                    if(mTarget != null) action = button(getString(R.string.spirit_crash_fix_mod), true, v -> fixMod(f.arg, (TextView) v));
+                    if(mTarget != null) action = button(getString(R.string.spirit_crash_fix_mod), !hasInstallOrUpdate, v -> runOne(f));
                     break;
                 case DISABLE_ALL_MODS:
-                    if(mTarget != null && !mTarget.isVanilla()) action = button(getString(R.string.spirit_crash_fix_all), false, v -> fixAllMods((TextView) v));
+                    if(mTarget != null && !mTarget.isVanilla()) action = button(getString(R.string.spirit_crash_fix_all), false, v -> runOne(f));
                     break;
                 case OPEN_SETTINGS:
                     action = button(getString(R.string.spirit_crash_fix_settings), false, v -> {
@@ -235,115 +272,103 @@ public class ExitActivity extends AppCompatActivity {
                     break;
                 default: break;
             }
-            if(action != null && f.fix != CrashAnalyzer.Fix.OPEN_SETTINGS) fixers.add(action);
+            if(action != null && f.fix != CrashAnalyzer.Fix.OPEN_SETTINGS) {
+                mButtons.put(f, action);
+                if(CrashFixer.isAutomatic(f, hasInstallOrUpdate) && (mTarget != null || f.fix == CrashAnalyzer.Fix.MORE_RAM || f.fix == CrashAnalyzer.Fix.UPDATE_LOADER)) anyAuto = true;
+            }
             mFindings.addView(card(title, detail, action));
         }
-        if(!fixers.isEmpty()) {
-            // One tap runs every fix found above
-            TextView all = button(getString(R.string.spirit_crash_auto), true, v -> {
-                for(View fixer : fixers) if(fixer.isEnabled()) fixer.performClick();
-                done((TextView) v, R.string.spirit_crash_auto_done);
-            });
-            LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(52));
-            ap.bottomMargin = dp(8);
-            mFindings.addView(all, 0, ap);
-        }
+        mAuto.setVisibility(anyAuto ? View.VISIBLE : View.GONE);
     }
 
-    private void done(TextView button, int labelRes) {
-        button.setText(labelRes);
+    private void markDone(@Nullable TextView button) {
+        if(button == null) return;
+        button.setText(R.string.spirit_crash_fixed);
         button.setEnabled(false);
         button.setAlpha(0.6f);
     }
 
-    private void fixLoader(final String minVersion, final TextView button) {
+    /** One fix from its own button */
+    private void runOne(final CrashAnalyzer.Finding f) {
+        final TextView button = mButtons.get(f);
+        if(button == null || !button.isEnabled()) return;
+        final CharSequence label = button.getText();
         button.setEnabled(false);
-        button.setText(R.string.spirit_crash_loader_working);
+        button.setText(R.string.spirit_crash_working);
         MojoApplication.sExecutorService.execute(() -> {
-            String message;
-            boolean ok = false;
+            String result;
+            boolean ok = true;
             try {
-                git.artdeell.mojo.instances.Instance instance = git.artdeell.mojo.instances.Instances.loadSelectedInstance();
-                if(instance == null) throw new java.io.IOException("No instance selected");
-                String id = git.artdeell.mojo.modding.LoaderSwitcher.installNewerThan(instance.versionId, minVersion);
-                instance.versionId = id;
-                instance.write();
-                message = getString(R.string.spirit_crash_loader_done, id);
-                ok = true;
-            } catch (java.io.IOException | RuntimeException e) {
-                message = getString(R.string.spirit_crash_loader_failed, String.valueOf(e.getMessage()));
+                result = CrashFixer.apply(this, f, mTarget);
+            } catch (IOException | RuntimeException e) {
+                ok = false;
+                result = getString(R.string.spirit_crash_failed, String.valueOf(e.getMessage()));
             }
-            final String m = message;
+            final String message = result;
             final boolean success = ok;
             runOnUiThread(() -> {
-                Toast.makeText(this, m, Toast.LENGTH_LONG).show();
-                if(success) done(button, R.string.spirit_crash_fixed);
-                else { button.setEnabled(true); button.setText(R.string.spirit_crash_fix_loader); }
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                if(success) markDone(button);
+                else { button.setEnabled(true); button.setText(label); }
             });
         });
     }
 
-    private void fixRam(TextView button) {
-        try {
-            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-            am.getMemoryInfo(mi);
-            int totalMb = (int) (mi.totalMem / (1024 * 1024));
-            int cap = (int) (totalMb * 0.65f);
-            int current = LauncherPreferences.DEFAULT_PREF.getInt("allocation", 1024);
-            int next = Math.min(cap, current + 1024);
-            if(next <= current) {
-                Toast.makeText(this, R.string.spirit_crash_ram_max, Toast.LENGTH_LONG).show();
-                return;
-            }
-            LauncherPreferences.DEFAULT_PREF.edit().putInt("allocation", next).apply();
-            Toast.makeText(this, getString(R.string.spirit_crash_ram_done, next), Toast.LENGTH_LONG).show();
-            done(button, R.string.spirit_crash_fixed);
-        } catch (RuntimeException e) {
-            Toast.makeText(this, String.valueOf(e.getMessage()), Toast.LENGTH_LONG).show();
+    /** "Auto fix everything": loader, missing mods, outdated mods and RAM, in that order. Mods are updated, not turned off. */
+    private void runAutoFix() {
+        if(mAutoRunning) return;
+        mAutoRunning = true;
+        mAuto.setEnabled(false);
+        mAuto.setAlpha(0.7f);
+        final List<CrashAnalyzer.Finding> todo = new java.util.ArrayList<>();
+        for(CrashAnalyzer.Finding f : mFindingList) {
+            if(mButtons.containsKey(f) && mButtons.get(f).isEnabled() && CrashFixer.isAutomatic(f, mHasInstallOrUpdate)) todo.add(f);
         }
-    }
-
-    private void fixMod(String modId, TextView button) {
-        final BrowseTarget target = mTarget;
-        if(target == null) return;
         MojoApplication.sExecutorService.execute(() -> {
-            int renamed = 0;
-            File[] jars = new File(target.gameDir, "mods").listFiles((d, n) -> n.endsWith(".jar"));
-            String key = CrashAnalyzer.squash(modId);
-            if(jars != null && !key.isEmpty()) {
-                for(File jar : jars) {
-                    if(CrashAnalyzer.squash(jar.getName()).contains(key)
-                            && jar.renameTo(new File(jar.getParentFile(), jar.getName() + ".disabled"))) renamed++;
+            int ok = 0;
+            StringBuilder errors = new StringBuilder();
+            for(final CrashAnalyzer.Finding f : todo) {
+                final TextView button = mButtons.get(f);
+                runOnUiThread(() -> {
+                    mAuto.setText(getString(R.string.spirit_crash_auto_working, workLabel(f)));
+                    button.setEnabled(false);
+                    button.setText(R.string.spirit_crash_working);
+                });
+                try {
+                    CrashFixer.apply(this, f, mTarget);
+                    ok++;
+                    runOnUiThread(() -> markDone(button));
+                } catch (IOException | RuntimeException e) {
+                    if(errors.length() > 0) errors.append('\n');
+                    errors.append(e.getMessage());
+                    runOnUiThread(() -> { button.setEnabled(true); button.setText(R.string.spirit_crash_retry); });
                 }
             }
-            final int count = renamed;
+            final int done = ok;
+            final String err = errors.toString();
             runOnUiThread(() -> {
-                if(count > 0) {
-                    Toast.makeText(this, getString(R.string.spirit_crash_mod_done, count), Toast.LENGTH_LONG).show();
-                    done(button, R.string.spirit_crash_fixed);
+                mAutoRunning = false;
+                mAuto.setEnabled(true);
+                mAuto.setAlpha(1f);
+                if(err.isEmpty()) {
+                    mAuto.setText(R.string.spirit_crash_auto_done);
+                    Toast.makeText(this, R.string.spirit_crash_auto_ok, Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(this, R.string.spirit_crash_mod_notfound, Toast.LENGTH_LONG).show();
+                    mAuto.setText(R.string.spirit_crash_auto);
+                    Toast.makeText(this, getString(R.string.spirit_crash_auto_partial, done, err), Toast.LENGTH_LONG).show();
                 }
             });
         });
     }
 
-    private void fixAllMods(TextView button) {
-        final BrowseTarget target = mTarget;
-        if(target == null) return;
-        MojoApplication.sExecutorService.execute(() -> {
-            int renamed = 0;
-            File[] jars = new File(target.gameDir, "mods").listFiles((d, n) -> n.endsWith(".jar"));
-            if(jars != null) for(File jar : jars) {
-                if(jar.renameTo(new File(jar.getParentFile(), jar.getName() + ".disabled"))) renamed++;
-            }
-            final int count = renamed;
-            runOnUiThread(() -> {
-                Toast.makeText(this, getString(R.string.spirit_crash_mod_done, count), Toast.LENGTH_LONG).show();
-                if(count > 0) done(button, R.string.spirit_crash_fixed);
-            });
-        });
+    private String workLabel(CrashAnalyzer.Finding f) {
+        switch(f.fix) {
+            case UPDATE_LOADER: return getString(R.string.spirit_crash_w_loader);
+            case INSTALL_MOD: return f.arg;
+            case UPDATE_MODS: return getString(R.string.spirit_crash_w_mods);
+            case MORE_RAM: return "RAM";
+            default: return "";
+        }
     }
 
     @SuppressWarnings("unused") //used by native jre_launcher_new

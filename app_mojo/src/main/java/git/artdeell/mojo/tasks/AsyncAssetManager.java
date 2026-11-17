@@ -11,6 +11,7 @@ import android.util.Log;
 import com.kdt.mcgui.ProgressLayout;
 
 import git.artdeell.mojo.Tools;
+import git.artdeell.mojo.prefs.LauncherPreferences;
 import git.artdeell.mojo.multirt.MultiRTUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -65,7 +66,15 @@ public class AsyncAssetManager {
         ProgressLayout.setProgress(ProgressLayout.EXTRACT_SINGLE_FILES, 0);
         sExecutorService.execute(() -> {
             try {
+                // The default controls were redesigned: replace the old default once (the old one is kept as default.json.old)
+                boolean refreshDefault = !LauncherPreferences.DEFAULT_PREF.getBoolean("spiritDefaultControlsV2", false);
+                if(refreshDefault) {
+                    File old = new File(Tools.CTRLMAP_PATH, "default.json");
+                    if(old.isFile()) //noinspection ResultOfMethodCallIgnored
+                        old.renameTo(new File(Tools.CTRLMAP_PATH, "default.json.old"));
+                }
                 Tools.copyAssetFile(ctx, "default.json", Tools.CTRLMAP_PATH, false);
+                if(refreshDefault) LauncherPreferences.DEFAULT_PREF.edit().putBoolean("spiritDefaultControlsV2", true).apply();
                 Tools.copyAssetFile(ctx, "launcher_profiles.json", Tools.DIR_GAME_NEW, false);
                 Tools.copyAssetFile(ctx,"resolv.conf",Tools.DIR_DATA, false);
             } catch (IOException e) {
