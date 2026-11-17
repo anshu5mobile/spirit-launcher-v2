@@ -246,6 +246,13 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
+    <com.kdt.mcgui.MineButton
+        android:id="@+id/vprof_editor_loader_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/fragment_padding_medium"
+        android:layout_marginTop="8dp"
+        android:text="@string/spirit_loader_button" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

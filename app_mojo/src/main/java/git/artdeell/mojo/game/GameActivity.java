@@ -142,6 +142,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 // No options.txt yet (first start) or unreadable: the game then runs with its own options
             }
         }
+        git.artdeell.mojo.wardrobe.SkinStore.refreshDefaultSkinPack(instance.getGameDirectory(), account);
         VoiceChatConfig.applyDenoiser(instance.getGameDirectory(),
                 LauncherPreferences.DEFAULT_PREF.getBoolean("spiritVoiceDenoise", true));
 

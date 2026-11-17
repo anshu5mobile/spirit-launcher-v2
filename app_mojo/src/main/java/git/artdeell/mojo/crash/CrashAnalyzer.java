@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public final class CrashAnalyzer {
     private CrashAnalyzer() {}
 
-    public enum Fix { NONE, MORE_RAM, DISABLE_MOD, DISABLE_ALL_MODS, OPEN_SETTINGS }
+    public enum Fix { NONE, MORE_RAM, DISABLE_MOD, DISABLE_ALL_MODS, OPEN_SETTINGS, UPDATE_LOADER }
 
     public static final class Finding {
         public final String id;
@@ -33,6 +33,23 @@ public final class CrashAnalyzer {
     private static final Pattern FORGE_FAILED = Pattern.compile("([A-Za-z0-9_.\\-]+) \\(([A-Za-z0-9_.\\-]+)\\) has failed to load correctly");
     private static final Pattern MIXIN_CONFIG = Pattern.compile("([A-Za-z0-9_.\\-]+)\\.mixins?\\.json");
 
+    // "Replace mod 'Fabric Loader' (fabricloader) 0.19.3 with version 0.20.1 or later" and
+    // "requires version 0.20.1 or later of mod 'Fabric Loader'"
+    private static final Pattern LOADER_REPLACE = Pattern.compile("Replace mod '(?:Fabric|Quilt) Loader'[^\\n]*? with version ([0-9][A-Za-z0-9_.+\\-]*)");
+    private static final Pattern LOADER_REQUIRES = Pattern.compile("requires version ([0-9][A-Za-z0-9_.+\\-]*) or later of mod '(?:Fabric|Quilt) Loader'");
+
+    /** The loader version a crash log asks for, or null when it does not ask for a newer loader */
+    public static String requiredLoaderVersion(String log) {
+        Matcher m = LOADER_REPLACE.matcher(log);
+        if(m.find()) return m.group(1);
+        String best = null;
+        m = LOADER_REQUIRES.matcher(log);
+        while(m.find()) {
+            if(best == null || git.artdeell.mojo.modding.LoaderSwitcher.compare(m.group(1), best) > 0) best = m.group(1);
+        }
+        return best;
+    }
+
     public static List<Finding> analyze(String log, boolean nativeSignal) {
         List<Finding> out = new ArrayList<>();
         if(log == null) log = "";
@@ -42,14 +59,18 @@ public final class CrashAnalyzer {
                 || lower.contains("gc overhead limit") || lower.contains("java heap space")) {
             out.add(new Finding("oom", Fix.MORE_RAM, null));
         }
+        String loaderNeeded = requiredLoaderVersion(log);
+        if(loaderNeeded != null) {
+            out.add(new Finding("loader_old", Fix.UPDATE_LOADER, loaderNeeded));
+        }
         if(lower.contains("unsupportedclassversionerror")) {
             out.add(new Finding("java_version", Fix.OPEN_SETTINGS, null));
         }
         if(lower.contains("no space left on device")) {
             out.add(new Finding("storage", Fix.NONE, null));
         }
-        if(lower.contains("incompatible mod set") || lower.contains("missing or unsupported mandatory dependencies")
-                || FABRIC_REQUIRES.matcher(log).find() && lower.contains("requires")) {
+        if(loaderNeeded == null && (lower.contains("incompatible mod set") || lower.contains("missing or unsupported mandatory dependencies")
+                || FABRIC_REQUIRES.matcher(log).find() && lower.contains("requires"))) {
             out.add(new Finding("dependency", Fix.NONE, null));
         }
 
@@ -69,6 +90,8 @@ public final class CrashAnalyzer {
         mods.remove("neoforge");
         mods.remove("java");
         int count = 0;
+        // When the loader itself is too old, disabling the mods that need the newer one would be wrong advice
+        if(loaderNeeded != null) mods.clear();
         for(String mod : mods) {
             out.add(new Finding("mod", Fix.DISABLE_MOD, mod));
             if(++count >= 3) break;

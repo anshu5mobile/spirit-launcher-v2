@@ -421,8 +421,11 @@ public final class SkinStore {
         byte[] png = encodePng(skin);
         String[] names = {"steve", "alex", "ari", "efe", "kai", "makena", "noor", "sunny", "zuri"};
         try(java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(new FileOutputStream(new File(packs, PACK_NAME)))) {
+            // Minecraft 1.21.9+ dropped supported_formats and requires min_format/max_format: without them the pack is
+            // rejected and the default skin never changes. Older versions ignore the keys they do not know.
             putEntry(zip, "pack.mcmeta", ("{\"pack\":{\"pack_format\":15,\"description\":\"Spirit Launcher skin\","
-                    + "\"supported_formats\":{\"min_inclusive\":0,\"max_inclusive\":999}}}").getBytes(StandardCharsets.UTF_8));
+                    + "\"supported_formats\":{\"min_inclusive\":0,\"max_inclusive\":999},"
+                    + "\"min_format\":15,\"max_format\":999}}").getBytes(StandardCharsets.UTF_8));
             for(String n : names) {
                 putEntry(zip, "assets/minecraft/textures/entity/player/wide/" + n + ".png", png);
                 putEntry(zip, "assets/minecraft/textures/entity/player/slim/" + n + ".png", png);
@@ -431,6 +434,20 @@ public final class SkinStore {
             putEntry(zip, "assets/minecraft/textures/entity/alex.png", png);
         }
         enablePack(new File(gameDir, "options.txt"));
+    }
+
+    /**
+     * Rewrites the skin pack of an offline account at game start, so packs made by an older launcher build
+     * (with a pack.mcmeta new Minecraft versions reject) are fixed without applying the skin again.
+     */
+    public static void refreshDefaultSkinPack(File gameDir, git.artdeell.mojo.authenticator.accounts.Account account) {
+        try {
+            if(account == null || account.authType != git.artdeell.mojo.authenticator.AuthType.LOCAL) return;
+            if(!new File(gameDir, "resourcepacks/" + PACK_NAME).isFile()) return;
+            Active active = loadActive(account);
+            if(active == null || active.bitmap == null) return;
+            installDefaultSkinPack(gameDir, active.bitmap);
+        } catch (IOException | RuntimeException ignored) { /* the game still starts */ }
     }
 
     private static void putEntry(java.util.zip.ZipOutputStream zip, String name, byte[] data) throws IOException {

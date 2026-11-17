@@ -201,6 +201,7 @@ public class ExitActivity extends AppCompatActivity {
 
     private void showFindings(List<CrashAnalyzer.Finding> findings) {
         mFindings.removeAllViews();
+        final List<View> fixers = new java.util.ArrayList<>();
         for(CrashAnalyzer.Finding f : findings) {
             String title, detail;
             switch(f.id) {
@@ -209,6 +210,7 @@ public class ExitActivity extends AppCompatActivity {
                 case "storage": title = getString(R.string.spirit_crash_storage); detail = getString(R.string.spirit_crash_storage_d); break;
                 case "dependency": title = getString(R.string.spirit_crash_dep); detail = getString(R.string.spirit_crash_dep_d); break;
                 case "graphics": title = getString(R.string.spirit_crash_gl); detail = getString(R.string.spirit_crash_gl_d); break;
+                case "loader_old": title = getString(R.string.spirit_crash_loader, f.arg); detail = getString(R.string.spirit_crash_loader_d); break;
                 case "mod": title = getString(R.string.spirit_crash_mod, f.arg); detail = getString(R.string.spirit_crash_mod_d); break;
                 case "signal": title = getString(R.string.spirit_crash_signal); detail = getString(R.string.spirit_crash_signal_d); break;
                 default: title = getString(R.string.spirit_crash_unknown); detail = getString(R.string.spirit_crash_unknown_d);
@@ -216,6 +218,9 @@ public class ExitActivity extends AppCompatActivity {
             View action = null;
             switch(f.fix) {
                 case MORE_RAM: action = button(getString(R.string.spirit_crash_fix_ram), true, v -> fixRam((TextView) v)); break;
+                case UPDATE_LOADER:
+                    action = button(getString(R.string.spirit_crash_fix_loader), true, v -> fixLoader(f.arg, (TextView) v));
+                    break;
                 case DISABLE_MOD:
                     if(mTarget != null) action = button(getString(R.string.spirit_crash_fix_mod), true, v -> fixMod(f.arg, (TextView) v));
                     break;
@@ -230,7 +235,18 @@ public class ExitActivity extends AppCompatActivity {
                     break;
                 default: break;
             }
+            if(action != null && f.fix != CrashAnalyzer.Fix.OPEN_SETTINGS) fixers.add(action);
             mFindings.addView(card(title, detail, action));
+        }
+        if(!fixers.isEmpty()) {
+            // One tap runs every fix found above
+            TextView all = button(getString(R.string.spirit_crash_auto), true, v -> {
+                for(View fixer : fixers) if(fixer.isEnabled()) fixer.performClick();
+                done((TextView) v, R.string.spirit_crash_auto_done);
+            });
+            LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(52));
+            ap.bottomMargin = dp(8);
+            mFindings.addView(all, 0, ap);
         }
     }
 
@@ -238,6 +254,33 @@ public class ExitActivity extends AppCompatActivity {
         button.setText(labelRes);
         button.setEnabled(false);
         button.setAlpha(0.6f);
+    }
+
+    private void fixLoader(final String minVersion, final TextView button) {
+        button.setEnabled(false);
+        button.setText(R.string.spirit_crash_loader_working);
+        MojoApplication.sExecutorService.execute(() -> {
+            String message;
+            boolean ok = false;
+            try {
+                git.artdeell.mojo.instances.Instance instance = git.artdeell.mojo.instances.Instances.loadSelectedInstance();
+                if(instance == null) throw new java.io.IOException("No instance selected");
+                String id = git.artdeell.mojo.modding.LoaderSwitcher.installNewerThan(instance.versionId, minVersion);
+                instance.versionId = id;
+                instance.write();
+                message = getString(R.string.spirit_crash_loader_done, id);
+                ok = true;
+            } catch (java.io.IOException | RuntimeException e) {
+                message = getString(R.string.spirit_crash_loader_failed, String.valueOf(e.getMessage()));
+            }
+            final String m = message;
+            final boolean success = ok;
+            runOnUiThread(() -> {
+                Toast.makeText(this, m, Toast.LENGTH_LONG).show();
+                if(success) done(button, R.string.spirit_crash_fixed);
+                else { button.setEnabled(true); button.setText(R.string.spirit_crash_fix_loader); }
+            });
+        });
     }
 
     private void fixRam(TextView button) {

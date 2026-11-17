@@ -89,6 +89,10 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
             Tools.backToMainMenu(requireActivity());
         });
 
+        view.findViewById(R.id.vprof_editor_loader_button).setOnClickListener(v ->
+                git.artdeell.mojo.modding.LoaderSwitcher.showDialog(requireActivity(), mDefaultVersion.getText().toString(),
+                        newId -> mDefaultVersion.setText(newId)));
+
         mDeleteButton.setOnClickListener(v -> {
             DeleteConfirmDialogFragment dialogFragment = new DeleteConfirmDialogFragment();
             dialogFragment.show(getChildFragmentManager(), "delete_dialog_confirm");

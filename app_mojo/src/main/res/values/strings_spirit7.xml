@@ -90,4 +90,21 @@
     <string name="spirit_donate_title">Support Spirit Launcher</string>
     <string name="spirit_donate_sub">Donate if you can. It helps us put the app on the Play Store.</string>
     <string name="spirit_donate_msg">Spirit Launcher is free and always will be. If you can, donate any amount with UPI (PhonePe, Google Pay, Paytm...) by scanning this code. Once we have enough money for the Play Store developer account, we will publish the app there. Thank you!</string>
+    <string name="spirit_loader_button">Change loader (Fabric / Quilt)</string>
+    <string name="spirit_loader_title">Change loader</string>
+    <string name="spirit_loader_unsupported">Only vanilla, Fabric and Quilt instances can be switched here. Forge and NeoForge need their own installer: make a new instance for them.</string>
+    <string name="spirit_loader_pick">Loader for Minecraft %1$s</string>
+    <string name="spirit_loader_loading">Loading versions…</string>
+    <string name="spirit_loader_none">No %1$s versions found for Minecraft %2$s.</string>
+    <string name="spirit_loader_installing">Installing…</string>
+    <string name="spirit_loader_failed">Could not install the loader: %1$s</string>
+    <string name="spirit_loader_done">Now using %1$s. Press Save to keep it.</string>
+    <string name="spirit_crash_loader">Your loader is too old (needs %1$s or newer)</string>
+    <string name="spirit_crash_loader_d">A mod needs a newer Fabric/Quilt loader than the one this instance uses. Updating the loader fixes it; your worlds and mods stay.</string>
+    <string name="spirit_crash_fix_loader">Update loader</string>
+    <string name="spirit_crash_loader_working">Updating…</string>
+    <string name="spirit_crash_loader_done">Loader updated: %1$s. Launch the game again.</string>
+    <string name="spirit_crash_loader_failed">Could not update the loader: %1$s</string>
+    <string name="spirit_crash_auto">Auto fix everything</string>
+    <string name="spirit_crash_auto_done">Fixes applied, go back and launch</string>
 </resources>
