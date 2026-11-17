@@ -136,20 +136,20 @@ public final class GameErrorWatcher {
         box.setPadding(dp(a, 20), dp(a, 18), dp(a, 20), dp(a, 14));
         box.addView(text(a, a.getString(R.string.spirit_game_incompat_title), 20, TEXT, true));
         TextView sub = text(a, a.getString(R.string.spirit_game_incompat_sub), 13, DIM, false);
-        sub.setPadding(0, dp(2), 0, dp(10));
+        sub.setPadding(0, dp(a, 2), 0, dp(a, 10));
         box.addView(sub);
         LinearLayout list = new LinearLayout(a);
         list.setOrientation(LinearLayout.VERTICAL);
         for(CrashAnalyzer.Finding f : findings) {
             TextView line = text(a, "•  " + title(a, f), 14, TEXT, false);
-            line.setPadding(0, dp(3), 0, dp(3));
+            line.setPadding(0, dp(a, 3), 0, dp(a, 3));
             list.addView(line);
         }
         ScrollView scroll = new ScrollView(a);
         scroll.addView(list);
         box.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         final TextView status = text(a, "", 13, LIME, false);
-        status.setPadding(0, dp(8), 0, dp(4));
+        status.setPadding(0, dp(a, 8), 0, dp(a, 4));
         box.addView(status);
 
         final AlertDialog dialog = new AlertDialog.Builder(a).setView(box).setCancelable(false).create();
@@ -157,9 +157,9 @@ public final class GameErrorWatcher {
         final boolean[] fixed = {false};
         LinearLayout row = new LinearLayout(a);
         row.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout.LayoutParams half = new LinearLayout.LayoutParams(0, dp(44), 1f);
-        half.rightMargin = dp(4);
-        half.leftMargin = dp(4);
+        LinearLayout.LayoutParams half = new LinearLayout.LayoutParams(0, dp(a, 44), 1f);
+        half.rightMargin = dp(a, 4);
+        half.leftMargin = dp(a, 4);
 
         fix[0] = button(a, a.getString(R.string.spirit_crash_auto), true, v -> {
             if(fixed[0]) { // finished: restart so the game starts with the fixed mods
@@ -200,13 +200,13 @@ public final class GameErrorWatcher {
             });
         });
         if(todo.isEmpty()) fix[0].setVisibility(View.GONE);
-        row.addView(fix[0], new LinearLayout.LayoutParams(0, dp(44), 1.3f));
+        row.addView(fix[0], new LinearLayout.LayoutParams(0, dp(a, 44), 1.3f));
         box.addView(row, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         LinearLayout row2 = new LinearLayout(a);
         row2.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout.LayoutParams r2 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(44));
-        r2.topMargin = dp(8);
+        LinearLayout.LayoutParams r2 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(a, 44));
+        r2.topMargin = dp(a, 8);
         row2.addView(button(a, a.getString(R.string.spirit_game_incompat_exit), false, v -> {
             Tools.restartLauncherActivity(a);
             Tools.fullyExit();
