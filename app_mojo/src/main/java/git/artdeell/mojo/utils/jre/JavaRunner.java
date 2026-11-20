@@ -271,10 +271,8 @@ public class JavaRunner {
         if(!hasArg(args, "-XX:+IgnoreUnrecognizedVMOptions")) args.add(0, "-XX:+IgnoreUnrecognizedVMOptions");
         // No perf-data memory mapped file: faster start and less disk writing
         if(!hasArg(args, "-XX:+UsePerfData") && !hasArg(args, "-XX:-UsePerfData")) args.add("-XX:-UsePerfData");
-        // Skip bytecode verification of mod and game classes: the biggest single cost while the game loads.
-        // A broken mod then fails differently, but a working one starts sooner.
-        if(!hasArg(args, "-XX:+BytecodeVerificationRemote") && !hasArg(args, "-XX:-BytecodeVerificationRemote")
-                && !hasArg(args, "-Xverify:all")) args.add("-XX:-BytecodeVerificationRemote");
+        // NOTE: -XX:-BytecodeVerificationRemote was tried here and removed: it is a diagnostic flag on newer JVMs and
+        // makes the VM refuse to start ("Bad arguments") unless -XX:+UnlockDiagnosticVMOptions comes first.
         // GC choice is left to the JVM: forcing G1 with a short pause target was never measured on phones
         // and can cost throughput, so it is not applied.
     }
