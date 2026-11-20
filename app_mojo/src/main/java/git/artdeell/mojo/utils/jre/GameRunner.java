@@ -174,7 +174,7 @@ public class GameRunner {
                 if (!showAddressMemoryWarning) {
                     builder.setNegativeButton(R.string.option_do_not_show_again, (d, w) -> {
                         LauncherPreferences.DEFAULT_PREF.edit().putBoolean("showMemoryWarning", false).apply();
-                        Toast.makeText(activity, R.string.notification_permission_toast, Toast.LENGTH_SHORT).show();
+                        git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.notification_permission_toast, Toast.LENGTH_SHORT).show();
                     });
                 }
             };
@@ -309,7 +309,7 @@ public class GameRunner {
         javaArgList.add("-Dorg.lwjgl.opengl.libname=libGLMojo.so");
         javaArgList.add("-Dorg.lwjgl.freetype.libname="+ Tools.NATIVE_LIB_DIR+"/libfreetype.so");
 
-        activity.runOnUiThread(() -> Toast.makeText(activity, activity.getString(R.string.autoram_info_msg,LauncherPreferences.PREF_RAM_ALLOCATION), Toast.LENGTH_SHORT).show());
+        activity.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(activity, activity.getString(R.string.autoram_info_msg,LauncherPreferences.PREF_RAM_ALLOCATION), Toast.LENGTH_SHORT).show());
 
         Log.i("GameRunner", "Running with "+ launchArgs.toString());
 
@@ -317,6 +317,7 @@ public class GameRunner {
 
         try {
             JavaRunner.nativeSetupExit(activity);
+            JavaRunner.sGameLaunch = true;
             JavaRunner.startJvm(runtime, javaArgList, launchClassPath, mainClass, launchArgs);
         }catch (VMLoadException e) {
             LifecycleAwareAlertDialog.DialogCreator dialogCreator = (dialog, builder) ->
@@ -358,7 +359,7 @@ public class GameRunner {
         Logger.appendToLog("Pinging authentication service...");
         if(DownloadUtils.pingInjectorUrl(injectorUrl)) return true;
         Logger.appendToLog("Authentication service did not respond, disabling");
-        Tools.runOnUiThread(()-> Toast.makeText(context, context.getString(R.string.warn_auth_type_missing, injectorUrl), Toast.LENGTH_SHORT).show());
+        Tools.runOnUiThread(()-> git.artdeell.mojo.utils.SpiritToast.makeText(context, context.getString(R.string.warn_auth_type_missing, injectorUrl), Toast.LENGTH_SHORT).show());
         return false;
     }
 

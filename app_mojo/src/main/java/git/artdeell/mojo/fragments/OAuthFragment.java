@@ -49,7 +49,7 @@ public class OAuthFragment extends WebViewCompletionFragment {
         }
         // Captured by the listener in the mcAccountSpinner
         ExtraCore.setValue(mExtraCoreConstant, code);
-        Toast.makeText(activity, R.string.oauth_web_complete, Toast.LENGTH_SHORT).show();
+        git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.oauth_web_complete, Toast.LENGTH_SHORT).show();
         Tools.backToMainMenu(activity);
     }
 }

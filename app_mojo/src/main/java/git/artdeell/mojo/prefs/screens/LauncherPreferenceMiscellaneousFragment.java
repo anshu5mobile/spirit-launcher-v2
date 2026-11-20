@@ -52,6 +52,7 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         });
         setupCacheClearPreference();
         setupMicrophoneRequestPreference();
+        requirePreference("spiritCleanup").setOnPreferenceClickListener(preference -> { askCleanup(); return true; });
         updateVisibility();
     }
 
@@ -89,11 +90,74 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
                     return;
                 }
                 Tools.runOnUiThread(() -> {
-                    Toast.makeText(getLauncherActivity(), R.string.preference_metadata_clear_complete, Toast.LENGTH_LONG).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(getLauncherActivity(), R.string.preference_metadata_clear_complete, Toast.LENGTH_LONG).show();
                     updateVisibility();
                 });
             });
             return true;
+        });
+    }
+
+    // ---- Clean temporary files: downloaded plugin installers, logs and crash reports of the selected instance
+
+    private java.util.List<File> cleanupTargets() {
+        java.util.List<File> out = new java.util.ArrayList<>();
+        out.add(new File(requireContext().getCacheDir(), "plugins"));
+        try {
+            git.artdeell.mojo.browse.BrowseTarget target = git.artdeell.mojo.browse.BrowseTarget.forSelectedInstance();
+            if(target != null) {
+                out.add(new File(target.gameDir, "logs"));
+                out.add(new File(target.gameDir, "crash-reports"));
+            }
+        } catch (Throwable ignored) { /* no instance selected */ }
+        return out;
+    }
+
+    private static long sizeOf(File f) {
+        if(f == null || !f.exists()) return 0;
+        if(f.isFile()) return f.length();
+        long total = 0;
+        File[] kids = f.listFiles();
+        if(kids != null) for(File k : kids) total += sizeOf(k);
+        return total;
+    }
+
+    private static void deleteTree(File f) {
+        File[] kids = f.listFiles();
+        if(kids != null) for(File k : kids) deleteTree(k);
+        //noinspection ResultOfMethodCallIgnored
+        f.delete();
+    }
+
+    private static String human(long bytes) {
+        if(bytes >= 1048576L) return String.format(java.util.Locale.US, "%.1f MB", bytes / 1048576f);
+        return Math.max(1, bytes / 1024) + " KB";
+    }
+
+    private void askCleanup() {
+        final android.content.Context app = requireContext().getApplicationContext();
+        final java.util.List<File> targets = cleanupTargets();
+        git.artdeell.mojo.MojoApplication.sExecutorService.execute(() -> {
+            long total = 0;
+            for(File t : targets) total += sizeOf(t);
+            final long size = total;
+            Tools.runOnUiThread(() -> {
+                if(!isAdded()) return;
+                if(size <= 0) {
+                    git.artdeell.mojo.utils.SpiritToast.makeText(app, R.string.spirit_cleanup_nothing, android.widget.Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                new AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.spirit_cleanup_title)
+                        .setMessage(getString(R.string.spirit_cleanup_confirm, human(size)))
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .setPositiveButton(android.R.string.ok, (d, w) -> git.artdeell.mojo.MojoApplication.sExecutorService.execute(() -> {
+                            for(File t : targets) if(t.exists()) deleteTree(t);
+                            Tools.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(app,
+                                    app.getString(R.string.spirit_cleanup_done, human(size)), android.widget.Toast.LENGTH_LONG).show());
+                        }))
+                        .show();
+            });
         });
     }
 }

@@ -124,7 +124,7 @@ public class InstanceEditorFragment extends Fragment implements CropperUtils.Cro
         Instance selectedInstance = Instances.loadSelectedInstance();
         Context context = view.getContext();
         if(selectedInstance == null) {
-            Toast.makeText(context, R.string.no_instance, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(context, R.string.no_instance, Toast.LENGTH_LONG).show();
             getParentFragmentManager().popBackStack();
         }else {
             loadValues(selectedInstance, context);

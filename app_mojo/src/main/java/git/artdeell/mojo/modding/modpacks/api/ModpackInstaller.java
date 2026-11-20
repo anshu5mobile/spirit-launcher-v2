@@ -50,7 +50,7 @@ public class ModpackInstaller {
             if(loaderInstaller.requiresGuiInstallation()) {
                 instance.installer.start();
             }
-            else ContextExecutor.executeActivity(activity -> Toast.makeText(activity, R.string.modpack_install_toast_success, Toast.LENGTH_SHORT).show());
+            else ContextExecutor.executeActivity(activity -> git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.modpack_install_toast_success, Toast.LENGTH_SHORT).show());
         } catch (IOException e) {
             Instances.removeInstance(instance);
             throw e;

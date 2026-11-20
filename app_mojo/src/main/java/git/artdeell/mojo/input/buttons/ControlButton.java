@@ -185,14 +185,17 @@ public class ControlButton extends TextView implements ControlInterface {
 
         switch (action){
             case MotionEvent.ACTION_DOWN: // 0
-            case MotionEvent.ACTION_POINTER_DOWN: // 5
                 handlePressed();
                 break;
             case MotionEvent.ACTION_UP: // 1
             case MotionEvent.ACTION_CANCEL: // 3
-            case MotionEvent.ACTION_POINTER_UP: // 6
                 handleReleased();
                 break;
+            case MotionEvent.ACTION_POINTER_DOWN: // 5
+            case MotionEvent.ACTION_POINTER_UP: // 6
+                // A second finger on a button that is already held must not press it again, and lifting it
+                // must not release the key while the first finger is still down (this made keys drop in fights)
+                return true;
             default:
                 return false;
         }

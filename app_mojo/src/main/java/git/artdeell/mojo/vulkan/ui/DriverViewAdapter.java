@@ -114,7 +114,7 @@ public class DriverViewAdapter extends PackageAdapter<DriverViewAdapter.DriverVi
 
         private void afterDelete(boolean deleted) {
             if(!deleted) {
-                Toast.makeText(mContext, R.string.driver_config_remove_failed, Toast.LENGTH_SHORT).show();
+                git.artdeell.mojo.utils.SpiritToast.makeText(mContext, R.string.driver_config_remove_failed, Toast.LENGTH_SHORT).show();
                 return;
             }
             displayDrivers.remove(mCurrentDriver);

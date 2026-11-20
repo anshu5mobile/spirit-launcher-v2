@@ -364,7 +364,7 @@ public class AWTActivity extends BaseActivity implements View.OnTouchListener {
         if(mIsVirtualMouseEnabled && mMousePointerImageView.getX() == 0 && mMousePointerImageView.getY() == 0) {
             mTouchPad.post(()->placeMouseAt(mTouchPad.getWidth() / 2f, mTouchPad.getHeight() / 2f));
         }
-        Toast.makeText(this,
+        git.artdeell.mojo.utils.SpiritToast.makeText(this,
                 mIsVirtualMouseEnabled ? R.string.control_mouseon : R.string.control_mouseoff,
                 Toast.LENGTH_SHORT).show();
     }

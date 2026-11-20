@@ -30,6 +30,20 @@
             app2:seekBarIncrement="@integer/memory_seekbar_increment"
             app2:selectable="false"/>
 
+        <Preference
+            android:key="spiritAutoAllocate"
+            android:icon="@drawable/ic_px_zap"
+            android:persistent="false"
+            android:summary="@string/spirit_autoalloc_desc"
+            android:title="@string/spirit_autoalloc_title" />
+
+        <Preference
+            android:key="spiritDeviceInfo"
+            android:icon="@drawable/ic_px_ram"
+            android:persistent="false"
+            android:selectable="false"
+            android:title="@string/spirit_device_title" />
+
         <SwitchPreferenceCompat
             android:defaultValue="true"
             android:icon="@drawable/ic_px_java_run"

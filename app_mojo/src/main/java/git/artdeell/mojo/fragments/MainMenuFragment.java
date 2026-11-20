@@ -147,14 +147,14 @@ public class MainMenuFragment extends Fragment {
     private void openGameDirectory(Context context) {
         Instance instance = Instances.loadSelectedInstance();
         if(instance == null) {
-            Toast.makeText(context, R.string.no_instance, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(context, R.string.no_instance, Toast.LENGTH_LONG).show();
             return;
         }
         File gameDirectory = instance.getGameDirectory();
         if(FileUtils.ensureDirectorySilently(gameDirectory)) {
             openPath(context, gameDirectory, false);
         }else {
-            Toast.makeText(context, R.string.gamedir_open_failed, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(context, R.string.gamedir_open_failed, Toast.LENGTH_LONG).show();
         }
     }
 

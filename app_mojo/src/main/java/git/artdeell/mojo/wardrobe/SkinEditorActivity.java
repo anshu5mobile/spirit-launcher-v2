@@ -58,7 +58,7 @@ public class SkinEditorActivity extends AppCompatActivity {
         String in = getIntent().getStringExtra(EXTRA_IN);
         Bitmap skin = in == null ? null : BitmapFactory.decodeFile(in);
         if(skin == null || mOut == null) {
-            Toast.makeText(this, R.string.spirit_editor_nofile, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.spirit_editor_nofile, Toast.LENGTH_LONG).show();
             finish();
             return;
         }
@@ -381,7 +381,7 @@ public class SkinEditorActivity extends AppCompatActivity {
         try(FileOutputStream out = new FileOutputStream(new File(mOut))) {
             out.write(SkinStore.encodePng(mEditor.getSkin()));
         } catch (IOException e) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
             return;
         }
         Intent data = new Intent();

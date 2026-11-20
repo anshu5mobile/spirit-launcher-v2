@@ -275,7 +275,7 @@ public class BrowseFragment extends Fragment {
                 mProgress.setVisibility(View.GONE);
                 if(result == null) {
                     if(mList.getChildCount() == 0) showEmpty(getString(R.string.spirit_browse_error));
-                    else Toast.makeText(requireContext(), R.string.spirit_browse_error, Toast.LENGTH_SHORT).show();
+                    else git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_error, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 for(ModrinthClient.Project p : result) addProjectEntry(p, kind);
@@ -442,7 +442,7 @@ public class BrowseFragment extends Fragment {
     private void pickVersion(ModrinthClient.Project project, BrowseKind kind) {
         BrowseTarget target = mTarget;
         if(target == null) {
-            Toast.makeText(requireContext(), R.string.spirit_browse_no_instance, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_no_instance, Toast.LENGTH_LONG).show();
             return;
         }
         if(kind == BrowseKind.MODS && target.isVanilla()) {
@@ -455,7 +455,7 @@ public class BrowseFragment extends Fragment {
         }
         if(!ProgressLayout.ensureNoOngoingTasks(requireContext())) return;
 
-        Toast.makeText(requireContext(), R.string.spirit_browse_loading_versions, Toast.LENGTH_SHORT).show();
+        git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_loading_versions, Toast.LENGTH_SHORT).show();
         final CurseWorlds curse = mCurse;
         MojoApplication.sExecutorService.execute(() -> {
             List<ModrinthClient.Version> versions;
@@ -470,7 +470,7 @@ public class BrowseFragment extends Fragment {
             Tools.runOnUiThread(() -> {
                 if(!isAlive()) return;
                 if(result == null) {
-                    Toast.makeText(requireContext(), R.string.spirit_browse_error, Toast.LENGTH_LONG).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_error, Toast.LENGTH_LONG).show();
                 } else if(result.isEmpty()) {
                     new AlertDialog.Builder(requireContext())
                             .setTitle(project.title)
@@ -604,7 +604,7 @@ public class BrowseFragment extends Fragment {
             action.setText(item.enabled ? R.string.spirit_browse_disable : R.string.spirit_browse_enable);
             action.setOnClickListener(v -> {
                 if(!BrowseInstaller.setEnabled(item, !item.enabled)) {
-                    Toast.makeText(requireContext(), R.string.spirit_browse_error, Toast.LENGTH_SHORT).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_error, Toast.LENGTH_SHORT).show();
                 }
                 reload();
             });

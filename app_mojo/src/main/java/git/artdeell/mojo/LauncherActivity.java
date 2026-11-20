@@ -122,7 +122,7 @@ public class LauncherActivity extends BaseActivity {
         Instance selectedInstance = Instances.loadSelectedInstance();
 
         if(selectedInstance == null) {
-            Toast.makeText(this, R.string.no_instance, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.no_instance, Toast.LENGTH_LONG).show();
             return false;
         }
 
@@ -132,12 +132,12 @@ public class LauncherActivity extends BaseActivity {
         }
 
         if (!Tools.isValidString(selectedInstance.versionId)){
-            Toast.makeText(this, R.string.error_no_version, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.error_no_version, Toast.LENGTH_LONG).show();
             return false;
         }
 
         if(Accounts.getCurrent() == null){
-            Toast.makeText(this, R.string.no_saved_accounts, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.no_saved_accounts, Toast.LENGTH_LONG).show();
             ExtraCore.setValue(ExtraConstants.SELECT_AUTH_METHOD, true);
             return false;
         }
@@ -192,7 +192,7 @@ public class LauncherActivity extends BaseActivity {
         mRequestPermissionLauncher = this.registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isAllowed -> {
-                    if(!isAllowed) Tools.runOnUiThread(() -> Toast.makeText(this, R.string.notification_permission_toast, Toast.LENGTH_LONG).show());
+                    if(!isAllowed) Tools.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.notification_permission_toast, Toast.LENGTH_LONG).show());
                 }
         );
         checkNotificationPermission();

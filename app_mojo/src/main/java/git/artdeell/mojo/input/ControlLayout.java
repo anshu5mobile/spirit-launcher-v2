@@ -577,7 +577,7 @@ public class ControlLayout extends FrameLayout {
 			}
 			try {
 				String jsonPath = saveToDirectory(mEditText.getText().toString());
-				Toast.makeText(context, context.getString(R.string.global_save) + ": " + jsonPath, Toast.LENGTH_SHORT).show();
+				git.artdeell.mojo.utils.SpiritToast.makeText(context, context.getString(R.string.global_save) + ": " + jsonPath, Toast.LENGTH_SHORT).show();
 				mDialog.dismiss();
 				if(mListener != null) mListener.exitEditor();
 			} catch (Throwable th) {

@@ -80,7 +80,7 @@ public class ControlJoystick extends JoystickView implements ControlInterface {
             public void onForwardLock(boolean isLocked) {
                 sendInput(mDirectionForwardLock, isLocked);
             }
-        });
+        }, 16); // the library checks the stick every 50 ms by default: 16 ms reacts about three times sooner
     }
 
     // ------------------------------------------------------------------

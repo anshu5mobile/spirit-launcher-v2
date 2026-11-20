@@ -27,7 +27,7 @@ public class GamepadRemapPreference extends Preference {
     private void init(){
         setOnPreferenceClickListener(preference -> {
             Remapper.wipePreferences(getContext());
-            Toast.makeText(getContext(), R.string.preference_controller_map_wiped, Toast.LENGTH_SHORT).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(getContext(), R.string.preference_controller_map_wiped, Toast.LENGTH_SHORT).show();
             return true;
         });
     }

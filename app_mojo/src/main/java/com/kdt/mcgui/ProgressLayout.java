@@ -112,7 +112,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
 
     public static boolean ensureNoOngoingTasks(Context context) {
         if(ProgressKeeper.hasOngoingTasks()) {
-            Toast.makeText(context, R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(context, R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
             return false;
         }
         return true;
@@ -120,7 +120,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
 
     public static boolean ensureNoOngoingTasks(Context context, String key) {
         if(ProgressKeeper.hasProgressKey(key)) {
-            Toast.makeText(context, R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(context, R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
             return false;
         }
         return true;

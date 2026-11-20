@@ -235,7 +235,7 @@ public class RenderFragment extends Fragment {
                     return;
                 }
                 if(!PluginInstaller.install(activity, file)) {
-                    Toast.makeText(activity, R.string.spirit_render_allow_installs, Toast.LENGTH_LONG).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.spirit_render_allow_installs, Toast.LENGTH_LONG).show();
                 }
             });
         });
@@ -264,7 +264,7 @@ public class RenderFragment extends Fragment {
                 message = app.getString(R.string.spirit_render_control_failed, String.valueOf(e.getMessage()));
             }
             final String m = message;
-            Tools.runOnUiThread(() -> Toast.makeText(app, m, Toast.LENGTH_LONG).show());
+            Tools.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(app, m, Toast.LENGTH_LONG).show());
         });
     }
 
@@ -283,7 +283,7 @@ public class RenderFragment extends Fragment {
 
     private void saveToGallery(final File video) {
         final Context app = requireContext().getApplicationContext();
-        Toast.makeText(app, R.string.spirit_render_saving, Toast.LENGTH_SHORT).show();
+        git.artdeell.mojo.utils.SpiritToast.makeText(app, R.string.spirit_render_saving, Toast.LENGTH_SHORT).show();
         MojoApplication.sExecutorService.execute(() -> {
             String message;
             try {
@@ -293,7 +293,7 @@ public class RenderFragment extends Fragment {
                 message = app.getString(R.string.spirit_render_save_failed, String.valueOf(e.getMessage()));
             }
             final String m = message;
-            Tools.runOnUiThread(() -> Toast.makeText(app, m, Toast.LENGTH_LONG).show());
+            Tools.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(app, m, Toast.LENGTH_LONG).show());
         });
     }
 

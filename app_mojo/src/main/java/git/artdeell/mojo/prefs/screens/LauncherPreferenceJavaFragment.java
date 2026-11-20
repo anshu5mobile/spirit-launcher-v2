@@ -12,6 +12,8 @@ import androidx.preference.EditTextPreference;
 import git.artdeell.mojo.R;
 import git.artdeell.mojo.Tools;
 import git.artdeell.mojo.contracts.OpenDocumentWithExtension;
+import git.artdeell.mojo.perf.AutoAllocate;
+import git.artdeell.mojo.utils.SpiritToast;
 import git.artdeell.mojo.multirt.MultiRTConfigDialog;
 import git.artdeell.mojo.prefs.CustomSeekBarPreference;
 import git.artdeell.mojo.prefs.LauncherPreferences;
@@ -42,6 +44,20 @@ public class LauncherPreferenceJavaFragment extends LauncherPreferenceFragment {
         memorySeekbar.setValue(ramAllocation);
         memorySeekbar.setSuffix(" MB");
 
+        final int minRam = getResources().getInteger(R.integer.memory_seekbar_min);
+        final int stepRam = getResources().getInteger(R.integer.memory_seekbar_increment);
+        final int maxAllowed = maxRAM;
+        requirePreference("spiritAutoAllocate").setOnPreferenceClickListener(preference -> {
+            AutoAllocate.Result r = AutoAllocate.compute(requireContext(), maxAllowed, minRam, stepRam);
+            memorySeekbar.setValue(r.allocationMb);
+            LauncherPreferences.PREF_RAM_ALLOCATION = r.allocationMb;
+            SpiritToast.makeText(requireContext(), getString(R.string.spirit_autoalloc_done, r.allocationMb, r.totalMb, r.freeMb),
+                    android.widget.Toast.LENGTH_LONG).show();
+            updateDeviceInfo(r.allocationMb);
+            return true;
+        });
+        updateDeviceInfo(ramAllocation);
+
         EditTextPreference editJVMArgs = findPreference("javaArgs");
         if (editJVMArgs != null) {
             editJVMArgs.setOnBindEditTextListener(TextView::setSingleLine);
@@ -51,6 +67,14 @@ public class LauncherPreferenceJavaFragment extends LauncherPreferenceFragment {
             openMultiRTDialog();
             return true;
         });
+    }
+
+    private void updateDeviceInfo(int currentMb) {
+        android.content.Context c = getContext();
+        if(c == null) return;
+        AutoAllocate.Result r = AutoAllocate.compute(c, Integer.MAX_VALUE, 256, 8);
+        requirePreference("spiritDeviceInfo").setSummary(getString(R.string.spirit_device_info,
+                r.totalMb, r.freeMb, android.os.Build.VERSION.RELEASE, Runtime.getRuntime().availableProcessors(), r.allocationMb, currentMb));
     }
 
     private void openMultiRTDialog() {

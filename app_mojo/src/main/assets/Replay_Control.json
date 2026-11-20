@@ -40,7 +40,7 @@
         0
       ],
       "name": "GUI",
-      "opacity": 0.0,
+      "opacity": 0.3,
       "passThruEnabled": false,
       "strokeColor": -11665664,
       "strokeWidth": 1.6,
@@ -388,7 +388,7 @@
       "opacity": 1.0,
       "passThruEnabled": false,
       "strokeColor": -11665664,
-      "strokeWidth": 1.5,
+      "strokeWidth": 0.0,
       "width": 25.01818
     },
     {
@@ -407,8 +407,8 @@
         0,
         0
       ],
-      "name": "New",
-      "opacity": 0.0,
+      "name": "Menu",
+      "opacity": 0.3,
       "passThruEnabled": false,
       "strokeColor": -11665664,
       "strokeWidth": 1.5,

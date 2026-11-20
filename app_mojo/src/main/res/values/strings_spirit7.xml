@@ -120,4 +120,16 @@
     <string name="spirit_render_control_confirm">Install the Replay Mod Control layout? If you already installed it, it is replaced with the original. Pick it afterwards in Custom controls.</string>
     <string name="spirit_render_control_done">Replay_Control installed. Pick it in Custom controls.</string>
     <string name="spirit_render_control_failed">Could not install: %1$s</string>
+    <string name="spirit_autoalloc_title">Auto allocate memory</string>
+    <string name="spirit_autoalloc_desc">Checks your phone and sets the memory that suits it best.</string>
+    <string name="spirit_autoalloc_done">Memory set to %1$d MB (phone has %2$d MB, %3$d MB free now)</string>
+    <string name="spirit_device_title">Your phone</string>
+    <string name="spirit_device_info">RAM %1$d MB, %2$d MB free · Android %3$s · %4$d cores\nBest for this phone: %5$d MB · Now: %6$d MB</string>
+    <string name="spirit_voice_echo_title">Voice chat echo guard (experimental)</string>
+    <string name="spirit_voice_echo_desc">Uses the phone\'s call audio mode, which often removes echo of the game sound in your mic. Headphones work best. If game sound becomes quiet, turn it off.</string>
+    <string name="spirit_cleanup_title">Clean temporary files</string>
+    <string name="spirit_cleanup_desc">Removes downloaded installers, old logs and crash reports of the selected instance. Worlds and mods are not touched.</string>
+    <string name="spirit_cleanup_confirm">About %1$s can be removed. Continue?</string>
+    <string name="spirit_cleanup_done">Freed %1$s</string>
+    <string name="spirit_cleanup_nothing">Nothing to clean</string>
 </resources>

@@ -208,7 +208,7 @@ public class AccountSpinner extends AppCompatSpinner implements LoginListener, A
         mLoginStep = mMaxSteps;
         invalidate();
 
-        Toast.makeText(getContext(), R.string.main_login_done, Toast.LENGTH_SHORT).show();
+        git.artdeell.mojo.utils.SpiritToast.makeText(getContext(), R.string.main_login_done, Toast.LENGTH_SHORT).show();
         Accounts.setCurrent(account);
         reload();
     }

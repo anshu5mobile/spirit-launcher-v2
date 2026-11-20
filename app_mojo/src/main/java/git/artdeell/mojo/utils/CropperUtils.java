@@ -45,7 +45,7 @@ public class CropperUtils {
             Context context = contextProvider.getContext();
             if(context == null) return;
             if (result == null) {
-                Toast.makeText(context, R.string.cropper_select_cancelled, Toast.LENGTH_SHORT).show();
+                git.artdeell.mojo.utils.SpiritToast.makeText(context, R.string.cropper_select_cancelled, Toast.LENGTH_SHORT).show();
                 return;
             }
             openCropperDialog(context, result, cropperReceiver);

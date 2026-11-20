@@ -27,10 +27,16 @@ import java.util.Objects;
 import java.util.TimeZone;
 
 public class JavaRunner {
+    /**
+     * Set by the game launcher. A running game has no use for desktop windows: with AWT headless, Fabric and Forge
+     * log their mod errors instead of opening a grey Swing window, and the launcher's own crash screen takes over.
+     */
+    public static volatile boolean sGameLaunch = false;
 
     private static boolean getCacioJavaArgs(List<String> javaArgList, boolean isJava8) {
         // Caciocavallo config AWT-enabled version
-        javaArgList.add("-Djava.awt.headless=false");
+        boolean headless = sGameLaunch && !git.artdeell.mojo.prefs.LauncherPreferences.DEFAULT_PREF.getBoolean("spiritDesktopErrors", false);
+        javaArgList.add("-Djava.awt.headless=" + headless);
         javaArgList.add("-Dcacio.managed.screensize=" + AWTView.AWT_CANVAS_WIDTH + "x" + AWTView.AWT_CANVAS_HEIGHT);
         javaArgList.add("-Dcacio.font.fontmanager=sun.awt.X11FontManager");
         javaArgList.add("-Dcacio.font.fontscaler=sun.font.FreetypeFontScaler");
@@ -265,6 +271,10 @@ public class JavaRunner {
         if(!hasArg(args, "-XX:+IgnoreUnrecognizedVMOptions")) args.add(0, "-XX:+IgnoreUnrecognizedVMOptions");
         // No perf-data memory mapped file: faster start and less disk writing
         if(!hasArg(args, "-XX:+UsePerfData") && !hasArg(args, "-XX:-UsePerfData")) args.add("-XX:-UsePerfData");
+        // Skip bytecode verification of mod and game classes: the biggest single cost while the game loads.
+        // A broken mod then fails differently, but a working one starts sooner.
+        if(!hasArg(args, "-XX:+BytecodeVerificationRemote") && !hasArg(args, "-XX:-BytecodeVerificationRemote")
+                && !hasArg(args, "-Xverify:all")) args.add("-XX:-BytecodeVerificationRemote");
         // GC choice is left to the JVM: forcing G1 with a short pause target was never measured on phones
         // and can cost throughput, so it is not applied.
     }

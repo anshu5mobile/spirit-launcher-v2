@@ -6,10 +6,19 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
+import android.graphics.Typeface;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
+import androidx.preference.PreferenceGroupAdapter;
+import androidx.preference.PreferenceScreen;
+import androidx.preference.PreferenceViewHolder;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.preference.PreferenceFragmentCompat;
 
 import git.artdeell.mojo.LauncherActivity;
@@ -27,6 +36,66 @@ public class LauncherPreferenceFragment extends PreferenceFragmentCompat impleme
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         view.setBackgroundColor(getResources().getColor(R.color.background_app));
         super.onViewCreated(view, savedInstanceState);
+        // Cards instead of a flat list: the list draws its own edge-to-edge dividers, which are not wanted now
+        setDivider(null);
+        setDividerHeight(0);
+        RecyclerView list = getListView();
+        if(list != null) {
+            list.setClipToPadding(false);
+            list.setPadding(0, dp(4), 0, dp(24));
+        }
+    }
+
+    private int dp(int v) {
+        return (int) (v * getResources().getDisplayMetrics().density);
+    }
+
+    /** Spirit look for every settings screen: a rounded card per setting and green section titles. */
+    @Override
+    protected RecyclerView.Adapter onCreateAdapter(PreferenceScreen preferenceScreen) {
+        return new PreferenceGroupAdapter(preferenceScreen) {
+            @Override
+            public void onBindViewHolder(PreferenceViewHolder holder, int position) {
+                super.onBindViewHolder(holder, position);
+                try {
+                    styleRow(holder, getItem(position));
+                } catch (RuntimeException ignored) { /* an unstyled row is still a working row */ }
+            }
+        };
+    }
+
+    private void styleRow(PreferenceViewHolder holder, Preference preference) {
+        final int lime = 0xFFA6F03A, text = 0xFFF2F7EA, dim = 0xFFB4BFAB;
+        View row = holder.itemView;
+        TextView title = (TextView) holder.findViewById(android.R.id.title);
+        TextView summary = (TextView) holder.findViewById(android.R.id.summary);
+        ViewGroup.LayoutParams raw = row.getLayoutParams();
+        if(preference instanceof PreferenceCategory) {
+            row.setBackground(null);
+            if(title != null) {
+                title.setTextColor(lime);
+                title.setTypeface(null, Typeface.BOLD);
+                title.setAllCaps(true);
+                title.setLetterSpacing(0.06f);
+            }
+            if(raw instanceof ViewGroup.MarginLayoutParams) {
+                ((ViewGroup.MarginLayoutParams) raw).setMargins(dp(8), dp(10), dp(8), 0);
+                row.setLayoutParams(raw);
+            }
+            return;
+        }
+        row.setBackgroundResource(R.drawable.spirit_card_bg);
+        if(raw instanceof ViewGroup.MarginLayoutParams) {
+            ((ViewGroup.MarginLayoutParams) raw).setMargins(dp(12), dp(4), dp(12), dp(4));
+            row.setLayoutParams(raw);
+        }
+        if(title != null) {
+            title.setTextColor(text);
+            title.setTypeface(null, Typeface.BOLD);
+        }
+        if(summary != null) summary.setTextColor(dim);
+        View icon = holder.findViewById(android.R.id.icon);
+        if(icon instanceof ImageView) ((ImageView) icon).setColorFilter(lime);
     }
 
     @Override

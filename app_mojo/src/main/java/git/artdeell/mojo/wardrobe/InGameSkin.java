@@ -72,7 +72,7 @@ public final class InGameSkin {
                 message = activity.getString(R.string.spirit_skin_apply_failed, String.valueOf(e.getMessage()));
             }
             final String m = message;
-            Tools.runOnUiThread(() -> Toast.makeText(activity, m, Toast.LENGTH_LONG).show());
+            Tools.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(activity, m, Toast.LENGTH_LONG).show());
         });
     }
 }

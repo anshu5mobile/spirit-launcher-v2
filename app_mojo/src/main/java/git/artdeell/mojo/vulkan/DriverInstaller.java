@@ -28,7 +28,7 @@ public class DriverInstaller {
             ProgressLayout.setProgress(ProgressLayout.DRIVER_INSTALL, 0, R.string.driver_progress_validate);
             try (InputStream is = context.getContentResolver().openInputStream(uri)) {
                 if ((target = DriverManager.validateDriver(is)) == null) {
-                    runOnUiThread(() -> Toast.makeText(context, R.string.driver_config_import_invalid, Toast.LENGTH_LONG).show());
+                    runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(context, R.string.driver_config_import_invalid, Toast.LENGTH_LONG).show());
                     ProgressLayout.clearProgress(ProgressLayout.DRIVER_INSTALL);
                     return;
                 }

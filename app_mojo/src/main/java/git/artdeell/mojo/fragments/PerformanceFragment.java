@@ -274,7 +274,7 @@ public class PerformanceFragment extends Fragment {
         final DeviceInfo d = mDevice;
         if(d == null) return;
         if(mTarget == null) {
-            Toast.makeText(requireContext(), R.string.spirit_browse_no_instance, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_no_instance, Toast.LENGTH_LONG).show();
             return;
         }
         String msg = getString(R.string.spirit_perf_confirm, mTarget.instanceName, profile.ramMb(d), profile.resolutionPercent(d));
@@ -351,7 +351,7 @@ public class PerformanceFragment extends Fragment {
             final boolean restored = optionsBack;
             Tools.runOnUiThread(() -> {
                 if(!isAdded()) return;
-                Toast.makeText(requireContext(), restored ? R.string.spirit_perf_restored_all : R.string.spirit_perf_restored, Toast.LENGTH_LONG).show();
+                git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), restored ? R.string.spirit_perf_restored_all : R.string.spirit_perf_restored, Toast.LENGTH_LONG).show();
                 render();
             });
         });

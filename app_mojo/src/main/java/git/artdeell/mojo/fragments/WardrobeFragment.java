@@ -132,7 +132,7 @@ public class WardrobeFragment extends Fragment {
             LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_AUTO_SKIN, checked).apply();
             refreshCompat();
             if(checked && (mUrl == null || mUrl.isEmpty())) {
-                Toast.makeText(requireContext(), R.string.spirit_autoskin_no_url, Toast.LENGTH_LONG).show();
+                git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_autoskin_no_url, Toast.LENGTH_LONG).show();
             }
         });
         view.findViewById(R.id.spirit_autoskin_servers).setOnClickListener(v -> openServers());
@@ -170,7 +170,7 @@ public class WardrobeFragment extends Fragment {
     }
 
     private void toast(String text) {
-        ui(() -> Toast.makeText(requireContext(), text, Toast.LENGTH_LONG).show());
+        ui(() -> git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), text, Toast.LENGTH_LONG).show());
     }
 
     private void promptText(int title, int hint, int inputType, @Nullable String initial, TextCallback callback) {
@@ -348,7 +348,7 @@ public class WardrobeFragment extends Fragment {
         mAddOnly = false;
         ui(() -> {
             refreshViews();
-            Toast.makeText(requireContext(), getString(R.string.spirit_skin_fetch_failed, messageOf(e)), Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), getString(R.string.spirit_skin_fetch_failed, messageOf(e)), Toast.LENGTH_LONG).show();
         });
     }
 
@@ -454,7 +454,7 @@ public class WardrobeFragment extends Fragment {
             final List<SkinStore.HistoryEntry> list = SkinStore.history();
             ui(() -> {
                 if(list.isEmpty()) {
-                    Toast.makeText(requireContext(), R.string.spirit_skin_history_empty, Toast.LENGTH_LONG).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_skin_history_empty, Toast.LENGTH_LONG).show();
                     return;
                 }
                 java.text.DateFormat df = java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT);
@@ -511,7 +511,7 @@ public class WardrobeFragment extends Fragment {
         final Account account = mAccount;
         final Bitmap bitmap = mBitmap;
         if(account == null || bitmap == null) {
-            Toast.makeText(requireContext(), R.string.no_saved_accounts, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.no_saved_accounts, Toast.LENGTH_LONG).show();
             return;
         }
         final boolean slim = mSlim;
@@ -563,12 +563,12 @@ public class WardrobeFragment extends Fragment {
                 } else if("TOKEN_EXPIRED".equals(e.getMessage())) {
                     ui(() -> {
                         refreshViews();
-                        Toast.makeText(requireContext(), R.string.spirit_skin_token_expired, Toast.LENGTH_LONG).show();
+                        git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_skin_token_expired, Toast.LENGTH_LONG).show();
                     });
                 } else {
                     ui(() -> {
                         refreshViews();
-                        Toast.makeText(requireContext(), getString(R.string.spirit_skin_apply_failed, messageOf(e)), Toast.LENGTH_LONG).show();
+                        git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), getString(R.string.spirit_skin_apply_failed, messageOf(e)), Toast.LENGTH_LONG).show();
                     });
                 }
             }
@@ -579,7 +579,7 @@ public class WardrobeFragment extends Fragment {
     private void refreshThenRetry(Account account, Bitmap bitmap, boolean slim, @Nullable String url, @Nullable String name) {
         if(!account.authType.requiresLogin()) {
             refreshViews();
-            Toast.makeText(requireContext(), R.string.spirit_skin_token_expired, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_skin_token_expired, Toast.LENGTH_LONG).show();
             return;
         }
         account.authType.createAuth().refreshAccount(new LoginListener() {
@@ -593,7 +593,7 @@ public class WardrobeFragment extends Fragment {
             public void onLoginError(Throwable error) {
                 if(!isAdded() || getView() == null) return;
                 refreshViews();
-                Toast.makeText(requireContext(), R.string.spirit_skin_token_expired, Toast.LENGTH_LONG).show();
+                git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_skin_token_expired, Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -674,7 +674,7 @@ public class WardrobeFragment extends Fragment {
             mAccount = account;
             mPending = false;
             refreshViews();
-            Toast.makeText(requireContext(), getString(R.string.spirit_skin_applied, account.username), Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), getString(R.string.spirit_skin_applied, account.username), Toast.LENGTH_LONG).show();
             ExtraCore.setValue(ExtraConstants.REFRESH_ACCOUNT_SPINNER, true);
         });
     }
@@ -757,7 +757,7 @@ public class WardrobeFragment extends Fragment {
                 .setTitle(R.string.spirit_autoskin_servers_title)
                 .setNeutralButton(R.string.spirit_autoskin_reset, (d, w) -> {
                     AutoSkin.setServers(new java.util.HashSet<>());
-                    Toast.makeText(requireContext(), R.string.spirit_autoskin_reset_done, Toast.LENGTH_SHORT).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_autoskin_reset_done, Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton(R.string.spirit_autoskin_close, null);
         if(sorted.isEmpty()) {
@@ -784,7 +784,7 @@ public class WardrobeFragment extends Fragment {
     private void openEditor() {
         final Bitmap bitmap = mBitmap;
         if(bitmap == null) {
-            Toast.makeText(requireContext(), R.string.spirit_editor_need_skin, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_editor_need_skin, Toast.LENGTH_LONG).show();
             return;
         }
         final boolean slim = mSlim;
@@ -814,7 +814,7 @@ public class WardrobeFragment extends Fragment {
     private void openCapes() {
         final Account account = mAccount;
         if(account == null || account.authType != git.artdeell.mojo.authenticator.AuthType.MICROSOFT) {
-            Toast.makeText(requireContext(), R.string.spirit_cape_only_ms, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_cape_only_ms, Toast.LENGTH_LONG).show();
             return;
         }
         MojoApplication.sExecutorService.execute(() -> {
@@ -828,7 +828,7 @@ public class WardrobeFragment extends Fragment {
     private void showCapeDialog(Account account, java.util.List<SkinNet.Cape> capes) {
         if(!isAdded()) return;
         if(capes.isEmpty()) {
-            Toast.makeText(requireContext(), R.string.spirit_cape_empty, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_cape_empty, Toast.LENGTH_LONG).show();
             return;
         }
         String[] names = new String[capes.size() + 1];

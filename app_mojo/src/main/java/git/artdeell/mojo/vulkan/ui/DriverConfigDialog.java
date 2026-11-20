@@ -25,7 +25,7 @@ public class DriverConfigDialog extends PackageSelector {
 
     protected PackageAdapter<?> createAdapter(Context context, PackageSelector dialog) { return new DriverViewAdapter(this); }
     protected void onPositive(Context context, ActivityResultLauncher<Object> launcher) {
-        Toast.makeText(context, R.string.driver_config_import_notify, Toast.LENGTH_LONG).show();
+        git.artdeell.mojo.utils.SpiritToast.makeText(context, R.string.driver_config_import_notify, Toast.LENGTH_LONG).show();
         launcher.launch(null);
     }
 }

@@ -12,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import java.util.ArrayDeque;
+
 import git.artdeell.mojo.LogDispatcher;
 import git.artdeell.mojo.Logger;
 import git.artdeell.mojo.R;
@@ -25,6 +27,29 @@ public class LoggerView extends ConstraintLayout {
     private ToggleButton mLogToggle;
     private DefocusableScrollView mScrollView;
     private TextView mLogTextView;
+
+    // Log lines arrive far faster than a TextView can lay them out: they are queued and shown a few times a second,
+    // and only the newest lines are kept, so the text never grows into a huge block that stalls the game start.
+    private static final int MAX_LINES = 300;
+    private static final long FLUSH_MS = 250L;
+    private final ArrayDeque<String> mPending = new ArrayDeque<>();
+    private boolean mFlushScheduled;
+    private final Runnable mFlush = new Runnable() {
+        @Override
+        public void run() {
+            String joined;
+            synchronized (mPending) {
+                mFlushScheduled = false;
+                if(mPending.isEmpty()) return;
+                StringBuilder sb = new StringBuilder(mPending.size() * 80);
+                for(String line : mPending) sb.append(line).append('\n');
+                joined = sb.toString();
+            }
+            if(mLogTextView.getVisibility() != VISIBLE) return;
+            mLogTextView.setText(joined);
+            if(mScrollView.isKeepFocusing()) mScrollView.fullScroll(View.FOCUS_DOWN);
+        }
+    };
 
 
     public LoggerView(@NonNull Context context) {
@@ -64,6 +89,7 @@ public class LoggerView extends ConstraintLayout {
                         LogDispatcher.setViewListener(mLogListener);
                     }else{
                         mLogTextView.setText("");
+                        synchronized (mPending) { mPending.clear(); }
                         LogDispatcher.setViewListener(null); // Makes the JNI code be able to skip expensive logger callbacks
                         // NOTE: was tested by rapidly smashing the log on/off button, no sync issues found :)
                     }
@@ -91,11 +117,13 @@ public class LoggerView extends ConstraintLayout {
         // Listen to logs
         mLogListener = text -> {
             if(mLogTextView.getVisibility() != VISIBLE) return;
-            post(() -> {
-                mLogTextView.append(text + '\n');
-                if(mScrollView.isKeepFocusing()) mScrollView.fullScroll(View.FOCUS_DOWN);
-            });
-
+            synchronized (mPending) {
+                mPending.addLast(text);
+                while(mPending.size() > MAX_LINES) mPending.pollFirst();
+                if(mFlushScheduled) return;
+                mFlushScheduled = true;
+            }
+            postDelayed(mFlush, FLUSH_MS);
         };
     }
 

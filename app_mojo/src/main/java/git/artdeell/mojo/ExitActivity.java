@@ -220,7 +220,7 @@ public class ExitActivity extends AppCompatActivity {
         ClipboardManager mgr = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
         String tail = mLogText.length() > 100000 ? mLogText.substring(mLogText.length() - 100000) : mLogText;
         if(mgr != null) mgr.setPrimaryClip(ClipData.newPlainText("log", tail));
-        Toast.makeText(this, R.string.spirit_crash_copied, Toast.LENGTH_SHORT).show();
+        git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.spirit_crash_copied, Toast.LENGTH_SHORT).show();
     }
 
     private void showFindings(List<CrashAnalyzer.Finding> findings) {
@@ -307,7 +307,7 @@ public class ExitActivity extends AppCompatActivity {
             final String message = result;
             final boolean success = ok;
             runOnUiThread(() -> {
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                git.artdeell.mojo.utils.SpiritToast.makeText(this, message, Toast.LENGTH_LONG).show();
                 if(success) markDone(button);
                 else { button.setEnabled(true); button.setText(label); }
             });
@@ -352,10 +352,10 @@ public class ExitActivity extends AppCompatActivity {
                 mAuto.setAlpha(1f);
                 if(err.isEmpty()) {
                     mAuto.setText(R.string.spirit_crash_auto_done);
-                    Toast.makeText(this, R.string.spirit_crash_auto_ok, Toast.LENGTH_LONG).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.spirit_crash_auto_ok, Toast.LENGTH_LONG).show();
                 } else {
                     mAuto.setText(R.string.spirit_crash_auto);
-                    Toast.makeText(this, getString(R.string.spirit_crash_auto_partial, done, err), Toast.LENGTH_LONG).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(this, getString(R.string.spirit_crash_auto_partial, done, err), Toast.LENGTH_LONG).show();
                 }
             });
         });

@@ -63,7 +63,7 @@ public final class LoaderSwitcher {
     }
 
     private static void loadVersions(final Activity activity, final FabriclikeUtils utils, final String mc, final Callback callback) {
-        Toast.makeText(activity, R.string.spirit_loader_loading, Toast.LENGTH_SHORT).show();
+        git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.spirit_loader_loading, Toast.LENGTH_SHORT).show();
         MojoApplication.sExecutorService.execute(() -> {
             FabricVersion[] versions = null;
             try { versions = utils.downloadLoaderVersions(mc); } catch (IOException | RuntimeException ignored) { /* shown below */ }
@@ -71,7 +71,7 @@ public final class LoaderSwitcher {
             activity.runOnUiThread(() -> {
                 if(activity.isFinishing()) return;
                 if(list == null || list.length == 0) {
-                    Toast.makeText(activity, activity.getString(R.string.spirit_loader_none, utils.getName(), mc), Toast.LENGTH_LONG).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(activity, activity.getString(R.string.spirit_loader_none, utils.getName(), mc), Toast.LENGTH_LONG).show();
                     return;
                 }
                 int n = Math.min(list.length, 40);
@@ -89,7 +89,7 @@ public final class LoaderSwitcher {
     }
 
     private static void install(final Activity activity, final FabriclikeUtils utils, final String mc, final String loaderVersion, final Callback callback) {
-        Toast.makeText(activity, R.string.spirit_loader_installing, Toast.LENGTH_SHORT).show();
+        git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.spirit_loader_installing, Toast.LENGTH_SHORT).show();
         MojoApplication.sExecutorService.execute(() -> {
             String id = null;
             String error = null;
@@ -97,10 +97,10 @@ public final class LoaderSwitcher {
             final String versionId = id, message = error;
             activity.runOnUiThread(() -> {
                 if(versionId == null) {
-                    Toast.makeText(activity, activity.getString(R.string.spirit_loader_failed, message == null ? "?" : message), Toast.LENGTH_LONG).show();
+                    git.artdeell.mojo.utils.SpiritToast.makeText(activity, activity.getString(R.string.spirit_loader_failed, message == null ? "?" : message), Toast.LENGTH_LONG).show();
                     return;
                 }
-                Toast.makeText(activity, activity.getString(R.string.spirit_loader_done, versionId), Toast.LENGTH_LONG).show();
+                git.artdeell.mojo.utils.SpiritToast.makeText(activity, activity.getString(R.string.spirit_loader_done, versionId), Toast.LENGTH_LONG).show();
                 callback.onSwitched(versionId);
             });
         });

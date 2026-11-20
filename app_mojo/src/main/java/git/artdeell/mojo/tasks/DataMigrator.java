@@ -74,10 +74,10 @@ public class DataMigrator {
         try {
             activity.getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
             copyFileTree(activity, getFilesUri(DocumentsContract.buildDocumentUriUsingTree(uri, DocumentsContract.getTreeDocumentId(uri))), root, 100);
-            Tools.runOnUiThread(() -> Toast.makeText(activity, R.string.migration_progress_finish, Toast.LENGTH_LONG).show());
+            Tools.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.migration_progress_finish, Toast.LENGTH_LONG).show());
         } catch (Exception e) {
             Log.e("DataMigration", "Failed to import data to the launcher: " + e.getMessage());
-            Tools.runOnUiThread(() -> Toast.makeText(activity, R.string.migration_progress_failed, Toast.LENGTH_LONG).show());
+            Tools.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.migration_progress_failed, Toast.LENGTH_LONG).show());
             Tools.showErrorRemote(e);
         }
         progress = 0;
@@ -93,12 +93,12 @@ public class DataMigrator {
         if(authority == null) return;
         // Shouldn't allow importing from any non-Mojo app
         if(!authority.contains(activity.getString(R.string.group_id))) {
-            Toast.makeText(activity, R.string.migration_progress_foreign, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.migration_progress_foreign, Toast.LENGTH_LONG).show();
             return;
         }
         // also shouldn't allow importing from self
         if(authority.equals(activity.getString(R.string.storageProviderAuthorities))){
-            Toast.makeText(activity, R.string.migration_progress_self, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(activity, R.string.migration_progress_self, Toast.LENGTH_LONG).show();
             return;
         }
         sExecutorService.submit(this::executeMigrate);

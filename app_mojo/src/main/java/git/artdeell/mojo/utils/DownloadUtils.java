@@ -173,22 +173,33 @@ public class DownloadUtils {
      * @return whether the ping was successful
      */
     public static boolean pingInjectorUrl(String url) {
+        // A phone on mobile data often needs more than half a second to answer: two tries with room to breathe,
+        // so a slow network is not mistaken for a service that is down (which silently logged people out).
+        for(int attempt = 0; attempt < 2; attempt++) {
+            if(pingOnce(url)) return true;
+        }
+        return false;
+    }
+
+    private static boolean pingOnce(String url) {
+        HttpURLConnection urlConnection = null;
         try {
-            HttpURLConnection urlConnection = (HttpURLConnection) new URL("https", url, "/").openConnection();
+            urlConnection = (HttpURLConnection) new URL("https", url, "/").openConnection();
             urlConnection.setRequestMethod("HEAD");
-            urlConnection.setConnectTimeout(2000);
-            urlConnection.setReadTimeout(500);
+            urlConnection.setConnectTimeout(6000);
+            urlConnection.setReadTimeout(6000);
+            urlConnection.setInstanceFollowRedirects(true);
             urlConnection.setDoInput(false);
             urlConnection.setDoOutput(false);
             urlConnection.setRequestProperty("User-Agent", "MojoLauncher-Ping/1.0");
             urlConnection.connect();
             int responseCode = urlConnection.getResponseCode();
-            if(responseCode != 200) return false;
-            if(urlConnection.getHeaderField("x-authlib-injector-api-location") == null) return false;
-            return true;
+            return responseCode >= 200 && responseCode < 400;
         }catch (IOException e) {
             Log.w("DownloadUtils", "Failed to ping injector url", e);
             return false;
+        } finally {
+            if(urlConnection != null) urlConnection.disconnect();
         }
     }
 

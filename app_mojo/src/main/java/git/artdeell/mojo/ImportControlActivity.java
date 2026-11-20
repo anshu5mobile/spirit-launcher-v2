@@ -91,7 +91,7 @@ public class ImportControlActivity extends Activity {
 
             if(verify())mIsFileVerified = true;
             else runOnUiThread(() -> {
-                Toast.makeText(
+                git.artdeell.mojo.utils.SpiritToast.makeText(
                         ImportControlActivity.this,
                         getText(R.string.import_control_invalid_file),
                         Toast.LENGTH_SHORT).show();
@@ -115,16 +115,16 @@ public class ImportControlActivity extends Activity {
         String fileName = trimFileName(mEditText.getText().toString());
         //Step 1 check for suffixes.
         if(!isFileNameValid(fileName)){
-            Toast.makeText(this, getText(R.string.import_control_invalid_name), Toast.LENGTH_SHORT).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(this, getText(R.string.import_control_invalid_name), Toast.LENGTH_SHORT).show();
             return;
         }
         if(!mIsFileVerified){
-            Toast.makeText(this, getText(R.string.import_control_verifying_file), Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(this, getText(R.string.import_control_verifying_file), Toast.LENGTH_LONG).show();
             return;
         }
 
         new File(Tools.CTRLMAP_PATH + "/TMP_IMPORT_FILE.json").renameTo(new File(Tools.CTRLMAP_PATH + "/" + fileName + ".json"));
-        Toast.makeText(getApplicationContext(), getText(R.string.import_control_done), Toast.LENGTH_SHORT).show();
+        git.artdeell.mojo.utils.SpiritToast.makeText(getApplicationContext(), getText(R.string.import_control_done), Toast.LENGTH_SHORT).show();
         finishAndRemoveTask();
     }
 

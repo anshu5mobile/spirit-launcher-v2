@@ -120,7 +120,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         instance = Instances.loadSelectedInstance();
         account = Accounts.getCurrent();
         if(instance == null) {
-            Toast.makeText(this, R.string.instance_dir_missing, Toast.LENGTH_LONG).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.instance_dir_missing, Toast.LENGTH_LONG).show();
             finish();
             return;
         }
@@ -145,6 +145,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         git.artdeell.mojo.wardrobe.SkinStore.refreshDefaultSkinPack(instance.getGameDirectory(), account);
         VoiceChatConfig.applyDenoiser(instance.getGameDirectory(),
                 LauncherPreferences.DEFAULT_PREF.getBoolean("spiritVoiceDenoise", true));
+        EchoGuard.start(this, instance.getGameDirectory());
 
         // Voice chat mods need the microphone: ask now if it was never granted
         if(android.os.Build.VERSION.SDK_INT >= 23 && checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
@@ -305,7 +306,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                     Tools.runOnUiThread(() -> { if(PREF_VIRTUAL_MOUSE_START) launcherGLView.mCursorView.setVisibility(View.VISIBLE); });
                     if(version == null || classpath == null) {
                         Tools.runOnUiThread(()->{
-                            Toast.makeText(this, R.string.main_please_restart, Toast.LENGTH_LONG).show();
+                            git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.main_please_restart, Toast.LENGTH_LONG).show();
                             finish();
                         });
                         return;
@@ -329,7 +330,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         java.io.File[] files = Tools.CTRLMAP_PATH == null ? null
                 : new java.io.File(Tools.CTRLMAP_PATH).listFiles((d, n) -> n.toLowerCase(java.util.Locale.ROOT).endsWith(".json"));
         if(files == null || files.length == 0) {
-            Toast.makeText(this, R.string.spirit_qs_no_layouts, Toast.LENGTH_SHORT).show();
+            git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.spirit_qs_no_layouts, Toast.LENGTH_SHORT).show();
             return;
         }
         java.util.Arrays.sort(files, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
@@ -350,10 +351,10 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                     if(path.equals(current)) return;
                     mControlLayout.switchLayout(path, (loaded, error) -> {
                         if(error != null) {
-                            Toast.makeText(this, R.string.spirit_qs_switch_failed, Toast.LENGTH_SHORT).show();
+                            git.artdeell.mojo.utils.SpiritToast.makeText(this, R.string.spirit_qs_switch_failed, Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        Toast.makeText(this, getString(R.string.spirit_qs_switched, names[which]), Toast.LENGTH_SHORT).show();
+                        git.artdeell.mojo.utils.SpiritToast.makeText(this, getString(R.string.spirit_qs_switched, names[which]), Toast.LENGTH_SHORT).show();
                         // The new layout may not have a menu button; keep the drawer reachable
                         updateDrawerPullButton();
                     });
@@ -590,6 +591,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     protected void onDestroy() {
+        EchoGuard.stop(this);
         super.onDestroy();
         ContextExecutor.clearActivity();
     }
@@ -726,11 +728,11 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 public void onSelectControl(String path) {
                     mControlLayout.switchLayout(path, (loaded, error) -> {
                         if(error != null) {
-                            Toast.makeText(GameActivity.this, getString(R.string.spirit_qs_switch_failed), Toast.LENGTH_SHORT).show();
+                            git.artdeell.mojo.utils.SpiritToast.makeText(GameActivity.this, getString(R.string.spirit_qs_switch_failed), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         String name = new java.io.File(loaded).getName().replaceAll("(?i)\\.json$", "");
-                        Toast.makeText(GameActivity.this, getString(R.string.spirit_qs_switched, name), Toast.LENGTH_SHORT).show();
+                        git.artdeell.mojo.utils.SpiritToast.makeText(GameActivity.this, getString(R.string.spirit_qs_switched, name), Toast.LENGTH_SHORT).show();
                         // The new layout may not have its own menu button, so keep the side menu reachable
                         updateDrawerPullButton();
                     });
@@ -785,7 +787,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 break;
         }
 
-        if(toastString != 0) Toast.makeText(ctx, toastString, Toast.LENGTH_SHORT).show();
+        if(toastString != 0) git.artdeell.mojo.utils.SpiritToast.makeText(ctx, toastString, Toast.LENGTH_SHORT).show();
     }
 
     @Override
