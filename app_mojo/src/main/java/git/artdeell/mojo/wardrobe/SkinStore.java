@@ -424,7 +424,7 @@ public final class SkinStore {
             // Minecraft 1.21.9+ dropped supported_formats and requires min_format/max_format: without them the pack is
             // rejected and the default skin never changes. Older versions ignore the keys they do not know.
             putEntry(zip, "pack.mcmeta", ("{\"pack\":{\"pack_format\":15,\"description\":\"Spirit Launcher skin\","
-                    + "\"supported_formats\":{\"min_inclusive\":0,\"max_inclusive\":999},"
+                    + "\"supported_formats\":{\"min_inclusive\":15,\"max_inclusive\":999},"
                     + "\"min_format\":15,\"max_format\":999}}").getBytes(StandardCharsets.UTF_8));
             for(String n : names) {
                 putEntry(zip, "assets/minecraft/textures/entity/player/wide/" + n + ".png", png);
