@@ -188,6 +188,38 @@
             android:textSize="14sp" />
 
         <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/spirit_switch_exact_fps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="42dp"
+            android:text="@string/spirit_exact_fps"
+            android:textColor="@color/spirit_text"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/spirit_hud_scale_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/spirit_hud_size"
+            android:textColor="@color/spirit_text"
+            android:textSize="14sp" />
+
+        <SeekBar
+            android:id="@+id/spirit_hud_scale_seek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:minHeight="36dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/spirit_hud_hint"
+            android:textColor="@color/spirit_text_dim"
+            android:textSize="12sp" />
+
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/spirit_switch_sustained"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

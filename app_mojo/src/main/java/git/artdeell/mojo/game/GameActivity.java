@@ -251,6 +251,8 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         mControlLayout.setMenuListener(this);
 
         mDrawerPullButton.setOnClickListener(v -> onClickedMenu());
+        if(mDrawerPullButton instanceof git.artdeell.mojo.input.handleview.DrawerPullButton)
+            ((git.artdeell.mojo.input.handleview.DrawerPullButton) mDrawerPullButton).enableHudSizing("spiritOverlayGear");
         OverlayDrag.attach(mDrawerPullButton, "spiritOverlayGear");
         OverlayDrag.restore(mDrawerPullButton, "spiritOverlayGear");
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
@@ -400,8 +402,8 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         return "Minecraft " + id;
     }
 
-    // ---------------- Spirit: live RAM counter + FPS booster ----------------
-    private TextView mStatsView;
+    // ---------------- Spirit: HUD (RAM pill, FPS pill, menu button) + FPS booster ----------------
+    private git.artdeell.mojo.game.hud.HudPill mStatsView;
     private boolean mStatsEnabled = false;
     private float mOriginalScaleBeforeBoost = -1f;
     private final Runnable mStatsUpdater = new Runnable() {
@@ -410,16 +412,21 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             if(!mStatsEnabled || mStatsView == null) return;
             try {
                 android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-                android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
-                am.getMemoryInfo(mi);
                 android.os.Debug.MemoryInfo[] pm = am.getProcessMemoryInfo(new int[]{android.os.Process.myPid()});
                 long usedMb = pm[0].getTotalPss() / 1024;
-                long freeMb = mi.availMem / (1024 * 1024);
-                mStatsView.setText("RAM " + usedMb + " MB  |  free " + freeMb + " MB");
+                long allocMb = Math.max(1, LauncherPreferences.PREF_RAM_ALLOCATION);
+                float fraction = Math.min(1f, usedMb / (float) allocMb);
+                int color = fraction < 0.75f ? git.artdeell.mojo.game.hud.HudStyle.GOOD
+                        : fraction < 0.9f ? git.artdeell.mojo.game.hud.HudStyle.WARN : git.artdeell.mojo.game.hud.HudStyle.BAD;
+                mStatsView.setValue(formatMb(usedMb) + "/" + formatMb(allocMb), color, fraction);
             } catch (Throwable ignored) {}
             mStatsView.postDelayed(this, 1000);
         }
     };
+
+    private static String formatMb(long mb) {
+        return mb >= 1024 ? String.format(java.util.Locale.US, "%.1f GB", mb / 1024f) : mb + " MB";
+    }
 
     private void setLiveStatsEnabled(boolean enabled) {
         mStatsEnabled = enabled;
@@ -427,17 +434,17 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             if(mStatsView == null) {
                 ViewGroup frame = findViewById(R.id.content_frame);
                 if(frame == null) return;
-                mStatsView = new TextView(this);
-                mStatsView.setTextColor(0xFFA6F03A);
-                mStatsView.setTextSize(11);
-                mStatsView.setBackgroundColor(0x990A0C09);
-                int pad = (int) (6 * getResources().getDisplayMetrics().density);
-                mStatsView.setPadding(pad, pad / 2, pad, pad / 2);
+                mStatsView = new git.artdeell.mojo.game.hud.HudPill(this);
+                mStatsView.setLabel("RAM:");
+                mStatsView.setValue("--", git.artdeell.mojo.game.hud.HudStyle.GOOD, -1f);
                 android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
+                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
+                lp.topMargin = (int) (8 * getResources().getDisplayMetrics().density);
+                lp.leftMargin = (int) (8 * getResources().getDisplayMetrics().density);
                 mStatsView.setLayoutParams(lp);
-                mStatsView.setTranslationZ(5);
+                mStatsView.bindPrefs("spiritOverlayRam");
+                mStatsView.setOnClickListener(v -> mStatsView.toggleCompact());
                 frame.addView(mStatsView);
                 OverlayDrag.attach(mStatsView, "spiritOverlayRam");
                 OverlayDrag.restore(mStatsView, "spiritOverlayRam");
@@ -451,8 +458,10 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         }
     }
 
-    // ---------------- Spirit: FPS overlay ----------------
-    private TextView mFpsView;
+    // ---------------- Spirit: FPS pill ----------------
+    // The number is the real game frame rate (GLFW swap-buffers calls counted by the spirit-fps agent inside the game).
+    // If the agent is off or did not start, it falls back to the frames the screen received and shows "~" before it.
+    private git.artdeell.mojo.game.hud.HudPill mFpsView;
     private boolean mFpsEnabled = false;
     private long mFpsLastNs = 0;
     private final Runnable mFpsUpdater = new Runnable() {
@@ -463,10 +472,30 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             int frames = git.artdeell.mojo.game.render.FpsMeter.drain();
             float seconds = mFpsLastNs == 0 ? 1f : (now - mFpsLastNs) / 1_000_000_000f;
             mFpsLastNs = now;
-            mFpsView.setText("Screen FPS " + Math.round(frames / Math.max(0.5f, seconds)));
+            int screenFps = Math.round(frames / Math.max(0.5f, seconds));
+            int gameFps = readAgentFps();
+            int fps = gameFps >= 0 ? gameFps : screenFps;
+            int color = fps >= 50 ? git.artdeell.mojo.game.hud.HudStyle.GOOD
+                    : fps >= 30 ? git.artdeell.mojo.game.hud.HudStyle.WARN : git.artdeell.mojo.game.hud.HudStyle.BAD;
+            mFpsView.setValue((gameFps >= 0 ? "" : "~") + fps, color, -1f);
             mFpsView.postDelayed(this, 1000);
         }
     };
+
+    /** The frame rate written by the spirit-fps agent, or -1 if there is no fresh number. */
+    private static int readAgentFps() {
+        try {
+            File f = new File(Tools.DIR_DATA, git.artdeell.mojo.utils.jre.GameRunner.SPIRIT_FPS_FILE);
+            if(!f.isFile()) return -1;
+            String[] parts = Tools.read(f.getAbsolutePath()).trim().split(" ");
+            if(parts.length != 2) return -1;
+            long age = System.currentTimeMillis() - Long.parseLong(parts[1]);
+            if(age < -1000 || age > 3000) return -1;
+            return Integer.parseInt(parts[0]);
+        } catch (Throwable t) {
+            return -1;
+        }
+    }
 
     private void setFpsEnabled(boolean enabled) {
         mFpsEnabled = enabled;
@@ -474,18 +503,16 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             if(mFpsView == null) {
                 ViewGroup frame = findViewById(R.id.content_frame);
                 if(frame == null) return;
-                mFpsView = new TextView(this);
-                mFpsView.setTextColor(0xFFA6F03A);
-                mFpsView.setTextSize(11);
-                mFpsView.setBackgroundColor(0x990A0C09);
-                int pad = (int) (6 * getResources().getDisplayMetrics().density);
-                mFpsView.setPadding(pad, pad / 2, pad, pad / 2);
+                mFpsView = new git.artdeell.mojo.game.hud.HudPill(this);
+                mFpsView.setLabel("FPS:");
+                mFpsView.setValue("--", git.artdeell.mojo.game.hud.HudStyle.GOOD, -1f);
                 android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
+                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
+                lp.topMargin = (int) (8 * getResources().getDisplayMetrics().density);
                 mFpsView.setLayoutParams(lp);
-                mFpsView.setTranslationZ(5);
-                mFpsView.setText("FPS --");
+                mFpsView.bindPrefs("spiritOverlayFps");
+                mFpsView.setOnClickListener(v -> mFpsView.toggleCompact());
                 frame.addView(mFpsView);
                 OverlayDrag.attach(mFpsView, "spiritOverlayFps");
                 OverlayDrag.restore(mFpsView, "spiritOverlayFps");
@@ -499,6 +526,14 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             mFpsView.removeCallbacks(mFpsUpdater);
             mFpsView.setVisibility(View.GONE);
         }
+    }
+
+    /** The HUD size slider moved: resize all overlays. */
+    private void refreshHudScale() {
+        if(mStatsView != null) mStatsView.refreshScale();
+        if(mFpsView != null) mFpsView.refreshScale();
+        if(mDrawerPullButton instanceof git.artdeell.mojo.input.handleview.DrawerPullButton)
+            ((git.artdeell.mojo.input.handleview.DrawerPullButton) mDrawerPullButton).refreshScale();
     }
 
     private void applyFpsBooster(boolean enabled) {
@@ -702,6 +737,11 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 @Override
                 public void onShowFpsChanged(boolean enabled) {
                     setFpsEnabled(enabled);
+                }
+
+                @Override
+                public void onHudScaleChanged() {
+                    refreshHudScale();
                 }
 
                 @Override

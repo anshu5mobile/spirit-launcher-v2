@@ -132,4 +132,9 @@
     <string name="spirit_cleanup_confirm">About %1$s can be removed. Continue?</string>
     <string name="spirit_cleanup_done">Freed %1$s</string>
     <string name="spirit_cleanup_nothing">Nothing to clean</string>
+    <string name="spirit_exact_fps">Exact game FPS (counts Minecraft frames)</string>
+    <string name="spirit_exact_fps_restart">Applies the next time the game starts</string>
+    <string name="spirit_hud_size">HUD size</string>
+    <string name="spirit_hud_size_value">HUD size: %1$d%%</string>
+    <string name="spirit_hud_hint">Drag the FPS, RAM and gear buttons to move them. Pinch one with two fingers to resize it. Tap FPS or RAM to shrink it to the number only.</string>
 </resources>

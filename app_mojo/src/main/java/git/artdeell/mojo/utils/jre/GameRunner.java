@@ -285,6 +285,7 @@ public class GameRunner {
 
         addAuthlibInjectorArgs(javaArgList, account);
         addNoBlocklistArgs(javaArgList);
+        addSpiritFpsArgs(javaArgList);
 
         mergeMoJsonArgs(javaArgList, getMoJsonJvmArgs(versionId));
 
@@ -368,6 +369,24 @@ public class GameRunner {
         if(injectorUrl == null) return;
         javaArgList.add("-javaagent:"+Tools.DIR_DATA+"/authlib-injector/authlib-injector.jar="+injectorUrl);
     }
+
+    /**
+     * Spirit: counts the frames Minecraft really renders (GLFW swap-buffers calls) and writes the number to a small file the
+     * overlay reads. The agent swallows all of its own errors; the switch is in the Quick settings / Settings.
+     */
+    private static void addSpiritFpsArgs(List<String> javaArgList) {
+        if(!LauncherPreferences.DEFAULT_PREF.getBoolean(SPIRIT_EXACT_FPS_PREF, true)) return;
+        java.io.File jar = new java.io.File(Tools.DIR_DATA, "spirit-fps/spirit-fps.jar");
+        java.io.File boot = new java.io.File(Tools.DIR_DATA, "spirit-fps/spirit-fps-boot.jar");
+        if(!jar.isFile() || !boot.isFile()) return;
+        java.io.File out = new java.io.File(Tools.DIR_DATA, SPIRIT_FPS_FILE);
+        //noinspection ResultOfMethodCallIgnored
+        out.delete();
+        javaArgList.add("-javaagent:" + jar.getAbsolutePath() + "=" + out.getAbsolutePath());
+    }
+
+    public static final String SPIRIT_EXACT_FPS_PREF = "spiritExactFps";
+    public static final String SPIRIT_FPS_FILE = "spirit_fps.txt";
 
     private static void addNoBlocklistArgs(List<String> javaArgList) {
         if(!LauncherPreferences.PREF_DISABLE_BLOCKLIST) return;

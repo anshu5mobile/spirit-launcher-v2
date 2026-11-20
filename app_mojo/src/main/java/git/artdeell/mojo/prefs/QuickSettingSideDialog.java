@@ -105,6 +105,31 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
                 onShowFpsChanged(on);
             });
         }
+        androidx.appcompat.widget.SwitchCompat exactFps = mDialogContent.findViewById(R.id.spirit_switch_exact_fps);
+        if(exactFps != null) {
+            exactFps.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(git.artdeell.mojo.utils.jre.GameRunner.SPIRIT_EXACT_FPS_PREF, true));
+            exactFps.setOnCheckedChangeListener((b, on) -> {
+                LauncherPreferences.DEFAULT_PREF.edit().putBoolean(git.artdeell.mojo.utils.jre.GameRunner.SPIRIT_EXACT_FPS_PREF, on).apply();
+                git.artdeell.mojo.utils.SpiritToast.makeText(mDialogContent.getContext(), R.string.spirit_exact_fps_restart, android.widget.Toast.LENGTH_SHORT).show();
+            });
+        }
+        android.widget.SeekBar hudSeek = mDialogContent.findViewById(R.id.spirit_hud_scale_seek);
+        android.widget.TextView hudLabel = mDialogContent.findViewById(R.id.spirit_hud_scale_label);
+        if(hudSeek != null) {
+            // progress 0..100 -> 60%..160%
+            hudSeek.setProgress(Math.round((git.artdeell.mojo.game.hud.HudStyle.globalScale() - 0.6f) * 100f));
+            if(hudLabel != null) hudLabel.setText(mDialogContent.getContext().getString(R.string.spirit_hud_size_value, 60 + hudSeek.getProgress()));
+            hudSeek.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+                @Override public void onProgressChanged(android.widget.SeekBar sb, int progress, boolean fromUser) {
+                    if(hudLabel != null) hudLabel.setText(sb.getContext().getString(R.string.spirit_hud_size_value, 60 + progress));
+                    if(!fromUser) return;
+                    git.artdeell.mojo.game.hud.HudStyle.setGlobalScale(0.6f + progress / 100f);
+                    onHudScaleChanged();
+                }
+                @Override public void onStartTrackingTouch(android.widget.SeekBar sb) {}
+                @Override public void onStopTrackingTouch(android.widget.SeekBar sb) {}
+            });
+        }
         androidx.appcompat.widget.SwitchCompat fpsBoost = mDialogContent.findViewById(R.id.spirit_switch_fps_boost);
         if(fpsBoost != null) {
             fpsBoost.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_PERF_MODE, false));
@@ -446,6 +471,9 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
 
     /** Spirit: Live RAM overlay toggled. */
     public void onLiveStatsChanged(boolean enabled) {}
+
+    /** Spirit: the HUD size slider moved. */
+    public void onHudScaleChanged() {}
 
     /** Spirit: FPS overlay toggled. */
     public void onShowFpsChanged(boolean enabled) {}
