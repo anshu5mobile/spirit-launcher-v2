@@ -375,13 +375,16 @@ public class GameRunner {
      * overlay reads. The agent swallows all of its own errors; the switch is in the Quick settings / Settings.
      */
     private static void addSpiritFpsArgs(List<String> javaArgList) {
-        if(!LauncherPreferences.DEFAULT_PREF.getBoolean(SPIRIT_EXACT_FPS_PREF, true)) return;
+        if(!LauncherPreferences.DEFAULT_PREF.getBoolean(SPIRIT_EXACT_FPS_PREF, false)) return;
         java.io.File jar = new java.io.File(Tools.DIR_DATA, "spirit-fps/spirit-fps.jar");
         java.io.File boot = new java.io.File(Tools.DIR_DATA, "spirit-fps/spirit-fps-boot.jar");
         if(!jar.isFile() || !boot.isFile()) return;
         java.io.File out = new java.io.File(Tools.DIR_DATA, SPIRIT_FPS_FILE);
         //noinspection ResultOfMethodCallIgnored
         out.delete();
+        // The counter class must be visible to every class loader: normal JVM option, no runtime append (that crashed
+        // libinstrument on Android: iconv_open).
+        javaArgList.add("-Xbootclasspath/a:" + boot.getAbsolutePath());
         javaArgList.add("-javaagent:" + jar.getAbsolutePath() + "=" + out.getAbsolutePath());
     }
 

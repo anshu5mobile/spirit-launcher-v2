@@ -107,7 +107,7 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         }
         androidx.appcompat.widget.SwitchCompat exactFps = mDialogContent.findViewById(R.id.spirit_switch_exact_fps);
         if(exactFps != null) {
-            exactFps.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(git.artdeell.mojo.utils.jre.GameRunner.SPIRIT_EXACT_FPS_PREF, true));
+            exactFps.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(git.artdeell.mojo.utils.jre.GameRunner.SPIRIT_EXACT_FPS_PREF, false));
             exactFps.setOnCheckedChangeListener((b, on) -> {
                 LauncherPreferences.DEFAULT_PREF.edit().putBoolean(git.artdeell.mojo.utils.jre.GameRunner.SPIRIT_EXACT_FPS_PREF, on).apply();
                 git.artdeell.mojo.utils.SpiritToast.makeText(mDialogContent.getContext(), R.string.spirit_exact_fps_restart, android.widget.Toast.LENGTH_SHORT).show();

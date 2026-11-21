@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
-import java.util.jar.JarFile;
 
 /**
  * Counts the frames Minecraft really renders by counting org.lwjgl.glfw.GLFW.glfwSwapBuffers calls and writes
@@ -22,10 +21,9 @@ public final class SpiritFpsAgent {
 
     public static void premain(String args, Instrumentation inst) {
         try {
-            File self = new File(SpiritFpsAgent.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-            // The counter (alone in its own jar) must be visible from whatever loader defines GLFW
-            // (Knot, ModLauncher, plain classpath ...), so it goes to the bootstrap search path.
-            inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(self.getParentFile(), "spirit-fps-boot.jar")));
+            // The counter class (spirit-fps-boot.jar) is put on the bootstrap class path by the launcher with
+            // -Xbootclasspath/a:, so every class loader of the game sees it. Doing it here with
+            // Instrumentation.appendToBootstrapClassLoaderSearch crashes the Android JVM (iconv_open in libinstrument).
             final String out = args;
             inst.addTransformer(new ClassFileTransformer() {
                 @Override
