@@ -95,7 +95,7 @@ public final class CrashFixer {
      * project name first, then as a search.
      * @return the file name that was installed
      */
-    private static String installMod(BrowseTarget target, String modId) throws IOException {
+    public static String installMod(BrowseTarget target, String modId) throws IOException {
         List<ModrinthClient.Version> versions = null;
         try {
             versions = ModrinthClient.versions(modId, target.mcVersion, target.loaders);

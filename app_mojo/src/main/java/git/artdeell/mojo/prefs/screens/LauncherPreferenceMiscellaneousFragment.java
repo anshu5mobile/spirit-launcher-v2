@@ -53,7 +53,31 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         setupCacheClearPreference();
         setupMicrophoneRequestPreference();
         requirePreference("spiritCleanup").setOnPreferenceClickListener(preference -> { askCleanup(); return true; });
+        requirePreference("spiritOwnNametag").setOnPreferenceClickListener(preference -> { installOwnNametag(); return true; });
         updateVisibility();
+    }
+
+    /** Installs the Third Person Nametags mod (and its dependencies) into the selected Fabric instance. */
+    private void installOwnNametag() {
+        final android.content.Context ctx = getContext();
+        if(ctx == null) return;
+        git.artdeell.mojo.utils.SpiritToast.makeText(ctx, R.string.spirit_own_nametag_working, Toast.LENGTH_SHORT).show();
+        MojoApplication.sExecutorService.submit(() -> {
+            String message;
+            try {
+                git.artdeell.mojo.browse.BrowseTarget target = git.artdeell.mojo.browse.BrowseTarget.forSelectedInstance();
+                if(target == null || !(target.loaders.contains("fabric") || target.loaders.contains("quilt"))) {
+                    message = ctx.getString(R.string.spirit_own_nametag_fabric_only);
+                } else {
+                    String file = git.artdeell.mojo.crash.CrashFixer.installMod(target, "third-person-nametags");
+                    message = ctx.getString(R.string.spirit_own_nametag_done, file);
+                }
+            } catch (Exception e) {
+                message = ctx.getString(R.string.spirit_own_nametag_fail, e.getMessage());
+            }
+            final String shown = message;
+            Tools.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(ctx, shown, Toast.LENGTH_LONG).show());
+        });
     }
 
     private void updateVisibility(){

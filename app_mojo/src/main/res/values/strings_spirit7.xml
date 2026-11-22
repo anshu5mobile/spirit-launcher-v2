@@ -139,4 +139,10 @@
     <string name="spirit_hud_hint">Drag the FPS, RAM and gear buttons to move them. Pinch one with two fingers to resize it. Tap FPS or RAM to shrink it to the number only.</string>
     <string name="spirit_hide_mod_updates_title">Hide mod update popups</string>
     <string name="spirit_hide_mod_updates_desc">Turns off the update checker of Mod Menu before the game starts, so the \"mod X is out\" popup in the corner stays away. Applies to the next start.</string>
+    <string name="spirit_own_nametag_title">Show my name in 3rd person</string>
+    <string name="spirit_own_nametag_desc">Installs the \"Third Person Nametags\" mod (with Fabric API) into the selected instance, so your own name shows above your head in F5 view.</string>
+    <string name="spirit_own_nametag_working">Installing Third Person Nametags…</string>
+    <string name="spirit_own_nametag_done">Installed: %1$s</string>
+    <string name="spirit_own_nametag_fabric_only">This works on Fabric instances only. Pick a Fabric instance first.</string>
+    <string name="spirit_own_nametag_fail">Could not install: %1$s</string>
 </resources>
