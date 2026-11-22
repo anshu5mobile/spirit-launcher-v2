@@ -95,6 +95,7 @@ public class AsyncAssetManager {
             tryUnpackComponent(ctx, "authlib-injector", true);
             tryUnpackComponent(ctx, "noblocklist", true);
             tryUnpackComponent(ctx, "spirit-fps", true);
+            tryUnpackComponent(ctx, "spirit-nametag", true);
             ProgressLayout.clearProgress(ProgressLayout.EXTRACT_COMPONENTS);
         });
     }

@@ -50,8 +50,9 @@
             android:persistent="false"
             android:summary="@string/spirit_cleanup_desc"
             android:title="@string/spirit_cleanup_title" />
-        <Preference
+        <SwitchPreferenceCompat
             android:key="spiritOwnNametag"
+            android:defaultValue="true"
             android:icon="@drawable/ic_px_zap"
             android:title="@string/spirit_own_nametag_title"
             android:summary="@string/spirit_own_nametag_desc" />

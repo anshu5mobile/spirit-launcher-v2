@@ -286,6 +286,7 @@ public class GameRunner {
         addAuthlibInjectorArgs(javaArgList, account);
         addNoBlocklistArgs(javaArgList);
         addSpiritFpsArgs(javaArgList);
+        addSpiritNametagArgs(javaArgList, instance);
 
         mergeMoJsonArgs(javaArgList, getMoJsonJvmArgs(versionId));
 
@@ -386,6 +387,20 @@ public class GameRunner {
         // libinstrument on Android: iconv_open).
         javaArgList.add("-Xbootclasspath/a:" + boot.getAbsolutePath());
         javaArgList.add("-javaagent:" + jar.getAbsolutePath() + "=" + out.getAbsolutePath());
+    }
+
+    /**
+     * Built-in "own name in third person": a tiny Fabric mod that ships inside the launcher and is handed to Fabric Loader
+     * with -Dfabric.addMods, so nothing is installed into the instance and nothing shows up in its mods folder.
+     * Only for Fabric instances; the mod's mixins are optional, so an unknown Minecraft version just gets no name tag.
+     */
+    private static void addSpiritNametagArgs(List<String> javaArgList, Instance instance) {
+        if(!LauncherPreferences.DEFAULT_PREF.getBoolean("spiritOwnNametag", true)) return;
+        String id = instance.versionId;
+        if(id == null || !id.toLowerCase(java.util.Locale.ROOT).contains("fabric")) return;
+        java.io.File jar = new java.io.File(Tools.DIR_DATA, "spirit-nametag/spirit-nametag.jar");
+        if(!jar.isFile()) return;
+        javaArgList.add("-Dfabric.addMods=" + jar.getAbsolutePath());
     }
 
     public static final String SPIRIT_EXACT_FPS_PREF = "spiritExactFps";

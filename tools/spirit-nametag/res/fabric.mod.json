@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "spirit_nametag",
+  "version": "1.0.0",
+  "name": "Spirit Launcher: own name tag",
+  "description": "Built into Spirit Launcher: shows your own name in third-person view.",
+  "environment": "client",
+  "mixins": ["spirit_nametag.mixins.json"],
+  "depends": { "fabricloader": "*" },
+  "custom": { "modmenu": { "badges": ["library"] } }
+}
