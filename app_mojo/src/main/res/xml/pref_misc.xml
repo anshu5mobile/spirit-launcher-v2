@@ -51,6 +51,12 @@
             android:summary="@string/spirit_cleanup_desc"
             android:title="@string/spirit_cleanup_title" />
         <SwitchPreferenceCompat
+            android:key="spiritHideModUpdates"
+            android:icon="@drawable/ic_px_zap"
+            android:defaultValue="true"
+            android:title="@string/spirit_hide_mod_updates_title"
+            android:summary="@string/spirit_hide_mod_updates_desc" />
+        <SwitchPreferenceCompat
             android:key="spiritVoiceEcho"
             android:icon="@drawable/ic_microphone"
             android:defaultValue="false"

@@ -143,6 +143,8 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             }
         }
         git.artdeell.mojo.wardrobe.SkinStore.refreshDefaultSkinPack(instance.getGameDirectory(), account);
+        if(LauncherPreferences.DEFAULT_PREF.getBoolean("spiritHideModUpdates", true))
+            ModUpdateConfig.silenceUpdatePopups(instance.getGameDirectory());
         VoiceChatConfig.applyDenoiser(instance.getGameDirectory(),
                 LauncherPreferences.DEFAULT_PREF.getBoolean("spiritVoiceDenoise", true));
         EchoGuard.start(this, instance.getGameDirectory());
@@ -406,21 +408,37 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
     private git.artdeell.mojo.game.hud.HudPill mStatsView;
     private boolean mStatsEnabled = false;
     private float mOriginalScaleBeforeBoost = -1f;
+    private final java.util.concurrent.ExecutorService mStatsExecutor = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "Spirit-RamStat");
+        t.setDaemon(true);
+        return t;
+    });
     private final Runnable mStatsUpdater = new Runnable() {
         @Override
         public void run() {
             if(!mStatsEnabled || mStatsView == null) return;
+            // Reading PSS walks /proc/<pid>/smaps and can take tens of ms: never do it on the UI thread.
+            final Context ctx = getApplicationContext();
             try {
-                android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-                android.os.Debug.MemoryInfo[] pm = am.getProcessMemoryInfo(new int[]{android.os.Process.myPid()});
-                long usedMb = pm[0].getTotalPss() / 1024;
-                long allocMb = Math.max(1, LauncherPreferences.PREF_RAM_ALLOCATION);
-                float fraction = Math.min(1f, usedMb / (float) allocMb);
-                int color = fraction < 0.75f ? git.artdeell.mojo.game.hud.HudStyle.GOOD
-                        : fraction < 0.9f ? git.artdeell.mojo.game.hud.HudStyle.WARN : git.artdeell.mojo.game.hud.HudStyle.BAD;
-                mStatsView.setValue(formatMb(usedMb) + "/" + formatMb(allocMb), color, fraction);
-            } catch (Throwable ignored) {}
-            mStatsView.postDelayed(this, 1000);
+            mStatsExecutor.execute(() -> {
+                try {
+                    android.app.ActivityManager am = (android.app.ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+                    android.os.Debug.MemoryInfo[] pm = am.getProcessMemoryInfo(new int[]{android.os.Process.myPid()});
+                    final long usedMb = pm[0].getTotalPss() / 1024;
+                    final long allocMb = Math.max(1, LauncherPreferences.PREF_RAM_ALLOCATION);
+                    final float fraction = Math.min(1f, usedMb / (float) allocMb);
+                    final int color = fraction < 0.75f ? git.artdeell.mojo.game.hud.HudStyle.GOOD
+                            : fraction < 0.9f ? git.artdeell.mojo.game.hud.HudStyle.WARN : git.artdeell.mojo.game.hud.HudStyle.BAD;
+                    runOnUiThread(() -> {
+                        if(mStatsEnabled && mStatsView != null)
+                            mStatsView.setValue(formatMb(usedMb) + "/" + formatMb(allocMb), color, fraction);
+                    });
+                } catch (Throwable ignored) {}
+            });
+            } catch (java.util.concurrent.RejectedExecutionException e) {
+                return; // activity is being destroyed
+            }
+            mStatsView.postDelayed(this, 3000);
         }
     };
 
@@ -477,7 +495,12 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             int fps = gameFps >= 0 ? gameFps : screenFps;
             int color = fps >= 50 ? git.artdeell.mojo.game.hud.HudStyle.GOOD
                     : fps >= 30 ? git.artdeell.mojo.game.hud.HudStyle.WARN : git.artdeell.mojo.game.hud.HudStyle.BAD;
-            mFpsView.setValue((gameFps >= 0 ? "" : "~") + fps, color, -1f);
+            if(gameFps < 0 && screenFps <= 0) {
+                // No agent number and no screen counter (SurfaceView has none): say so instead of showing a fake 0
+                mFpsView.setValue("--", 0xFF9AA58A, -1f);
+            } else {
+                mFpsView.setValue((gameFps >= 0 ? "" : "~") + fps, color, -1f);
+            }
             mFpsView.postDelayed(this, 1000);
         }
     };
@@ -626,6 +649,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     protected void onDestroy() {
+        mStatsExecutor.shutdownNow();
         EchoGuard.stop(this);
         super.onDestroy();
         ContextExecutor.clearActivity();
