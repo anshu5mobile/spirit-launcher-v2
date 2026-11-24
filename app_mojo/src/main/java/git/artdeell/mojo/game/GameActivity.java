@@ -458,7 +458,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 lp.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
-                lp.topMargin = (int) (8 * getResources().getDisplayMetrics().density);
+                lp.topMargin = (int) (48 * getResources().getDisplayMetrics().density);
                 lp.leftMargin = (int) (8 * getResources().getDisplayMetrics().density);
                 mStatsView.setLayoutParams(lp);
                 mStatsView.bindPrefs("spiritOverlayRam");
@@ -531,8 +531,9 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
                 mFpsView.setValue("--", git.artdeell.mojo.game.hud.HudStyle.GOOD, -1f);
                 android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
+                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.START; // left: the top centre holds mod text (IAS account)
                 lp.topMargin = (int) (8 * getResources().getDisplayMetrics().density);
+                lp.leftMargin = (int) (8 * getResources().getDisplayMetrics().density);
                 mFpsView.setLayoutParams(lp);
                 mFpsView.bindPrefs("spiritOverlayFps");
                 mFpsView.setOnClickListener(v -> mFpsView.toggleCompact());

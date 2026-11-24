@@ -147,6 +147,19 @@ public class JavaRunner {
                 Log.i("ArgProcessor","Arg skipped: "+arg);
         }
 
+        // "Fast game startup": skip bytecode verification of the (huge) game and mod jars while loading.
+        // BytecodeVerificationRemote is a diagnostic flag, so it needs the unlock flag in front (without it the JVM
+        // refuses to start with "Bad arguments"). Checked on desktop Java 21 only; the user can still override by
+        // passing their own flag.
+        if(LauncherPreferences.PREF_RAPID_START) {
+            boolean hasVerify = false;
+            for(String uarg : userArguments) if(uarg.contains("BytecodeVerification") || uarg.startsWith("-Xverify")) hasVerify = true;
+            if(!hasVerify) {
+                if(!userArguments.contains("-XX:+UnlockDiagnosticVMOptions")) additionalArguments.add("-XX:+UnlockDiagnosticVMOptions");
+                additionalArguments.add("-XX:-BytecodeVerificationRemote");
+            }
+        }
+
         //Add all the arguments
         userArguments.addAll(additionalArguments);
         return userArguments;

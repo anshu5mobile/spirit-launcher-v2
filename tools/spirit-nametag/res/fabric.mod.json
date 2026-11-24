@@ -5,6 +5,7 @@
   "name": "Spirit Launcher: own name tag",
   "description": "Built into Spirit Launcher: shows your own name in third-person view.",
   "environment": "client",
+  "entrypoints": { "main": ["git.spirit.nametag.SpiritNametag"] },
   "mixins": ["spirit_nametag.mixins.json"],
   "depends": { "fabricloader": "*" },
   "custom": { "modmenu": { "badges": ["library"] } }

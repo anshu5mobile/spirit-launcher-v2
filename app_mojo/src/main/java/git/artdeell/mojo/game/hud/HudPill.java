@@ -116,7 +116,7 @@ public class HudPill extends View implements HudStyle.Pinchable {
     }
 
     private float chevronSpace(float u) {
-        return mCompact ? 0 : 34 * u;
+        return 0f; // no side arrows
     }
 
     @Override
@@ -159,15 +159,6 @@ public class HudPill extends View implements HudStyle.Pinchable {
         canvas.drawPath(mPath, mGlow);
         mStroke.setAlpha(255);
         canvas.drawPath(mPath, mStroke);
-
-        if(!mCompact) {
-            float cy = h / 2f, ch = 10 * u, step = 9 * u;
-            // right side: >>   left side: <<  (inner chevron brighter)
-            drawChevron(canvas, w - cs + 4 * u + step * 0, cy, ch, true, 255);
-            drawChevron(canvas, w - cs + 4 * u + step * 1.5f, cy, ch, true, 120);
-            drawChevron(canvas, cs - 4 * u - step * 0, cy, ch, false, 255);
-            drawChevron(canvas, cs - 4 * u - step * 1.5f, cy, ch, false, 120);
-        }
 
         // text, centred in the body
         float labelW = mCompact ? 0 : mLabelPaint.measureText(mLabel + " ");

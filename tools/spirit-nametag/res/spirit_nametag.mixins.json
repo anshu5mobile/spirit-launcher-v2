@@ -3,6 +3,6 @@
   "minVersion": "0.8",
   "package": "git.spirit.nametag.mixin",
   "compatibilityLevel": "JAVA_17",
-  "client": ["OwnNameMixin"],
+  "client": ["OwnNameMixin", "OwnNameBaseMixin"],
   "injectors": { "defaultRequire": 0 }
 }
