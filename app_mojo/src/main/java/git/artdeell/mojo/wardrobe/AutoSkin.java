@@ -73,7 +73,7 @@ public final class AutoSkin {
     /** Call when the game starts. Does nothing unless Auto Skin is on and the skin has a public link. */
     public static void startForGame() {
         LogDispatcher.setAutoListener(null);
-        if(!LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_ENABLED, false)) return;
+        if(!LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_ENABLED, true)) return;
         Account account = Accounts.getCurrent();
         if(account == null) return;
         SkinStore.Active active = SkinStore.loadActive(account);

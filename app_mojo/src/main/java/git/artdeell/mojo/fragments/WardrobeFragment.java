@@ -127,7 +127,7 @@ public class WardrobeFragment extends Fragment {
         mOfflineInstall.setOnClickListener(v -> installSkinSupport());
 
         SwitchCompat autoSkin = view.findViewById(R.id.spirit_autoskin_switch);
-        autoSkin.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, false));
+        autoSkin.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, true));
         autoSkin.setOnCheckedChangeListener((b, checked) -> {
             LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_AUTO_SKIN, checked).apply();
             refreshCompat();
@@ -230,7 +230,7 @@ public class WardrobeFragment extends Fragment {
         if(root == null) return;
         TextView view = root.findViewById(R.id.spirit_autoskin_status);
         if(view == null) return;
-        boolean on = LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, false);
+        boolean on = LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, true);
         int text;
         if(!on) text = R.string.spirit_compat_off;
         else if(mUrl == null || mUrl.isEmpty()) text = R.string.spirit_compat_nolink;
@@ -516,7 +516,7 @@ public class WardrobeFragment extends Fragment {
         }
         final boolean slim = mSlim;
         final String name = mName;
-        if(mUrl == null && LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, false)) {
+        if(mUrl == null && LauncherPreferences.DEFAULT_PREF.getBoolean(PREF_AUTO_SKIN, true)) {
             // A skin from the gallery has no link yet: make one so Auto Skin can use it on servers
             if(mStatus != null) mStatus.setText(R.string.spirit_skin_uploading);
             MojoApplication.sExecutorService.execute(() -> {
