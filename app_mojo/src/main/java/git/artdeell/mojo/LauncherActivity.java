@@ -394,7 +394,7 @@ public class LauncherActivity extends BaseActivity {
             selected = R.id.nav_accounts; ownHeader = true;
         }else if(fragment instanceof WardrobeFragment) {
             selected = R.id.nav_wardrobe; ownHeader = true;
-        }else if(fragment instanceof BrowseFragment) {
+        }else if(fragment instanceof BrowseFragment || fragment instanceof git.artdeell.mojo.fragments.ControlsFragment) {
             selected = R.id.nav_browse; ownHeader = true;
         }else if(fragment instanceof AboutFragment) {
             selected = R.id.nav_about; ownHeader = true;

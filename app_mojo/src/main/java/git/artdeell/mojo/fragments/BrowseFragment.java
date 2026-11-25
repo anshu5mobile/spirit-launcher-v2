@@ -111,6 +111,9 @@ public class BrowseFragment extends Fragment {
             final int index = i;
             view.findViewById(TAB_IDS[i]).setOnClickListener(v -> selectTab(index));
         }
+        View controlsTab = view.findViewById(R.id.spirit_tab_controls);
+        if(controlsTab != null) controlsTab.setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), ControlsFragment.class, ControlsFragment.TAG, null));
         mInput.setOnEditorActionListener((v, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
                 android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager)

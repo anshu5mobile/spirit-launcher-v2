@@ -118,6 +118,22 @@
                 android:textColor="@color/spirit_text"
                 android:textSize="13sp"
                 android:textStyle="bold" />
+            <TextView
+                android:id="@+id/spirit_tab_controls"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/spirit_card_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+                android:paddingTop="9dp"
+    android:paddingBottom="9dp"
+                android:text="@string/spirit_tab_controls"
+                android:textColor="@color/spirit_text"
+                android:textSize="13sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </HorizontalScrollView>
 

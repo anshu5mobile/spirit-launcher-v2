@@ -29,6 +29,13 @@ def getVersionName = {
     }
 }
 
+// Shared controls (Browse > Controls) live in a Supabase project. Both values are public by design (anon key),
+// what the app may do is limited by the row level security in tools/supabase/controls.sql.
+def getEnvOrDummy = { String name ->
+    String v = System.getenv(name)
+    return (v != null && !v.trim().isEmpty()) ? v.trim() : "DUMMY"
+}
+
 def getCFApiKey = {
     String key = System.getenv("CURSEFORGE_API_KEY")
     if(key != null) return key
@@ -85,6 +92,8 @@ android {
         versionName getVersionName()
         multiDexEnabled false //important
         resValue 'string', 'curseforge_api_key', getCFApiKey()
+        resValue 'string', 'supabase_url', getEnvOrDummy('SUPABASE_URL')
+        resValue 'string', 'supabase_anon_key', getEnvOrDummy('SUPABASE_ANON_KEY')
         resValue 'string', 'group_id', 'git.artdeell'
     }
 
