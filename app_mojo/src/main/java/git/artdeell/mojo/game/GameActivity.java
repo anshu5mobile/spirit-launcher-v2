@@ -650,6 +650,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     protected void onDestroy() {
+        Tools.MAIN_HANDLER.removeCallbacks(mHideLoadingRetry);
         mStatsExecutor.shutdownNow();
         EchoGuard.stop(this);
         super.onDestroy();
@@ -888,8 +889,28 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
         }
     }
 
+    private final Runnable mHideLoadingRetry = this::hideLoadingScreen;
+    private long mLoadWaitStart = -1, mLoadFramesAtStart;
+
+    /**
+     * The backend starts as soon as the game window exists, but Minecraft only draws its Mojang screen a while later,
+     * which used to leave a blank screen in between. Keep the launcher loading screen until the surface has really
+     * presented a couple of frames. The screen counter only exists for the TextureView, so a timeout covers the rest.
+     */
     public void hideLoadingScreen(){
         if(mLoadingScreen == null) return;
+        long now = android.os.SystemClock.uptimeMillis();
+        if(mLoadWaitStart < 0) {
+            mLoadWaitStart = now;
+            mLoadFramesAtStart = git.artdeell.mojo.game.render.FpsMeter.total();
+        }
+        boolean drawn = LauncherPreferences.PREF_USE_ALTERNATE_SURFACE // SurfaceView has no frame counter
+                || git.artdeell.mojo.game.render.FpsMeter.total() - mLoadFramesAtStart >= 2;
+        if(!drawn && now - mLoadWaitStart < 20000) {
+            Tools.MAIN_HANDLER.removeCallbacks(mHideLoadingRetry);
+            Tools.MAIN_HANDLER.postDelayed(mHideLoadingRetry, 150);
+            return;
+        }
         ((TextView) mLoadingScreen.findViewById(R.id.main_loading_screen_text)).setText(getString(R.string.loading_screen_booted, PLATFORM.backendName()));
         mLoadingScreen.animate()
                 .alpha(0f)
