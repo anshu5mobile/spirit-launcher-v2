@@ -68,7 +68,8 @@ public final class GameErrorWatcher {
 
     static boolean isModResolutionFailure(String log) {
         return log.contains("Some of your mods are incompatible") || log.contains("Incompatible mod set!")
-                || log.contains("Mod resolution failed");
+                || log.contains("Mod resolution failed") || log.contains("A mod crashed on startup!")
+                || log.contains("failed during PREPARE") || log.contains("InvalidMixinException");
     }
 
     private static String readTail(File file, int max) {

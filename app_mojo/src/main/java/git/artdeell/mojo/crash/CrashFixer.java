@@ -125,10 +125,28 @@ public final class CrashFixer {
         String key = modId == null ? "" : CrashAnalyzer.squash(modId);
         if(jars != null && (modId == null || !key.isEmpty())) {
             for(File jar : jars) {
-                if((modId == null || CrashAnalyzer.squash(jar.getName()).contains(key))
+                if((modId == null || CrashAnalyzer.squash(jar.getName()).contains(key) || jarHasModId(jar, modId))
                         && jar.renameTo(new File(jar.getParentFile(), jar.getName() + ".disabled"))) renamed++;
             }
         }
         return renamed;
+    }
+
+    /** True when the jar's fabric.mod.json says this is the mod with that id (the file name may look different). */
+    private static boolean jarHasModId(File jar, String modId) {
+        try(java.util.zip.ZipFile zip = new java.util.zip.ZipFile(jar)) {
+            java.util.zip.ZipEntry e = zip.getEntry("fabric.mod.json");
+            if(e == null || e.getSize() > 512 * 1024) return false;
+            try(java.io.InputStream in = zip.getInputStream(e)) {
+                java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[4096];
+                int n;
+                while((n = in.read(buf)) > 0) bos.write(buf, 0, n);
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"id\"\\s*:\\s*\"([^\"]+)\"").matcher(bos.toString("UTF-8"));
+                return m.find() && m.group(1).equals(modId);
+            }
+        } catch (IOException | RuntimeException ex) {
+            return false;
+        }
     }
 }

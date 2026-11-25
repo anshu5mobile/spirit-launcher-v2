@@ -28,7 +28,9 @@ public final class CrashAnalyzer {
     }
 
     private static final Pattern MOD_QUOTED = Pattern.compile("provided by '([A-Za-z0-9_.\\-]+)'");
-    private static final Pattern MIXIN_MOD = Pattern.compile("Mixin apply for mod ([A-Za-z0-9_.\\-]+) failed");
+    private static final Pattern MIXIN_MOD = Pattern.compile("Mixin (?:apply|prepare) for mod ([A-Za-z0-9_.\\-]+) failed");
+    /** "[some.mixins.json:Name from mod modid]" in a MixinApplyError line */
+    private static final Pattern MIXIN_FROM_MOD = Pattern.compile("\\[[^\\]\\n]*? from mod ([A-Za-z0-9_.\\-]+)\\]");
     private static final Pattern FABRIC_REQUIRES = Pattern.compile("Mod '[^']*' \\(([A-Za-z0-9_.\\-]+)\\) [^\\n]*?(requires|depends)");
     private static final Pattern FORGE_FAILED = Pattern.compile("([A-Za-z0-9_.\\-]+) \\(([A-Za-z0-9_.\\-]+)\\) has failed to load correctly");
     private static final Pattern MIXIN_CONFIG = Pattern.compile("([A-Za-z0-9_.\\-]+)\\.mixins?\\.json");
@@ -104,8 +106,11 @@ public final class CrashAnalyzer {
         }
 
         Set<String> mods = new LinkedHashSet<>();
-        collect(MOD_QUOTED, log, 1, mods);
+        // A broken mixin names the mod that owns it. The mod "provided by" in the same crash (often Sodium, whose
+        // entrypoint merely triggered the failing class load) is only the victim, so it is left out when the owner is known.
         collect(MIXIN_MOD, log, 1, mods);
+        collect(MIXIN_FROM_MOD, log, 1, mods);
+        if(mods.isEmpty()) collect(MOD_QUOTED, log, 1, mods);
         collect(FABRIC_REQUIRES, log, 1, mods);
         Matcher forge = FORGE_FAILED.matcher(log);
         while(forge.find()) mods.add(forge.group(2));

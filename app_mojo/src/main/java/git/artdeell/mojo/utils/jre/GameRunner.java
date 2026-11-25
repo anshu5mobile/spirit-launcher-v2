@@ -323,7 +323,19 @@ public class GameRunner {
             JavaRunner.startJvm(runtime, javaArgList, launchClassPath, mainClass, launchArgs);
         }catch (VMLoadException e) {
             LifecycleAwareAlertDialog.DialogCreator dialogCreator = (dialog, builder) ->
-                builder.setMessage(e.toString(activity)).setPositiveButton(android.R.string.ok, (d, w)->{});
+                builder.setMessage(e.toString(activity)).setPositiveButton(android.R.string.ok, (d, w)->{
+                    // Open the crash screen (reads the log and offers Auto fix) instead of leaving a dead game screen
+                    try {
+                        android.content.Intent exit = new android.content.Intent(activity, git.artdeell.mojo.ExitActivity.class);
+                        exit.putExtra("code", 1);
+                        exit.putExtra("isSignal", false);
+                        exit.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK | android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                        activity.startActivity(exit);
+                    } catch (RuntimeException ignored) {
+                        Tools.restartLauncherActivity(activity);
+                    }
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(Tools::fullyExit, 700);
+                });
 
             if(LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator)) {
                 return;
