@@ -151,7 +151,9 @@ public class JavaRunner {
         // BytecodeVerificationRemote is a diagnostic flag, so it needs the unlock flag in front (without it the JVM
         // refuses to start with "Bad arguments"). Checked on desktop Java 21 only; the user can still override by
         // passing their own flag.
-        if(LauncherPreferences.PREF_RAPID_START) {
+        // OFF unless the hidden pref is set: a build with this on ended with "Failed to start the main class" right
+        // after Mixin init, and the cause was not confirmed. Kept so it can be tested on its own.
+        if(LauncherPreferences.DEFAULT_PREF.getBoolean("spiritSkipVerify", false)) {
             boolean hasVerify = false;
             for(String uarg : userArguments) if(uarg.contains("BytecodeVerification") || uarg.startsWith("-Xverify")) hasVerify = true;
             if(!hasVerify) {
