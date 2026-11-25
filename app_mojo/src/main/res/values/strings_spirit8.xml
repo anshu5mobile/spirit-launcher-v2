@@ -25,4 +25,6 @@
     <string name="spirit_browse_enable_all">Enable all mods</string>
     <string name="spirit_browse_disable_all">Disable all mods</string>
     <string name="spirit_browse_disable_all_confirm">Disable every mod of this instance? The game may not start until you enable them again.</string>
+    <string name="spirit_smooth_gc_title">Smoother frames</string>
+    <string name="spirit_smooth_gc_desc">Asks the game\'s memory cleaner for shorter pauses to reduce lag spikes. Not measured on every phone: if the game feels worse or does not start, turn it off. Applies to the next start.</string>
 </resources>

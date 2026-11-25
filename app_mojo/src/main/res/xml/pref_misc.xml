@@ -57,6 +57,12 @@
             android:title="@string/spirit_own_nametag_title"
             android:summary="@string/spirit_own_nametag_desc" />
         <SwitchPreferenceCompat
+            android:key="spiritSmoothGc"
+            android:icon="@drawable/ic_px_zap"
+            android:defaultValue="true"
+            android:title="@string/spirit_smooth_gc_title"
+            android:summary="@string/spirit_smooth_gc_desc" />
+        <SwitchPreferenceCompat
             android:key="spiritHideModUpdates2"
             android:icon="@drawable/ic_px_zap"
             android:defaultValue="true"

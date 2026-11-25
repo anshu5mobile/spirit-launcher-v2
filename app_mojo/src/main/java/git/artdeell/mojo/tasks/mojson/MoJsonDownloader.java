@@ -119,6 +119,17 @@ public class MoJsonDownloader extends Downloader {
         // work to keep the launcher alive. We will replace this line when we will start downloading stuff.
         ProgressLayout.setProgress(ProgressLayout.DOWNLOAD_GAME, 0, R.string.newdl_starting);
 
+        // Fast game startup: a previous complete run left a still valid stamp, nothing to check or download
+        if(LauncherPreferences.PREF_RAPID_START) {
+            LinkedHashSet<File> known = SpiritLaunchStamp.tryLoad(versionName);
+            if(known != null) {
+                mClassPath = known;
+                Log.i("NewMCDownloader", "Fast startup: version " + versionName + " verified earlier, skipping the check");
+                return;
+            }
+        }
+        SpiritLaunchStamp.forget(versionName);
+
         mTargetJarFile = createGameJarPath(versionName);
         mScheduledDownloadTasks = new ArrayList<>();
         mDeclaredNatives = new ArrayList<>();
@@ -161,6 +172,8 @@ public class MoJsonDownloader extends Downloader {
         } catch (Exception e) {
             throw new PresentableException(e, R.string.mjdl_native_error_title, R.string.mjdl_native_error_subtitle_2);
         }
+
+        SpiritLaunchStamp.save(versionName, mClassPath);
     }
 
     public static File createGameJsonPath(String versionId) {

@@ -288,8 +288,16 @@ public class JavaRunner {
         if(!hasArg(args, "-XX:+UsePerfData") && !hasArg(args, "-XX:-UsePerfData")) args.add("-XX:-UsePerfData");
         // NOTE: -XX:-BytecodeVerificationRemote was tried here and removed: it is a diagnostic flag on newer JVMs and
         // makes the VM refuse to start ("Bad arguments") unless -XX:+UnlockDiagnosticVMOptions comes first.
-        // GC choice is left to the JVM: forcing G1 with a short pause target was never measured on phones
-        // and can cost throughput, so it is not applied.
+        // "Smoother frames": ask the collector for shorter pauses (a smaller pause target makes it work in smaller
+        // steps) and process references with several threads. Both are plain product flags, the collector itself
+        // is still the JVM's choice. Not measured on a phone, so it has its own switch (Misc settings) and is skipped
+        // when the user or the version json already set a collector or a pause target.
+        if(LauncherPreferences.DEFAULT_PREF.getBoolean("spiritSmoothGc", true)
+                && !hasArg(args, "-XX:MaxGCPauseMillis") && !hasArg(args, "-XX:+UseSerialGC")
+                && !hasArg(args, "-XX:+UseParallelGC") && !hasArg(args, "-XX:+UseZGC") && !hasArg(args, "-XX:+UseShenandoahGC")) {
+            args.add("-XX:MaxGCPauseMillis=30");
+            if(!hasArg(args, "-XX:+ParallelRefProcEnabled") && !hasArg(args, "-XX:-ParallelRefProcEnabled")) args.add("-XX:+ParallelRefProcEnabled");
+        }
     }
 
     private static void addx86SignalWorkaround(List<String> args) {

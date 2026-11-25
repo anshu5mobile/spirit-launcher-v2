@@ -299,7 +299,7 @@ public class ControlsFragment extends Fragment {
                 //noinspection ResultOfMethodCallIgnored
                 tmp.delete();
             }
-        } catch (IOException | RuntimeException | IllegalStateException e) {
+        } catch (IOException | RuntimeException e) {
             return null;
         }
     }
