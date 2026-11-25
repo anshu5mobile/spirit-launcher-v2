@@ -53,6 +53,49 @@ public enum PerfProfile {
         m.put("maxFps", this == PERFORMANCE ? "260" : String.valueOf(Math.min(hz, this == POTATO ? 60 : 260)));
         m.put("enableVsync", "false");
         m.put("viewBobbing", this == POTATO ? "false" : "true");
+        // More of the video settings. Each key is only written when the game's options.txt already has it, so keys
+        // that a game version does not know (newer ones such as cutoutLeaves) are simply skipped.
+        boolean low = this == POTATO || this == PERFORMANCE;
+        m.put("ao", this == POTATO || this == PERFORMANCE ? "false" : "true");
+        m.put("vignette", this == QUALITY ? "true" : "false");
+        m.put("cutoutLeaves", this == QUALITY || this == BALANCED ? "true" : "false");
+        m.put("weatherRadius", this == POTATO ? "3" : this == PERFORMANCE ? "4" : this == BALANCED ? "6" : "10");
+        m.put("chunkSectionFadeInTime", this == QUALITY ? "0.75" : "0.0");
+        m.put("menuBackgroundBlurriness", low ? "0" : this == BALANCED ? "2" : "5");
+        m.put("hideLightningFlashes", low ? "true" : "false");
+        m.put("showAutosaveIndicator", low ? "false" : "true");
+        m.put("glintStrength", this == POTATO ? "0.0" : "0.75");
+        m.put("glintSpeed", this == POTATO ? "0.0" : "0.5");
+        return m;
+    }
+
+    /**
+     * Settings of Sodium Extra (animations, particles, details), changed in config/sodium-extra-options.json when
+     * that file exists. Path "section.key" to value; only existing true/false keys are changed.
+     */
+    public Map<String, Boolean> sodiumExtra() {
+        Map<String, Boolean> m = new LinkedHashMap<>();
+        boolean potato = this == POTATO, perf = this == PERFORMANCE, quality = this == QUALITY;
+        // animated textures
+        m.put("animation_settings.animation", !potato);
+        m.put("animation_settings.water", quality || this == BALANCED);
+        m.put("animation_settings.lava", quality || this == BALANCED);
+        m.put("animation_settings.fire", quality || this == BALANCED);
+        m.put("animation_settings.portal", quality || this == BALANCED);
+        m.put("animation_settings.block_animations", !potato && !perf);
+        m.put("animation_settings.sculk_sensor", quality);
+        // particles
+        m.put("particle_settings.rain_splash", quality);
+        m.put("particle_settings.block_break", !potato);
+        m.put("particle_settings.block_breaking", !potato);
+        // details
+        m.put("detail_settings.rain_snow", !potato);
+        m.put("detail_settings.biome_colors", !potato);
+        m.put("detail_settings.sky_colors", !potato);
+        // things drawn in the world
+        m.put("render_settings.enchanting_table_book", quality || this == BALANCED);
+        m.put("render_settings.beacon_beam", !potato);
+        m.put("render_settings.limit_beacon_beam_height", !quality);
         return m;
     }
 }

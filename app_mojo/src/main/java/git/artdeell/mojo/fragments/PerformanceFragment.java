@@ -184,6 +184,16 @@ public class PerformanceFragment extends Fragment {
         }
     }
 
+    /** One line with the main values the profile sets, so the player sees what a tap will change */
+    private String settingsLine(PerfProfile p, DeviceInfo d) {
+        java.util.Map<String, String> o = p.options(d);
+        String gfx = "0".equals(o.get("graphicsMode")) ? "Fast" : "1".equals(o.get("graphicsMode")) ? "Fancy" : "?";
+        String part = "2".equals(o.get("particles")) ? "Minimal" : "1".equals(o.get("particles")) ? "Decreased" : "All";
+        boolean anim = p.sodiumExtra().get("animation_settings.animation");
+        return "Render " + o.get("renderDistance") + " · Sim " + o.get("simulationDistance") + " · " + gfx
+                + " · Particles " + part + " · Anim " + (anim ? "on" : "off") + " · RAM " + p.ramMb(d) + " MB";
+    }
+
     private String profileDesc(PerfProfile p) {
         switch(p) {
             case POTATO: return getString(R.string.spirit_perf_potato_d);
@@ -234,6 +244,7 @@ public class PerformanceFragment extends Fragment {
             row.setPadding(0, dp(8), 0, dp(4));
             row.addView(text(profileName(p) + (p == rec ? "  ★" : ""), 15, TEXT, true));
             row.addView(text(profileDesc(p), 12, DIM, false));
+            row.addView(text(settingsLine(p, d), 11, DIM, false));
             row.addView(button(getString(R.string.spirit_perf_apply), false, v -> confirmApply(p)));
             profiles.addView(row);
         }
@@ -302,6 +313,9 @@ public class PerformanceFragment extends Fragment {
                         .setPositiveButton(android.R.string.ok, null).show(); });
                 return;
             }
+            // Sodium Extra: animations, particles, details (only when it is installed and has run once)
+            changes.addAll(git.artdeell.mojo.perf.ModConfigFile.applyBooleans(
+                    new File(target.gameDir, "config/sodium-extra-options.json"), profile.sodiumExtra()));
             int ram = profile.ramMb(d);
             LauncherPreferences.DEFAULT_PREF.edit()
                     .putInt("allocation", ram)
@@ -346,6 +360,7 @@ public class PerformanceFragment extends Fragment {
                     } catch (IOException | RuntimeException ignored) { /* keep the current file */ }
                 }
             }
+            if(target != null) optionsBack |= git.artdeell.mojo.perf.ModConfigFile.restore(new File(target.gameDir, "config/sodium-extra-options.json"));
             LauncherPreferences.DEFAULT_PREF.edit().remove("allocation").remove("resolutionRatio").remove("javaArgs").apply();
             LauncherPreferences.loadPreferences(app);
             final boolean restored = optionsBack;
