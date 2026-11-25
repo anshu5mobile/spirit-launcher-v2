@@ -59,11 +59,6 @@ public final class InGameSkin {
             try {
                 Bitmap bitmap = SkinStore.load(entry);
                 if(bitmap == null) throw new IOException("file missing");
-                File dir = new File(gameDir, "CustomSkinLoader/LocalSkin/skins");
-                if(!dir.isDirectory() && !dir.mkdirs()) throw new IOException("Could not create " + dir);
-                try(FileOutputStream out = new FileOutputStream(new File(dir, account.username + ".png"))) {
-                    out.write(SkinStore.encodePng(bitmap));
-                }
                 SkinStore.installDefaultSkinPack(gameDir, bitmap);
                 SkinStore.saveActive(account, bitmap, entry.name, entry.url, entry.slim);
                 account.updateFaceFromSkin(bitmap);

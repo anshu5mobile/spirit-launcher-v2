@@ -643,7 +643,6 @@ public class WardrobeFragment extends Fragment {
             try {
                 BrowseTarget target = BrowseTarget.forSelectedInstance();
                 if(target != null) {
-                    writeLocalSkin(target, account, bitmap);
                     SkinStore.installDefaultSkinPack(new File(target.gameDir.toString()), bitmap);
                 }
                 finishApplied(account, bitmap, slim, url, name);
@@ -685,8 +684,9 @@ public class WardrobeFragment extends Fragment {
         if(mOfflineCard == null) return;
         final Account account = mAccount;
         boolean offline = account != null && account.authType == AuthType.LOCAL;
-        mOfflineCard.setVisibility(offline ? View.VISIBLE : View.GONE);
-        if(!offline) return;
+        // The skin of an offline account now comes from a built-in resource pack: no skin mod to install any more
+        mOfflineCard.setVisibility(View.GONE);
+        if(true) return;
         MojoApplication.sExecutorService.execute(() -> {
             BrowseTarget target = BrowseTarget.forSelectedInstance();
             final boolean installed = target != null && hasSkinSupport(target);
