@@ -64,6 +64,7 @@ public class BrowseFragment extends Fragment {
     private static ModIconCache sIcons;
 
     private LinearLayout mList;
+    private View mBulkRow;
     private TextView mEmpty, mTargetText, mSortView, mInstalledToggle, mUpdateAll, mMore;
     private ProgressBar mProgress;
     private EditText mInput;
@@ -97,6 +98,14 @@ public class BrowseFragment extends Fragment {
         mSortView = view.findViewById(R.id.spirit_browse_sort);
         mInstalledToggle = view.findViewById(R.id.spirit_browse_installed_toggle);
         mUpdateAll = view.findViewById(R.id.spirit_browse_update_all);
+        mBulkRow = view.findViewById(R.id.spirit_browse_bulk_row);
+        view.findViewById(R.id.spirit_browse_enable_all).setOnClickListener(v -> setAllMods(true));
+        view.findViewById(R.id.spirit_browse_disable_all).setOnClickListener(v ->
+                new AlertDialog.Builder(requireContext())
+                        .setMessage(R.string.spirit_browse_disable_all_confirm)
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .setPositiveButton(R.string.spirit_browse_disable_all, (d, w) -> setAllMods(false))
+                        .show());
         mMore = view.findViewById(R.id.spirit_browse_more);
         mProgress = view.findViewById(R.id.spirit_browse_progress);
         mInput = view.findViewById(R.id.spirit_browse_input);
@@ -111,9 +120,6 @@ public class BrowseFragment extends Fragment {
             final int index = i;
             view.findViewById(TAB_IDS[i]).setOnClickListener(v -> selectTab(index));
         }
-        View controlsTab = view.findViewById(R.id.spirit_tab_controls);
-        if(controlsTab != null) controlsTab.setOnClickListener(v ->
-                Tools.swapFragment(requireActivity(), ControlsFragment.class, ControlsFragment.TAG, null));
         mInput.setOnEditorActionListener((v, actionId, event) -> {
             if(actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
                 android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager)
@@ -208,6 +214,7 @@ public class BrowseFragment extends Fragment {
         mInput.setEnabled(!mInstalledMode);
         mInstalledToggle.setText(mInstalledMode ? R.string.spirit_browse_back_to_browse : R.string.spirit_browse_installed);
         mUpdateAll.setVisibility(mInstalledMode && mKind == BrowseKind.MODS ? View.VISIBLE : View.GONE);
+        mBulkRow.setVisibility(mInstalledMode && mKind == BrowseKind.MODS ? View.VISIBLE : View.GONE);
         updateTargetText();
         if(!mTargetLoaded) {
             mProgress.setVisibility(View.VISIBLE);
@@ -635,6 +642,24 @@ public class BrowseFragment extends Fragment {
                             Tools.runOnUiThread(this::reload);
                         }))
                 .show();
+    }
+
+    /** Turns every mod of the selected instance on or off (a mod is switched by renaming its jar). */
+    private void setAllMods(boolean enable) {
+        final BrowseTarget target = mTarget;
+        if(target == null) return;
+        MojoApplication.sExecutorService.execute(() -> {
+            int failed = 0;
+            for(BrowseInstaller.Installed item : BrowseInstaller.listInstalled(target, BrowseKind.MODS)) {
+                if(item.enabled != enable && !BrowseInstaller.setEnabled(item, enable)) failed++;
+            }
+            final int fFailed = failed;
+            Tools.runOnUiThread(() -> {
+                if(!isAlive()) return;
+                if(fFailed > 0) git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_error, Toast.LENGTH_SHORT).show();
+                reload();
+            });
+        });
     }
 
     private void updateAllMods() {

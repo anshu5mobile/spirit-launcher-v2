@@ -138,7 +138,7 @@
     <string name="spirit_hud_size_value">HUD size: %1$d%%</string>
     <string name="spirit_hud_hint">Drag the FPS, RAM and gear buttons to move them. Pinch one with two fingers to resize it. Tap FPS or RAM to shrink it to the number only.</string>
     <string name="spirit_hide_mod_updates_title">Hide mod update popups</string>
-    <string name="spirit_hide_mod_updates_desc">Turns off the update checker of Mod Menu before the game starts, so the \"mod X is out\" popup in the corner stays away. Applies to the next start.</string>
+    <string name="spirit_hide_mod_updates_desc">Hides the \"mod X is out\" popups (Mod Menu and WalksyLib) by turning their update checker off before the game starts. On by default. Applies to the next start.</string>
     <string name="spirit_own_nametag_title">Show my name in 3rd person</string>
     <string name="spirit_own_nametag_desc">Built in, no mod to install: shows your own name above your head in F5 view. Fabric instances only. Applies to the next start.</string>
 </resources>

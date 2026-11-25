@@ -143,7 +143,7 @@ public class GameActivity extends BaseActivity implements ControlButtonMenuListe
             }
         }
         git.artdeell.mojo.wardrobe.SkinStore.refreshDefaultSkinPack(instance.getGameDirectory(), account);
-        if(LauncherPreferences.DEFAULT_PREF.getBoolean("spiritHideModUpdates", true))
+        if(LauncherPreferences.DEFAULT_PREF.getBoolean("spiritHideModUpdates2", true))
             ModUpdateConfig.silenceUpdatePopups(instance.getGameDirectory());
         VoiceChatConfig.applyDenoiser(instance.getGameDirectory(),
                 LauncherPreferences.DEFAULT_PREF.getBoolean("spiritVoiceDenoise", true));

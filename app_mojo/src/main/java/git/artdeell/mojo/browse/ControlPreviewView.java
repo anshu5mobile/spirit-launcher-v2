@@ -66,7 +66,7 @@ public final class ControlPreviewView extends View {
         try {
             float x = d.insertDynamicPos(d.dynamicX, mRefW, mRefH) * scale;
             float y = d.insertDynamicPos(d.dynamicY, mRefW, mRefH) * scale;
-            float w = d.width * mDensity * scale, h = d.height * mDensity * scale;
+            float w = d.getWidth() * scale, h = d.getHeight() * scale;
             if(w <= 0 || h <= 0) return;
             float alpha = d.opacity <= 0 ? 0.55f : Math.min(1f, d.opacity);
             mFill.setColor(0xFFA6F03A);

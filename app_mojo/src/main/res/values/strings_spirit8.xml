@@ -1,4 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="spirit_tab_controls">Controls</string>
+    <string name="spirit_crash_dep_missing">The mod "%1$s" is missing</string>
+    <string name="spirit_crash_dep_missing_d">Another mod needs it to start. Install it here, the launcher picks the version for your game.</string>
+    <string name="spirit_crash_mods_old">Some mods are too old for this game</string>
+    <string name="spirit_crash_mods_old_d">Needs a newer version: %1$s. Updating gets the versions that match your game and loader. Nothing is turned off.</string>
+    <string name="spirit_crash_fix_install">Install this mod</string>
+    <string name="spirit_crash_fix_update">Update mods</string>
+    <string name="spirit_crash_working">Working…</string>
+    <string name="spirit_crash_retry">Try again</string>
+    <string name="spirit_crash_failed">Could not fix it: %1$s</string>
+    <string name="spirit_crash_installed">Installed %1$s</string>
+    <string name="spirit_crash_updated">%1$d mod(s) updated.</string>
+    <string name="spirit_crash_updated_none">No newer versions were found for the mods you have.</string>
+    <string name="spirit_crash_auto_working">Fixing: %1$s…</string>
+    <string name="spirit_crash_auto_ok">All fixes applied. Go back and start the game.</string>
+    <string name="spirit_crash_auto_partial">%1$d fix(es) worked. Some did not: %2$s</string>
+    <string name="spirit_crash_w_loader">loader</string>
+    <string name="spirit_crash_w_mods">mods</string>
+    <string name="spirit_game_incompat_title">Mods do not match</string>
+    <string name="spirit_game_incompat_sub">The game cannot start because of the mods listed below.</string>
+    <string name="spirit_game_incompat_exit">Close game</string>
+    <string name="spirit_game_incompat_later">Keep open</string>
+    <string name="spirit_game_incompat_restart">Close game and restart</string>
+    <string name="spirit_browse_enable_all">Enable all mods</string>
+    <string name="spirit_browse_disable_all">Disable all mods</string>
+    <string name="spirit_browse_disable_all_confirm">Disable every mod of this instance? The game may not start until you enable them again.</string>
 </resources>

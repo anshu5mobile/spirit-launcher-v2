@@ -70,6 +70,7 @@
 
         <TextView
             android:id="@+id/spirit_about_version"
+            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
@@ -172,6 +173,7 @@
 
     <LinearLayout
         android:id="@+id/spirit_about_donate"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"

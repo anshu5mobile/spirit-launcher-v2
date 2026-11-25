@@ -57,7 +57,7 @@
             android:title="@string/spirit_own_nametag_title"
             android:summary="@string/spirit_own_nametag_desc" />
         <SwitchPreferenceCompat
-            android:key="spiritHideModUpdates"
+            android:key="spiritHideModUpdates2"
             android:icon="@drawable/ic_px_zap"
             android:defaultValue="true"
             android:title="@string/spirit_hide_mod_updates_title"
