@@ -40,6 +40,15 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
             }
     );
 
+    private final ActivityResultLauncher<String[]> mCursorLauncher = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(), (uri) -> {
+                if(uri == null) return;
+                boolean ok = git.artdeell.mojo.game.CursorImage.importFrom(requireContext(), uri);
+                git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(),
+                        ok ? R.string.spirit_cursor_set : R.string.spirit_cursor_fail, Toast.LENGTH_SHORT).show();
+            }
+    );
+
     @Override
     public void onCreatePreferences(Bundle b, String str) {
         mVisibilityUpdater = this::updateVisibility;
@@ -52,6 +61,12 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         });
         setupCacheClearPreference();
         setupMicrophoneRequestPreference();
+        requirePreference("spiritCursorPick").setOnPreferenceClickListener(preference -> { mCursorLauncher.launch(new String[]{"image/*"}); return true; });
+        requirePreference("spiritCursorReset").setOnPreferenceClickListener(preference -> {
+            git.artdeell.mojo.game.CursorImage.reset(requireContext());
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_cursor_reset_done, Toast.LENGTH_SHORT).show();
+            return true;
+        });
         requirePreference("spiritCleanup").setOnPreferenceClickListener(preference -> { askCleanup(); return true; });
         updateVisibility();
     }

@@ -42,7 +42,10 @@ public class GameCursorView extends View implements PlatformCursorImplementor {
         cursorDrawable = ContextCompat.getDrawable(context, R.drawable.ic_mouse_pointer);
         assert cursorDrawable != null;
         cursorDrawable.setBounds(0, 0, 36, 54);
+        customBitmap = CursorImage.load(context);
     }
+
+    private android.graphics.Bitmap customBitmap;
 
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
@@ -54,7 +57,8 @@ public class GameCursorView extends View implements PlatformCursorImplementor {
         PlatformCursor cursor = Platform.getCursor();
         canvas.scale(mouseScale, mouseScale);
         if (cursor == null) {
-            cursorDrawable.draw(canvas);
+            if (customBitmap != null) canvas.drawBitmap(customBitmap, 0, 0, customCursorPaint);
+            else cursorDrawable.draw(canvas);
         } else {
             canvas.drawBitmap(cursor.bitmap, -cursor.hotX, -cursor.hotY, customCursorPaint);
         }

@@ -45,6 +45,18 @@
             android:title="@string/spirit_voice_denoise_title"
             android:summary="@string/spirit_voice_denoise_desc" />
         <Preference
+            android:key="spiritCursorPick"
+            android:icon="@drawable/ic_mouse_pointer"
+            android:persistent="false"
+            android:title="@string/spirit_cursor_pick_title"
+            android:summary="@string/spirit_cursor_pick_desc" />
+        <Preference
+            android:key="spiritCursorReset"
+            android:icon="@drawable/ic_mouse_pointer"
+            android:persistent="false"
+            android:title="@string/spirit_cursor_reset_title"
+            android:summary="@string/spirit_cursor_reset_desc" />
+        <Preference
             android:key="spiritCleanup"
             android:icon="@drawable/ic_px_zap"
             android:persistent="false"

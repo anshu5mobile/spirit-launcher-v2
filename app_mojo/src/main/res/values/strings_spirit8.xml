@@ -27,4 +27,11 @@
     <string name="spirit_browse_disable_all_confirm">Disable every mod of this instance? The game may not start until you enable them again.</string>
     <string name="spirit_smooth_gc_title">Smoother frames</string>
     <string name="spirit_smooth_gc_desc">Asks the game\'s memory cleaner for shorter pauses to reduce lag spikes. Not measured on every phone: if the game feels worse or does not start, turn it off. Applies to the next start.</string>
+    <string name="spirit_cursor_pick_title">Cursor image</string>
+    <string name="spirit_cursor_pick_desc">Pick a PNG to use as the in-game cursor</string>
+    <string name="spirit_cursor_reset_title">Reset cursor image</string>
+    <string name="spirit_cursor_reset_desc">Go back to the default cursor</string>
+    <string name="spirit_cursor_set">Cursor image set</string>
+    <string name="spirit_cursor_reset_done">Default cursor restored</string>
+    <string name="spirit_cursor_fail">Could not read that image</string>
 </resources>
