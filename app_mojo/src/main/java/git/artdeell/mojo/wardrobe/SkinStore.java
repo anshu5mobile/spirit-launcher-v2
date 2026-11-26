@@ -269,6 +269,34 @@ public final class SkinStore {
 
     // ---------------------------------------------------------------- worn skin
 
+    /** The skin picture of the account (may not exist) */
+    public static File activeFile(Account account) {
+        return new File(activeDir(), accountKey(account) + ".png");
+    }
+
+    /** The cape picture of the account (may not exist) */
+    public static File capeFile(Account account) {
+        return new File(activeDir(), accountKey(account) + ".cape.png");
+    }
+
+    /** Saves a cape for an offline account. A cape is 64x32 (or a bigger picture with the same shape), or the 22x17 classic size. */
+    public static void saveCape(Account account, byte[] png) throws IOException {
+        Bitmap b = BitmapFactory.decodeByteArray(png, 0, png.length);
+        if(b == null) throw new IOException("not a picture");
+        boolean ok = (b.getWidth() == 22 && b.getHeight() == 17) || (b.getWidth() >= 64 && b.getWidth() == b.getHeight() * 2 && b.getWidth() % 64 == 0);
+        if(!ok) throw new IOException("A cape must be 64x32 (or 22x17)");
+        synchronized (LOCK) {
+            writePng(capeFile(account), b);
+        }
+    }
+
+    public static void clearCape(Account account) {
+        synchronized (LOCK) {
+            //noinspection ResultOfMethodCallIgnored
+            capeFile(account).delete();
+        }
+    }
+
     public static void saveActive(Account account, Bitmap skin, @Nullable String name, @Nullable String url, boolean slim) throws IOException {
         synchronized (LOCK) {
             String key = accountKey(account);

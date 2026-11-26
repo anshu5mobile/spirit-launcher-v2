@@ -34,4 +34,8 @@
     <string name="spirit_cursor_set">Cursor image set</string>
     <string name="spirit_cursor_reset_done">Default cursor restored</string>
     <string name="spirit_cursor_fail">Could not read that image</string>
+    <string name="spirit_cape_local_pick">Choose a cape picture</string>
+    <string name="spirit_cape_local_remove">Remove my cape</string>
+    <string name="spirit_cape_local_done">Cape saved. It shows up the next time the game starts.</string>
+    <string name="spirit_cape_local_removed">Cape removed</string>
 </resources>

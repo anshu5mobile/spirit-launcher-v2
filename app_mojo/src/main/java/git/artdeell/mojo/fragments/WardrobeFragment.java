@@ -81,6 +81,9 @@ public class WardrobeFragment extends Fragment {
     private final ActivityResultLauncher<String> mGalleryLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(), this::onGalleryPicked);
 
+    private final ActivityResultLauncher<String> mCapeLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(), this::onCapePicked);
+
     private final ActivityResultLauncher<android.content.Intent> mEditorLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if(result.getResultCode() != android.app.Activity.RESULT_OK || result.getData() == null || !isAdded()) return;
@@ -807,12 +810,47 @@ public class WardrobeFragment extends Fragment {
 
     // ---------------------------------------------------------------- capes
 
+    private void onCapePicked(@Nullable android.net.Uri uri) {
+        final Account account = mAccount;
+        if(uri == null || account == null) return;
+        final android.content.Context app = requireContext().getApplicationContext();
+        MojoApplication.sExecutorService.execute(() -> {
+            try(java.io.InputStream in = app.getContentResolver().openInputStream(uri)) {
+                if(in == null) throw new IOException("cannot open");
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[8192];
+                int n;
+                while((n = in.read(buf)) > 0 && out.size() < 8 * 1024 * 1024) out.write(buf, 0, n);
+                git.artdeell.mojo.wardrobe.SkinStore.saveCape(account, out.toByteArray());
+                toast(app.getString(R.string.spirit_cape_local_done));
+            } catch (IOException | RuntimeException e) {
+                toast(app.getString(R.string.spirit_cape_failed, messageOf(e)));
+            }
+        });
+    }
+
     private interface CapeAction {
         void run(Account account) throws IOException;
     }
 
     private void openCapes() {
         final Account account = mAccount;
+        if(account != null && account.authType == git.artdeell.mojo.authenticator.AuthType.LOCAL) {
+            // Offline account: the cape is a picture from the phone, shown by the launcher's own skin server
+            String[] choices = { getString(R.string.spirit_cape_local_pick), getString(R.string.spirit_cape_local_remove) };
+            new AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.spirit_cape_title)
+                    .setItems(choices, (d, which) -> {
+                        if(which == 0) mCapeLauncher.launch("image/*");
+                        else {
+                            git.artdeell.mojo.wardrobe.SkinStore.clearCape(account);
+                            toast(getString(R.string.spirit_cape_local_removed));
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+            return;
+        }
         if(account == null || account.authType != git.artdeell.mojo.authenticator.AuthType.MICROSOFT) {
             git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_cape_only_ms, Toast.LENGTH_LONG).show();
             return;

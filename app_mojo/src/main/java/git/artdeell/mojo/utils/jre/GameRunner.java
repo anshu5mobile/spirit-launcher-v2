@@ -379,6 +379,16 @@ public class GameRunner {
 
     private static void addAuthlibInjectorArgs(List<String> javaArgList, Account account) {
         String injectorUrl = account.authType.injectorUrl;
+        if(injectorUrl == null && account.authType == git.artdeell.mojo.authenticator.AuthType.LOCAL
+                && git.artdeell.mojo.prefs.LauncherPreferences.DEFAULT_PREF.getBoolean("spiritLocalSkinServer", true)) {
+            // Offline account: the launcher's own skin server tells the game which skin and cape to show
+            int port = git.artdeell.mojo.wardrobe.LocalSkinServer.start(account);
+            if(port > 0) {
+                javaArgList.add("-Dauthlibinjector.noShowServerName");
+                javaArgList.add("-Dauthlibinjector.noLogFile");
+                injectorUrl = "http://127.0.0.1:" + port;
+            }
+        }
         if(injectorUrl == null) return;
         javaArgList.add("-javaagent:"+Tools.DIR_DATA+"/authlib-injector/authlib-injector.jar="+injectorUrl);
     }
