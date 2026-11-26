@@ -297,6 +297,17 @@ public class JavaRunner {
                 && !hasArg(args, "-XX:+UseParallelGC") && !hasArg(args, "-XX:+UseZGC") && !hasArg(args, "-XX:+UseShenandoahGC")) {
             args.add("-XX:MaxGCPauseMillis=30");
             if(!hasArg(args, "-XX:+ParallelRefProcEnabled") && !hasArg(args, "-XX:-ParallelRefProcEnabled")) args.add("-XX:+ParallelRefProcEnabled");
+            // Minecraft makes a lot of short-lived garbage (chunk rebuilds, entities). A bigger young generation lets
+            // that garbage die young instead of being promoted and cleaned in long mixed collections, which is
+            // what shows up as sudden frame drops. The two G1New* flags are experimental ones, so the unlock flag has
+            // to come before them. They only matter when G1 is the collector; otherwise the VM ignores them.
+            if(!hasArg(args, "-XX:G1NewSizePercent") && !hasArg(args, "-XX:G1MaxNewSizePercent")) {
+                if(!hasArg(args, "-XX:+UnlockExperimentalVMOptions")) args.add("-XX:+UnlockExperimentalVMOptions");
+                args.add("-XX:G1NewSizePercent=30");
+                args.add("-XX:G1MaxNewSizePercent=50");
+                if(!hasArg(args, "-XX:G1ReservePercent")) args.add("-XX:G1ReservePercent=20");
+                if(!hasArg(args, "-XX:InitiatingHeapOccupancyPercent")) args.add("-XX:InitiatingHeapOccupancyPercent=20");
+            }
         }
     }
 
