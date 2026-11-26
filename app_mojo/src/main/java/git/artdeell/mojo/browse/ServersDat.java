@@ -35,36 +35,35 @@ public final class ServersDat {
         ListValue(int elementType, List<Object> items) { this.elementType = elementType; this.items = items; }
     }
 
-    /** @return true when the server was added, false when the same address was already in the list */
-    public static boolean add(File gameDir, String name, String ip) throws IOException {
-        File file = new File(gameDir, "servers.dat");
-        Map<String, Tag> root = new LinkedHashMap<>();
-        if(file.isFile() && file.length() > 0) {
-            try(DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
-                if(in.readByte() != COMPOUND) throw new IOException("servers.dat is not valid");
-                in.readUTF();
-                root = readCompound(in);
-            }
+    private static Map<String, Tag> load(File file) throws IOException {
+        if(!file.isFile() || file.length() == 0) return new LinkedHashMap<>();
+        try(DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
+            if(in.readByte() != COMPOUND) throw new IOException("servers.dat is not valid");
+            in.readUTF();
+            return readCompound(in);
         }
-        Tag serversTag = root.get("servers");
-        ListValue servers;
-        if(serversTag != null && serversTag.type == LIST) {
-            servers = (ListValue) serversTag.value;
-            if(servers.elementType != COMPOUND && !servers.items.isEmpty()) throw new IOException("servers.dat is not valid");
-        } else {
-            servers = new ListValue(COMPOUND, new ArrayList<>());
-        }
-        for(Object o : servers.items) {
-            @SuppressWarnings("unchecked") Map<String, Tag> existing = (Map<String, Tag>) o;
-            Tag t = existing.get("ip");
-            if(t != null && t.type == STRING && ((String) t.value).equalsIgnoreCase(ip)) return false;
-        }
-        Map<String, Tag> entry = new LinkedHashMap<>();
-        entry.put("name", new Tag(STRING, name));
-        entry.put("ip", new Tag(STRING, ip));
-        servers.items.add(entry);
-        root.put("servers", new Tag(LIST, new ListValue(COMPOUND, servers.items)));
+    }
 
+    @SuppressWarnings("unchecked")
+    private static ListValue serversOf(Map<String, Tag> root) throws IOException {
+        Tag serversTag = root.get("servers");
+        if(serversTag != null && serversTag.type == LIST) {
+            ListValue servers = (ListValue) serversTag.value;
+            if(servers.elementType != COMPOUND && !servers.items.isEmpty()) throw new IOException("servers.dat is not valid");
+            return servers;
+        }
+        return new ListValue(COMPOUND, new ArrayList<>());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String stringOf(Object entry, String key) {
+        Tag t = ((Map<String, Tag>) entry).get(key);
+        return t != null && t.type == STRING ? (String) t.value : "";
+    }
+
+    private static void save(File gameDir, Map<String, Tag> root, ListValue servers) throws IOException {
+        File file = new File(gameDir, "servers.dat");
+        root.put("servers", new Tag(LIST, new ListValue(COMPOUND, servers.items)));
         if(file.isFile()) {
             File old = new File(gameDir, "servers.dat_old");
             //noinspection ResultOfMethodCallIgnored
@@ -77,7 +76,39 @@ public final class ServersDat {
             out.writeUTF("");
             writeCompound(out, root);
         }
+    }
+
+    /** @return the saved servers as {name, ip} pairs, in the order the game shows them */
+    public static List<String[]> list(File gameDir) throws IOException {
+        List<String[]> out = new ArrayList<>();
+        ListValue servers = serversOf(load(new File(gameDir, "servers.dat")));
+        for(Object o : servers.items) out.add(new String[]{stringOf(o, "name"), stringOf(o, "ip")});
+        return out;
+    }
+
+    /** @return true when the server was added, false when the same address was already in the list */
+    public static boolean add(File gameDir, String name, String ip) throws IOException {
+        Map<String, Tag> root = load(new File(gameDir, "servers.dat"));
+        ListValue servers = serversOf(root);
+        for(Object o : servers.items) if(stringOf(o, "ip").equalsIgnoreCase(ip)) return false;
+        Map<String, Tag> entry = new LinkedHashMap<>();
+        entry.put("name", new Tag(STRING, name));
+        entry.put("ip", new Tag(STRING, ip));
+        servers.items.add(entry);
+        save(gameDir, root, servers);
         return true;
+    }
+
+    /** Removes the server with this address; other servers (and everything else the game stored) stay as they were */
+    public static boolean remove(File gameDir, String ip) throws IOException {
+        Map<String, Tag> root = load(new File(gameDir, "servers.dat"));
+        ListValue servers = serversOf(root);
+        boolean removed = false;
+        for(java.util.Iterator<Object> it = servers.items.iterator(); it.hasNext(); ) {
+            if(stringOf(it.next(), "ip").equalsIgnoreCase(ip)) { it.remove(); removed = true; }
+        }
+        if(removed) save(gameDir, root, servers);
+        return removed;
     }
 
     // ---------------------------------------------------------------- reading

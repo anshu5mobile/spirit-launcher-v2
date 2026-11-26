@@ -45,4 +45,15 @@
     <string name="spirit_server_added">Server added to your list</string>
     <string name="spirit_server_exists">That address is already in your list</string>
     <string name="spirit_server_failed">Could not write the server list: %1$s</string>
+    <string name="spirit_tab_servers">Servers</string>
+    <string name="spirit_server_mine">Your servers</string>
+    <string name="spirit_server_popular">Popular servers</string>
+    <string name="spirit_server_empty">No servers yet. Tap + Server or add one from the popular list.</string>
+    <string name="spirit_server_checking">Checking…</string>
+    <string name="spirit_server_online">Online · %1$d / %2$d players %3$s</string>
+    <string name="spirit_server_offline">Offline or not reachable</string>
+    <string name="spirit_server_unknown">Status unknown</string>
+    <string name="spirit_server_delete_confirm">Remove this server from your list?</string>
+    <string name="spirit_server_removed">Server removed</string>
+    <string name="spirit_server_online_note">Most big servers only let Microsoft accounts join. With an offline account you can join servers that allow it.</string>
 </resources>

@@ -50,10 +50,10 @@ public class BrowseFragment extends Fragment {
     public static final String TAG = "SpiritBrowseFragment";
 
     private static final int[] TAB_IDS = {
-            R.id.spirit_tab_mods, R.id.spirit_tab_packs, R.id.spirit_tab_shaders, R.id.spirit_tab_worlds
+            R.id.spirit_tab_mods, R.id.spirit_tab_packs, R.id.spirit_tab_shaders, R.id.spirit_tab_worlds, R.id.spirit_tab_servers
     };
     private static final BrowseKind[] TAB_KINDS = {
-            BrowseKind.MODS, BrowseKind.PACKS, BrowseKind.SHADERS, BrowseKind.WORLDS
+            BrowseKind.MODS, BrowseKind.PACKS, BrowseKind.SHADERS, BrowseKind.WORLDS, BrowseKind.SERVERS
     };
     private static final String[] SORTS = {"relevance", "downloads", "updated"};
     private static final int[] SORT_LABELS = {
@@ -210,8 +210,11 @@ public class BrowseFragment extends Fragment {
         mEmpty.setVisibility(View.GONE);
         mProgress.setVisibility(View.GONE);
 
+        boolean servers = mKind == BrowseKind.SERVERS;
+        ((View) mInput.getParent()).setVisibility(servers ? View.GONE : View.VISIBLE);
+        mInstalledToggle.setVisibility(servers ? View.GONE : View.VISIBLE);
         mSortView.setText(SORT_LABELS[mSortIndex]);
-        mSortView.setVisibility(mInstalledMode ? View.GONE : View.VISIBLE);
+        mSortView.setVisibility(mInstalledMode || servers ? View.GONE : View.VISIBLE);
         mInput.setEnabled(!mInstalledMode);
         mInstalledToggle.setText(mInstalledMode ? R.string.spirit_browse_back_to_browse : R.string.spirit_browse_installed);
         mUpdateAll.setVisibility(mInstalledMode && mKind == BrowseKind.MODS ? View.VISIBLE : View.GONE);
@@ -222,7 +225,8 @@ public class BrowseFragment extends Fragment {
             return;
         }
 
-        if(mInstalledMode) showInstalled();
+        if(mKind == BrowseKind.SERVERS) showServers();
+        else if(mInstalledMode) showInstalled();
         else searchPage();
     }
 
@@ -602,6 +606,124 @@ public class BrowseFragment extends Fragment {
         });
     }
 
+    // ---------------------------------------------------------------- servers
+
+    private static final String[][] POPULAR = {
+            {"Hypixel", "mc.hypixel.net"},
+            {"Wynncraft", "play.wynncraft.com"},
+            {"CubeCraft", "play.cubecraft.net"},
+            {"Mineplex", "us.mineplex.com"},
+    };
+
+    private void showServers() {
+        final BrowseTarget target = mTarget;
+        mProgress.setVisibility(View.GONE);
+        if(target == null) { showEmpty(getString(R.string.spirit_browse_no_instance)); return; }
+        mTargetText.setText(getString(R.string.spirit_browse_installed_in, target.instanceName));
+        final int gen = mGeneration;
+        MojoApplication.sExecutorService.execute(() -> {
+            java.util.List<String[]> mine;
+            try {
+                mine = git.artdeell.mojo.browse.ServersDat.list(target.gameDir);
+            } catch (IOException | RuntimeException e) {
+                mine = new ArrayList<>();
+            }
+            final java.util.List<String[]> fMine = mine;
+            Tools.runOnUiThread(() -> {
+                if(!isAlive() || gen != mGeneration) return;
+                addServerHeader(getString(R.string.spirit_server_mine));
+                if(fMine.isEmpty()) {
+                    TextView none = new TextView(requireContext());
+                    none.setText(R.string.spirit_server_empty);
+                    none.setTextColor(ContextCompat.getColor(requireContext(), R.color.spirit_text_dim));
+                    none.setPadding(0, 0, 0, 16);
+                    mList.addView(none);
+                }
+                for(String[] s : fMine) addServerRow(s[0], s[1], true, target, gen);
+                addServerHeader(getString(R.string.spirit_server_popular));
+                TextView note = new TextView(requireContext());
+                note.setText(R.string.spirit_server_online_note);
+                note.setTextSize(12);
+                note.setTextColor(ContextCompat.getColor(requireContext(), R.color.spirit_text_dim));
+                note.setPadding(0, 0, 0, 16);
+                mList.addView(note);
+                for(String[] s : POPULAR) addServerRow(s[0], s[1], false, target, gen);
+            });
+        });
+    }
+
+    private void addServerHeader(String text) {
+        TextView h = new TextView(requireContext());
+        h.setText(text);
+        h.setTextSize(15);
+        h.setTypeface(null, Typeface.BOLD);
+        h.setTextColor(ContextCompat.getColor(requireContext(), R.color.spirit_text));
+        h.setPadding(0, 12, 0, 10);
+        mList.addView(h);
+    }
+
+    private void addServerRow(final String name, final String ip, final boolean saved, final BrowseTarget target, final int gen) {
+        View entry = LayoutInflater.from(requireContext()).inflate(R.layout.item_spirit_browse_entry, mList, false);
+        ((TextView) entry.findViewById(R.id.spirit_entry_name)).setText(name.isEmpty() ? ip : name);
+        final TextView sub = entry.findViewById(R.id.spirit_entry_sub);
+        sub.setText(ip + "\n" + getString(R.string.spirit_server_checking));
+        TextView action = entry.findViewById(R.id.spirit_entry_install);
+        TextView delete = entry.findViewById(R.id.spirit_entry_delete);
+        if(saved) {
+            action.setVisibility(View.GONE);
+            delete.setVisibility(View.VISIBLE);
+            delete.setOnClickListener(v -> new AlertDialog.Builder(requireContext())
+                    .setTitle(name.isEmpty() ? ip : name)
+                    .setMessage(R.string.spirit_server_delete_confirm)
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .setPositiveButton(R.string.spirit_browse_remove, (d, w) -> MojoApplication.sExecutorService.execute(() -> {
+                        try {
+                            git.artdeell.mojo.browse.ServersDat.remove(target.gameDir, ip);
+                        } catch (IOException | RuntimeException e) {
+                            Tools.showErrorRemote(e);
+                        }
+                        Tools.runOnUiThread(this::reload);
+                    }))
+                    .show());
+        } else {
+            action.setText(R.string.spirit_install);
+            action.setOnClickListener(v -> addServerAsync(target, name, ip));
+        }
+        mList.addView(entry);
+        MojoApplication.sExecutorService.execute(() -> {
+            final git.artdeell.mojo.browse.ServerStatus st = git.artdeell.mojo.browse.ServerStatus.fetch(ip);
+            Tools.runOnUiThread(() -> {
+                if(!isAlive() || gen != mGeneration) return;
+                String line = !st.known ? getString(R.string.spirit_server_unknown)
+                        : st.online ? getString(R.string.spirit_server_online, st.players, st.max, st.version)
+                        : getString(R.string.spirit_server_offline);
+                sub.setText(ip + "\n" + line);
+            });
+        });
+    }
+
+    private void addServerAsync(final BrowseTarget target, final String label, final String address) {
+        MojoApplication.sExecutorService.execute(() -> {
+            int message;
+            String detail = null;
+            try {
+                message = git.artdeell.mojo.browse.ServersDat.add(target.gameDir, label, address)
+                        ? R.string.spirit_server_added : R.string.spirit_server_exists;
+            } catch (IOException | RuntimeException e) {
+                message = R.string.spirit_server_failed;
+                detail = String.valueOf(e.getMessage());
+            }
+            final int m = message;
+            final String det = detail;
+            Tools.runOnUiThread(() -> {
+                if(!isAlive()) return;
+                String text = det != null ? getString(m, det) : getString(m);
+                git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), text, Toast.LENGTH_LONG).show();
+                if(mKind == BrowseKind.SERVERS) reload();
+            });
+        });
+    }
+
     private void showAddServer() {
         final BrowseTarget target = mTarget;
         if(target == null) {
@@ -629,24 +751,7 @@ public class BrowseFragment extends Fragment {
                     final String address = ip.getText().toString().trim();
                     final String label = name.getText().toString().trim().isEmpty() ? address : name.getText().toString().trim();
                     if(address.isEmpty()) return;
-                    MojoApplication.sExecutorService.execute(() -> {
-                        int message;
-                        String detail = null;
-                        try {
-                            message = git.artdeell.mojo.browse.ServersDat.add(target.gameDir, label, address)
-                                    ? R.string.spirit_server_added : R.string.spirit_server_exists;
-                        } catch (IOException | RuntimeException e) {
-                            message = R.string.spirit_server_failed;
-                            detail = String.valueOf(e.getMessage());
-                        }
-                        final int m = message;
-                        final String det = detail;
-                        Tools.runOnUiThread(() -> {
-                            if(!isAlive()) return;
-                            String text = det != null ? getString(m, det) : getString(m);
-                            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), text, Toast.LENGTH_LONG).show();
-                        });
-                    });
+                    addServerAsync(target, label, address);
                 })
                 .show();
     }
