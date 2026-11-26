@@ -601,7 +601,37 @@ public class BrowseFragment extends Fragment {
         });
     }
 
+    private void addModRow(BrowseInstaller.Installed item) {
+        View row = LayoutInflater.from(requireContext()).inflate(R.layout.item_spirit_mod_row, mList, false);
+        String name = item.displayName == null ? "" : item.displayName;
+        ((TextView) row.findViewById(R.id.spirit_mod_letter)).setText(name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase(java.util.Locale.ROOT));
+        ((TextView) row.findViewById(R.id.spirit_mod_name)).setText(name);
+        ((TextView) row.findViewById(R.id.spirit_mod_sub)).setText(item.file.getName());
+        androidx.appcompat.widget.SwitchCompat sw = row.findViewById(R.id.spirit_mod_switch);
+        sw.setChecked(item.enabled);
+        sw.setOnCheckedChangeListener((b, checked) -> {
+            if(checked == item.enabled) return;
+            if(!BrowseInstaller.setEnabled(item, checked)) {
+                git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_error, Toast.LENGTH_SHORT).show();
+            }
+            reload();
+        });
+        row.findViewById(R.id.spirit_mod_info).setOnClickListener(v -> {
+            long size = item.file.length();
+            String sizeText = size >= 1048576L ? String.format(java.util.Locale.US, "%.1f MB", size / 1048576f) : Math.max(1, size / 1024) + " KB";
+            new AlertDialog.Builder(requireContext())
+                    .setTitle(name)
+                    .setMessage(item.file.getName() + "\n" + sizeText + "\n"
+                            + getString(item.enabled ? R.string.spirit_browse_enabled : R.string.spirit_browse_disabled))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+        });
+        row.findViewById(R.id.spirit_mod_delete).setOnClickListener(v -> confirmRemove(item));
+        mList.addView(row);
+    }
+
     private void addInstalledEntry(BrowseInstaller.Installed item, BrowseKind kind) {
+        if(kind == BrowseKind.MODS) { addModRow(item); return; }
         View entry = LayoutInflater.from(requireContext()).inflate(R.layout.item_spirit_browse_entry, mList, false);
         ((TextView) entry.findViewById(R.id.spirit_entry_name)).setText(item.displayName);
         TextView sub = entry.findViewById(R.id.spirit_entry_sub);
