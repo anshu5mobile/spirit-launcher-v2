@@ -741,6 +741,10 @@ public class BrowseFragment extends Fragment {
         ip.setHint(R.string.spirit_server_ip_hint);
         ip.setSingleLine(true);
         ip.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
+        // No password-manager popup ("Save sign-in info?") for these fields
+        androidx.core.view.ViewCompat.setImportantForAutofill(box, View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
+        androidx.core.view.ViewCompat.setImportantForAutofill(name, View.IMPORTANT_FOR_AUTOFILL_NO);
+        androidx.core.view.ViewCompat.setImportantForAutofill(ip, View.IMPORTANT_FOR_AUTOFILL_NO);
         box.addView(name);
         box.addView(ip);
         new AlertDialog.Builder(requireContext())
