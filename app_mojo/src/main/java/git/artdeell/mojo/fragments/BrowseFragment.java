@@ -99,6 +99,7 @@ public class BrowseFragment extends Fragment {
         mInstalledToggle = view.findViewById(R.id.spirit_browse_installed_toggle);
         mUpdateAll = view.findViewById(R.id.spirit_browse_update_all);
         mBulkRow = view.findViewById(R.id.spirit_browse_bulk_row);
+        view.findViewById(R.id.spirit_add_server).setOnClickListener(v -> showAddServer());
         view.findViewById(R.id.spirit_browse_enable_all).setOnClickListener(v -> setAllMods(true));
         view.findViewById(R.id.spirit_browse_disable_all).setOnClickListener(v ->
                 new AlertDialog.Builder(requireContext())
@@ -599,6 +600,55 @@ public class BrowseFragment extends Fragment {
                 for(BrowseInstaller.Installed item : items) addInstalledEntry(item, kind);
             });
         });
+    }
+
+    private void showAddServer() {
+        final BrowseTarget target = mTarget;
+        if(target == null) {
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_no_instance, Toast.LENGTH_LONG).show();
+            return;
+        }
+        android.widget.LinearLayout box = new android.widget.LinearLayout(requireContext());
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = (int) (20 * getResources().getDisplayMetrics().density);
+        box.setPadding(pad, pad / 2, pad, 0);
+        final android.widget.EditText name = new android.widget.EditText(requireContext());
+        name.setHint(R.string.spirit_server_name_hint);
+        name.setSingleLine(true);
+        final android.widget.EditText ip = new android.widget.EditText(requireContext());
+        ip.setHint(R.string.spirit_server_ip_hint);
+        ip.setSingleLine(true);
+        ip.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
+        box.addView(name);
+        box.addView(ip);
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_server_add_title)
+                .setView(box)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    final String address = ip.getText().toString().trim();
+                    final String label = name.getText().toString().trim().isEmpty() ? address : name.getText().toString().trim();
+                    if(address.isEmpty()) return;
+                    MojoApplication.sExecutorService.execute(() -> {
+                        int message;
+                        String detail = null;
+                        try {
+                            message = git.artdeell.mojo.browse.ServersDat.add(target.gameDir, label, address)
+                                    ? R.string.spirit_server_added : R.string.spirit_server_exists;
+                        } catch (IOException | RuntimeException e) {
+                            message = R.string.spirit_server_failed;
+                            detail = String.valueOf(e.getMessage());
+                        }
+                        final int m = message;
+                        final String det = detail;
+                        Tools.runOnUiThread(() -> {
+                            if(!isAlive()) return;
+                            String text = det != null ? getString(m, det) : getString(m);
+                            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), text, Toast.LENGTH_LONG).show();
+                        });
+                    });
+                })
+                .show();
     }
 
     private void addModRow(BrowseInstaller.Installed item) {

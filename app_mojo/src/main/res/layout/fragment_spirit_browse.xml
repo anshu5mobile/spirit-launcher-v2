@@ -41,6 +41,21 @@
             android:textColor="@color/spirit_text"
             android:textSize="22sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/spirit_add_server"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:background="@drawable/spirit_card_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/spirit_server_add"
+            android:textColor="@color/spirit_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <HorizontalScrollView

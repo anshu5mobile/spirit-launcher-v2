@@ -38,4 +38,11 @@
     <string name="spirit_cape_local_remove">Remove my cape</string>
     <string name="spirit_cape_local_done">Cape saved. It shows up the next time the game starts.</string>
     <string name="spirit_cape_local_removed">Cape removed</string>
+    <string name="spirit_server_add">+ Server</string>
+    <string name="spirit_server_add_title">Add a server</string>
+    <string name="spirit_server_name_hint">Server name</string>
+    <string name="spirit_server_ip_hint">Address, e.g. play.example.com</string>
+    <string name="spirit_server_added">Server added to your list</string>
+    <string name="spirit_server_exists">That address is already in your list</string>
+    <string name="spirit_server_failed">Could not write the server list: %1$s</string>
 </resources>
