@@ -766,6 +766,16 @@ public class BrowseFragment extends Fragment {
         ((TextView) row.findViewById(R.id.spirit_mod_letter)).setText(name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase(java.util.Locale.ROOT));
         ((TextView) row.findViewById(R.id.spirit_mod_name)).setText(name);
         ((TextView) row.findViewById(R.id.spirit_mod_sub)).setText(item.file.getName());
+        final android.widget.ImageView iconView = row.findViewById(R.id.spirit_mod_icon);
+        final int sizePx = (int) (46 * getResources().getDisplayMetrics().density);
+        MojoApplication.sExecutorService.execute(() -> {
+            final android.graphics.Bitmap bmp = git.artdeell.mojo.browse.JarIcon.load(item.file, sizePx);
+            if(bmp == null) return;
+            Tools.runOnUiThread(() -> {
+                iconView.setImageBitmap(bmp);
+                iconView.setVisibility(View.VISIBLE);
+            });
+        });
         androidx.appcompat.widget.SwitchCompat sw = row.findViewById(R.id.spirit_mod_switch);
         sw.setChecked(item.enabled);
         sw.setOnCheckedChangeListener((b, checked) -> {

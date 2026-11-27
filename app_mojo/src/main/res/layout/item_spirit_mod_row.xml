@@ -8,15 +8,28 @@
     android:orientation="horizontal"
     android:padding="12dp">
 
-    <TextView
-        android:id="@+id/spirit_mod_letter"
+    <FrameLayout
         android:layout_width="46dp"
-        android:layout_height="46dp"
-        android:background="@drawable/spirit_icon_tile"
-        android:gravity="center"
-        android:textColor="@color/spirit_text"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:layout_height="46dp">
+
+        <TextView
+            android:id="@+id/spirit_mod_letter"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/spirit_icon_tile"
+            android:gravity="center"
+            android:textColor="@color/spirit_text"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/spirit_mod_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
