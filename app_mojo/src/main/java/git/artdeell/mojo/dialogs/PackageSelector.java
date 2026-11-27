@@ -1,7 +1,7 @@
 package git.artdeell.mojo.dialogs;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.content.Context;
 import android.widget.Button;
 
@@ -32,7 +32,7 @@ public abstract class PackageSelector {
         mDialogView.setAdapter(adapter);
         mAdapter = adapter;
 
-        mDialog = new AlertDialog.Builder(context)
+        mDialog = new AlertDialog.Builder(context, git.artdeell.mojo.R.style.SpiritAlertDialog)
                 .setTitle(getTitleRes())
                 .setView(mDialogView)
                 .setPositiveButton(getPositiveButtonText(), (dialog, which) -> onPositive(context, launcher))
