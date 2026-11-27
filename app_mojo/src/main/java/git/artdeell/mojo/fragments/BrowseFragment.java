@@ -70,6 +70,18 @@ public class BrowseFragment extends Fragment {
     private EditText mInput;
     private View mRoot;
 
+    private static final String[] SERVER_SORTS = {"relevance", "minecraft_java_server.ping.data.players_online", "newest"};
+    private static final int[] SERVER_SORT_LABELS = {
+            R.string.spirit_sort_relevance, R.string.spirit_server_sort_players, R.string.spirit_server_sort_newest
+    };
+    /** Language filter choices of the server list: label and Modrinth language code */
+    private static final String[][] SERVER_LANGUAGES = {
+            {"English", "en"}, {"Hindi", "hi"}, {"Spanish", "es"}, {"Portuguese", "pt"}, {"French", "fr"},
+            {"German", "de"}, {"Russian", "ru"}, {"Turkish", "tr"}, {"Indonesian", "id"}, {"Chinese", "zh"}
+    };
+    private boolean mServerOnlineOnly = false;
+    @Nullable private String mServerLanguage;
+
     private BrowseKind mKind = BrowseKind.MODS;
     private int mSortIndex = 0;
     private boolean mInstalledMode = false;
@@ -132,7 +144,7 @@ public class BrowseFragment extends Fragment {
             return false;
         });
         mSortView.setOnClickListener(v -> {
-            mSortIndex = (mSortIndex + 1) % SORTS.length;
+            mSortIndex = (mSortIndex + 1) % (mKind == BrowseKind.SERVERS ? SERVER_SORTS.length : SORTS.length);
             reload();
         });
         mInstalledToggle.setOnClickListener(v -> {
@@ -185,6 +197,8 @@ public class BrowseFragment extends Fragment {
         BrowseKind kind = TAB_KINDS[index];
         if(kind == mKind) return;
         mKind = kind;
+        mSortIndex = 0;
+        if(kind == BrowseKind.SERVERS) mInstalledMode = false; // open on the Modrinth server list
         styleTabs();
         reload();
     }
@@ -211,12 +225,11 @@ public class BrowseFragment extends Fragment {
         mProgress.setVisibility(View.GONE);
 
         boolean servers = mKind == BrowseKind.SERVERS;
-        ((View) mInput.getParent()).setVisibility(servers ? View.GONE : View.VISIBLE);
-        mInstalledToggle.setVisibility(servers ? View.GONE : View.VISIBLE);
-        mSortView.setText(SORT_LABELS[mSortIndex]);
-        mSortView.setVisibility(mInstalledMode || servers ? View.GONE : View.VISIBLE);
+        mSortView.setText(servers ? SERVER_SORT_LABELS[mSortIndex % SERVER_SORTS.length] : SORT_LABELS[mSortIndex]);
+        mSortView.setVisibility(mInstalledMode ? View.GONE : View.VISIBLE);
         mInput.setEnabled(!mInstalledMode);
-        mInstalledToggle.setText(mInstalledMode ? R.string.spirit_browse_back_to_browse : R.string.spirit_browse_installed);
+        mInstalledToggle.setText(mInstalledMode ? R.string.spirit_browse_back_to_browse
+                : servers ? R.string.spirit_server_mine : R.string.spirit_browse_installed);
         mUpdateAll.setVisibility(mInstalledMode && mKind == BrowseKind.MODS ? View.VISIBLE : View.GONE);
         mBulkRow.setVisibility(mInstalledMode && mKind == BrowseKind.MODS ? View.VISIBLE : View.GONE);
         updateTargetText();
@@ -225,7 +238,10 @@ public class BrowseFragment extends Fragment {
             return;
         }
 
-        if(mKind == BrowseKind.SERVERS) showServers();
+        if(mKind == BrowseKind.SERVERS) {
+            if(mInstalledMode) showServers();
+            else searchServers();
+        }
         else if(mInstalledMode) showInstalled();
         else searchPage();
     }
@@ -255,6 +271,7 @@ public class BrowseFragment extends Fragment {
 
     private void searchPage() {
         if(!isAlive()) return;
+        if(mKind == BrowseKind.SERVERS) { searchServers(); return; }
         if(mKind == BrowseKind.WORLDS && mCurse == null) {
             showEmpty(getString(R.string.spirit_browse_worlds_key));
             return;
@@ -341,8 +358,33 @@ public class BrowseFragment extends Fragment {
         return value == null ? getString(R.string.spirit_filter_auto) : "any".equals(value) ? getString(R.string.spirit_filter_any) : value;
     }
 
+    private void openServerFilters() {
+        String language = "Any";
+        for(String[] l : SERVER_LANGUAGES) if(l[1].equals(mServerLanguage)) language = l[0];
+        String[] rows = {
+                getString(R.string.spirit_server_filter_online, getString(mServerOnlineOnly ? R.string.spirit_server_yes : R.string.spirit_filter_any)),
+                getString(R.string.spirit_server_filter_language, language),
+                getString(R.string.spirit_filter_reset)
+        };
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.spirit_browse_filters)
+                .setItems(rows, (d, which) -> {
+                    if(which == 0) { mServerOnlineOnly = !mServerOnlineOnly; reload(); }
+                    else if(which == 1) {
+                        String[] names = new String[SERVER_LANGUAGES.length + 1];
+                        names[0] = getString(R.string.spirit_filter_any);
+                        for(int i = 0; i < SERVER_LANGUAGES.length; i++) names[i + 1] = SERVER_LANGUAGES[i][0];
+                        new AlertDialog.Builder(requireContext())
+                                .setItems(names, (dd, w) -> { mServerLanguage = w == 0 ? null : SERVER_LANGUAGES[w - 1][1]; reload(); })
+                                .show();
+                    } else { mServerOnlineOnly = false; mServerLanguage = null; reload(); }
+                })
+                .show();
+    }
+
     private void openFilters() {
         if(!isAlive()) return;
+        if(mKind == BrowseKind.SERVERS) { openServerFilters(); return; }
         final boolean mods = mKind == BrowseKind.MODS;
         final boolean worlds = mKind == BrowseKind.WORLDS;
         List<String> rows = new ArrayList<>();
@@ -608,12 +650,73 @@ public class BrowseFragment extends Fragment {
 
     // ---------------------------------------------------------------- servers
 
-    private static final String[][] POPULAR = {
-            {"Hypixel", "mc.hypixel.net"},
-            {"Wynncraft", "play.wynncraft.com"},
-            {"CubeCraft", "play.cubecraft.net"},
-            {"Mineplex", "us.mineplex.com"},
-    };
+    private void searchServers() {
+        if(!isAlive()) return;
+        final int gen = ++mGeneration;
+        final String query = mInput.getText().toString().trim();
+        final String index = SERVER_SORTS[mSortIndex % SERVER_SORTS.length];
+        final int offset = mOffset;
+        final boolean onlineOnly = mServerOnlineOnly;
+        final String language = mServerLanguage;
+        mProgress.setVisibility(View.VISIBLE);
+        mMore.setVisibility(View.GONE);
+        mEmpty.setVisibility(View.GONE);
+        MojoApplication.sExecutorService.execute(() -> {
+            git.artdeell.mojo.browse.ModrinthServers.Page page = null;
+            try {
+                page = git.artdeell.mojo.browse.ModrinthServers.search(query, index, offset, onlineOnly, language);
+            } catch (IOException | RuntimeException e) {
+                page = null;
+            }
+            final git.artdeell.mojo.browse.ModrinthServers.Page result = page;
+            Tools.runOnUiThread(() -> {
+                if(!isAlive() || gen != mGeneration) return;
+                mProgress.setVisibility(View.GONE);
+                if(result == null) {
+                    if(mList.getChildCount() == 0) showEmpty(getString(R.string.spirit_browse_error));
+                    else git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_error, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                for(git.artdeell.mojo.browse.ModrinthServers.Server s : result.servers) addModrinthServerEntry(s);
+                mOffset += result.raw;
+                if(mList.getChildCount() == 0) showEmpty(getString(R.string.spirit_browse_no_results));
+                mMore.setVisibility(result.raw >= git.artdeell.mojo.browse.ModrinthServers.PAGE_SIZE ? View.VISIBLE : View.GONE);
+            });
+        });
+    }
+
+    private void addModrinthServerEntry(final git.artdeell.mojo.browse.ModrinthServers.Server s) {
+        View entry = LayoutInflater.from(requireContext()).inflate(R.layout.item_spirit_browse_entry, mList, false);
+        ((TextView) entry.findViewById(R.id.spirit_entry_name)).setText(s.name);
+        String status = s.online
+                ? getString(R.string.spirit_server_online, s.players, s.max, s.version == null ? "" : s.version)
+                : getString(R.string.spirit_server_offline);
+        String sub = s.address + " · " + status;
+        if(!s.summary.isEmpty()) sub += "\n" + s.summary;
+        ((TextView) entry.findViewById(R.id.spirit_entry_sub)).setText(sub);
+        ImageView icon = entry.findViewById(R.id.spirit_entry_icon);
+        if(s.iconUrl != null && !s.iconUrl.isEmpty() && sIcons != null) {
+            final ImageReceiver receiver = bitmap -> {
+                if(!isAlive()) return;
+                icon.setImageDrawable(RoundedBitmapDrawableFactory.create(getResources(), bitmap));
+            };
+            icon.setTag(receiver);
+            sIcons.getImage(receiver, "mrs_" + s.id, s.iconUrl);
+        }
+        TextView add = entry.findViewById(R.id.spirit_entry_install);
+        add.setText(R.string.spirit_server_add_btn);
+        View.OnClickListener click = v -> {
+            BrowseTarget target = mTarget;
+            if(target == null) {
+                git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_no_instance, Toast.LENGTH_LONG).show();
+                return;
+            }
+            addServerAsync(target, s.name, s.address);
+        };
+        add.setOnClickListener(click);
+        entry.setOnClickListener(click);
+        mList.addView(entry);
+    }
 
     private void showServers() {
         final BrowseTarget target = mTarget;
@@ -640,14 +743,12 @@ public class BrowseFragment extends Fragment {
                     mList.addView(none);
                 }
                 for(String[] s : fMine) addServerRow(s[0], s[1], true, target, gen);
-                addServerHeader(getString(R.string.spirit_server_popular));
                 TextView note = new TextView(requireContext());
                 note.setText(R.string.spirit_server_online_note);
                 note.setTextSize(12);
                 note.setTextColor(ContextCompat.getColor(requireContext(), R.color.spirit_text_dim));
-                note.setPadding(0, 0, 0, 16);
+                note.setPadding(0, 8, 0, 16);
                 mList.addView(note);
-                for(String[] s : POPULAR) addServerRow(s[0], s[1], false, target, gen);
             });
         });
     }

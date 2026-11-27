@@ -58,4 +58,10 @@
     <string name="spirit_server_online_note">Most big servers only let Microsoft accounts join. With an offline account you can join servers that allow it.</string>
     <string name="spirit_cursor_crop_title">Crop your cursor</string>
     <string name="spirit_cursor_remove_bg">Remove the background</string>
+    <string name="spirit_server_sort_players">Players</string>
+    <string name="spirit_server_sort_newest">Newest</string>
+    <string name="spirit_server_filter_online">Online now only: %1$s</string>
+    <string name="spirit_server_filter_language">Language: %1$s</string>
+    <string name="spirit_server_yes">Yes</string>
+    <string name="spirit_server_add_btn">Add</string>
 </resources>
