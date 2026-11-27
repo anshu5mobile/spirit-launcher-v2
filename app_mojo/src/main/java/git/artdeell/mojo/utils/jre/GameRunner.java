@@ -389,6 +389,19 @@ public class GameRunner {
                 injectorUrl = "http://127.0.0.1:" + port;
             }
         }
+        if(injectorUrl != null && account.authType == git.artdeell.mojo.authenticator.AuthType.ELY_BY
+                && LauncherPreferences.DEFAULT_PREF.getBoolean("spiritLocalSkinServer", true)
+                && (git.artdeell.mojo.wardrobe.SkinStore.capeFile(account).isFile() || git.artdeell.mojo.wardrobe.SkinStore.activeFile(account).isFile())) {
+            // Ely.by account with a local cape or skin: the launcher's server passes everything on to Ely.by and
+            // only adds the player's own cape/skin to the answer. Without local pictures Ely.by is used directly.
+            String upstream = git.artdeell.mojo.wardrobe.LocalSkinServer.resolveUpstream(injectorUrl, "https://authserver.ely.by/api/authlib-injector");
+            int port = git.artdeell.mojo.wardrobe.LocalSkinServer.start(account, upstream);
+            if(port > 0) {
+                javaArgList.add("-Dauthlibinjector.noShowServerName");
+                javaArgList.add("-Dauthlibinjector.noLogFile");
+                injectorUrl = "http://127.0.0.1:" + port;
+            }
+        }
         if(injectorUrl == null) return;
         javaArgList.add("-javaagent:"+Tools.DIR_DATA+"/authlib-injector/authlib-injector.jar="+injectorUrl);
     }

@@ -30,12 +30,20 @@ import java.util.Locale;
 public final class LocalSkinServer {
     private static ServerSocket sSocket;
     private static Account sAccount;
+    /** When set, everything except the player's own textures is passed on to this real server (Ely.by) */
+    private static String sUpstream;
 
     private LocalSkinServer() {}
 
     /** @return the port the server listens on, or -1 when it could not be started */
     public static synchronized int start(Account account) {
+        return start(account, null);
+    }
+
+    /** @param upstream the real authlib-injector API (no trailing slash), or null for a purely local server */
+    public static synchronized int start(Account account, String upstream) {
         sAccount = account;
+        sUpstream = upstream;
         if(sSocket != null && !sSocket.isClosed()) return sSocket.getLocalPort();
         try {
             final ServerSocket socket = new ServerSocket(0, 20, InetAddress.getByName("127.0.0.1"));
@@ -72,13 +80,19 @@ public final class LocalSkinServer {
             if(parts.length < 2) return;
             String method = parts[0];
             String path = parts[1];
+            String query = "";
             int q = path.indexOf('?');
-            if(q >= 0) path = path.substring(0, q);
+            if(q >= 0) { query = path.substring(q); path = path.substring(0, q); }
             int length = 0;
+            String contentType = null, authorization = null;
             String line;
             while((line = readLine(in)) != null && !line.isEmpty()) {
                 if(line.regionMatches(true, 0, "content-length:", 0, 15)) {
                     try { length = Integer.parseInt(line.substring(15).trim()); } catch (NumberFormatException ignored) { /* 0 */ }
+                } else if(line.regionMatches(true, 0, "content-type:", 0, 13)) {
+                    contentType = line.substring(13).trim();
+                } else if(line.regionMatches(true, 0, "authorization:", 0, 14)) {
+                    authorization = line.substring(14).trim();
                 }
             }
             byte[] body = new byte[Math.min(Math.max(length, 0), 65536)];
@@ -88,7 +102,7 @@ public final class LocalSkinServer {
                 if(n < 0) break;
                 read += n;
             }
-            route(c.getOutputStream(), method, path, body);
+            route(c.getOutputStream(), method, path, query, body, contentType, authorization);
         } catch (IOException | RuntimeException ignored) { /* the game closed the connection */ }
     }
 
@@ -105,7 +119,7 @@ public final class LocalSkinServer {
     }
 
     private static void respond(OutputStream out, int code, String type, byte[] data) throws IOException {
-        String status = code == 200 ? "OK" : code == 204 ? "No Content" : code == 401 ? "Unauthorized" : "Not Found";
+        String status = code == 200 ? "OK" : code == 204 ? "No Content" : code == 401 ? "Unauthorized" : code == 404 ? "Not Found" : "Status";
         StringBuilder head = new StringBuilder("HTTP/1.1 ").append(code).append(' ').append(status).append("\r\n");
         if(data != null && code != 204) head.append("Content-Type: ").append(type).append("\r\nContent-Length: ").append(data.length).append("\r\n");
         else head.append("Content-Length: 0\r\n");
@@ -121,10 +135,16 @@ public final class LocalSkinServer {
 
     // ---------------------------------------------------------------- api
 
-    private static void route(OutputStream out, String method, String path, byte[] body) throws IOException {
+    private static void route(OutputStream out, String method, String path, String query, byte[] body,
+                              String contentType, String authorization) throws IOException {
         Account account = sAccount;
         if(account == null) { json(out, 404, "{}"); return; }
         String id = noDashes(account.profileId);
+        String upstream = sUpstream;
+        if(upstream != null) {
+            routeProxy(out, upstream, account, id, method, path, query, body, contentType, authorization);
+            return;
+        }
 
         if(path.equals("/") || path.isEmpty()) {
             JsonObject meta = new JsonObject();
@@ -180,6 +200,150 @@ public final class LocalSkinServer {
             return;
         }
         json(out, 404, "{\"error\":\"NotFound\"}");
+    }
+
+    // ---------------------------------------------------------------- proxy mode (Ely.by)
+
+    private static final class Reply {
+        int code = 502;
+        String type = "application/json";
+        byte[] data = new byte[0];
+    }
+
+    private static Reply forward(String upstream, String method, String path, String query, byte[] body,
+                                 String contentType, String authorization) {
+        Reply r = new Reply();
+        java.net.HttpURLConnection c = null;
+        try {
+            c = (java.net.HttpURLConnection) new java.net.URL(upstream + path + query).openConnection();
+            c.setConnectTimeout(8000);
+            c.setReadTimeout(15000);
+            c.setInstanceFollowRedirects(true);
+            c.setRequestMethod(method);
+            c.setRequestProperty("User-Agent", "SpiritLauncher");
+            if(authorization != null) c.setRequestProperty("Authorization", authorization);
+            if(body != null && body.length > 0 && !method.equals("GET")) {
+                if(contentType != null) c.setRequestProperty("Content-Type", contentType);
+                c.setDoOutput(true);
+                try(OutputStream o = c.getOutputStream()) { o.write(body); }
+            }
+            r.code = c.getResponseCode();
+            String t = c.getContentType();
+            if(t != null) r.type = t;
+            InputStream in = r.code >= 400 ? c.getErrorStream() : c.getInputStream();
+            if(in != null) {
+                try(InputStream i = in) {
+                    ByteArrayOutputStream bo = new ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while((n = i.read(buf)) > 0) bo.write(buf, 0, n);
+                    r.data = bo.toByteArray();
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            r.code = 502;
+            r.data = "{\"error\":\"BadGateway\"}".getBytes(StandardCharsets.UTF_8);
+        } finally {
+            if(c != null) c.disconnect();
+        }
+        return r;
+    }
+
+    private static void routeProxy(OutputStream out, String upstream, Account account, String id, String method,
+                                   String path, String query, byte[] body, String contentType, String authorization) throws IOException {
+        if(path.startsWith("/textures/")) {
+            String file = path.substring("/textures/".length());
+            File png = file.startsWith("cape-") ? SkinStore.capeFile(account) : SkinStore.activeFile(account);
+            if(!png.isFile()) { json(out, 404, "{}"); return; }
+            respond(out, 200, "image/png", readAll(png));
+            return;
+        }
+        Reply r = forward(upstream, method, path.isEmpty() ? "/" : path, query, body, contentType, authorization);
+        try {
+            if(path.equals("/") && r.code == 200) {
+                JsonObject root = new com.google.gson.Gson().fromJson(new String(r.data, StandardCharsets.UTF_8), JsonObject.class);
+                JsonArray domains = root.has("skinDomains") && root.get("skinDomains").isJsonArray() ? root.getAsJsonArray("skinDomains") : new JsonArray();
+                domains.add("127.0.0.1");
+                root.add("skinDomains", domains);
+                json(out, 200, root.toString());
+                return;
+            }
+            if(path.startsWith("/sessionserver/session/minecraft/profile/") && r.code == 200
+                    && noDashes(path.substring("/sessionserver/session/minecraft/profile/".length())).equalsIgnoreCase(id)) {
+                json(out, 200, withLocalTextures(new String(r.data, StandardCharsets.UTF_8), account, id));
+                return;
+            }
+        } catch (RuntimeException ignored) { /* send the real answer unchanged */ }
+        respond(out, r.code, r.type, r.data);
+    }
+
+    /** Puts the player's local skin and cape into the real server's profile answer (only for the player's own profile) */
+    private static String withLocalTextures(String profileJson, Account account, String id) {
+        JsonObject profile = new com.google.gson.Gson().fromJson(profileJson, JsonObject.class);
+        JsonArray props = profile.has("properties") && profile.get("properties").isJsonArray() ? profile.getAsJsonArray("properties") : new JsonArray();
+        JsonObject textureProp = null;
+        for(com.google.gson.JsonElement e : props) {
+            if(e.isJsonObject() && e.getAsJsonObject().has("name") && "textures".equals(e.getAsJsonObject().get("name").getAsString())) {
+                textureProp = e.getAsJsonObject();
+            }
+        }
+        JsonObject value;
+        if(textureProp != null) {
+            value = new com.google.gson.Gson().fromJson(new String(Base64.decode(textureProp.get("value").getAsString(), Base64.DEFAULT), StandardCharsets.UTF_8), JsonObject.class);
+        } else {
+            value = new JsonObject();
+            value.addProperty("timestamp", System.currentTimeMillis());
+            value.addProperty("profileId", id);
+            value.addProperty("profileName", account.username);
+        }
+        JsonObject textures = value.has("textures") && value.get("textures").isJsonObject() ? value.getAsJsonObject("textures") : new JsonObject();
+        File skin = SkinStore.activeFile(account);
+        File cape = SkinStore.capeFile(account);
+        if(skin.isFile()) {
+            SkinStore.Active active = SkinStore.loadActive(account);
+            JsonObject s = new JsonObject();
+            s.addProperty("url", "http://127.0.0.1:" + port() + "/textures/skin-" + hash(skin));
+            if(active != null && active.slim) {
+                JsonObject md = new JsonObject();
+                md.addProperty("model", "slim");
+                s.add("metadata", md);
+            }
+            textures.add("SKIN", s);
+        }
+        if(cape.isFile()) {
+            JsonObject c = new JsonObject();
+            c.addProperty("url", "http://127.0.0.1:" + port() + "/textures/cape-" + hash(cape));
+            textures.add("CAPE", c);
+        }
+        value.add("textures", textures);
+        if(textureProp == null) {
+            textureProp = new JsonObject();
+            textureProp.addProperty("name", "textures");
+            props.add(textureProp);
+        }
+        textureProp.addProperty("value", Base64.encodeToString(value.toString().getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP));
+        textureProp.remove("signature"); // the picture was changed, so the real server's signature no longer fits
+        profile.add("properties", props);
+        return profile.toString();
+    }
+
+    /** Finds the real API address behind a site such as ely.by (the header authlib-injector itself looks for) */
+    public static String resolveUpstream(String site, String fallback) {
+        java.net.HttpURLConnection c = null;
+        try {
+            c = (java.net.HttpURLConnection) new java.net.URL("https://" + site).openConnection();
+            c.setRequestMethod("HEAD");
+            c.setConnectTimeout(5000);
+            c.setReadTimeout(5000);
+            c.setInstanceFollowRedirects(true);
+            String loc = c.getHeaderField("X-Authlib-Injector-API-Location");
+            if(loc != null && !loc.isEmpty()) {
+                String url = new java.net.URL(c.getURL(), loc).toString();
+                return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
+            }
+        } catch (IOException | RuntimeException ignored) { /* use the fallback */ }
+        finally { if(c != null) c.disconnect(); }
+        return fallback;
     }
 
     private static String profileJson(Account account, String id, boolean withTextures) {

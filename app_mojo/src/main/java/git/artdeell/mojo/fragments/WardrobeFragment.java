@@ -835,8 +835,8 @@ public class WardrobeFragment extends Fragment {
 
     private void openCapes() {
         final Account account = mAccount;
-        if(account != null && account.authType == git.artdeell.mojo.authenticator.AuthType.LOCAL) {
-            // Offline account: the cape is a picture from the phone, shown by the launcher's own skin server
+        if(account != null && account.authType != git.artdeell.mojo.authenticator.AuthType.MICROSOFT) {
+            // Offline or Ely.by account: the cape is a picture from the phone, shown by the launcher's own skin server
             String[] choices = { getString(R.string.spirit_cape_local_pick), getString(R.string.spirit_cape_local_remove) };
             new AlertDialog.Builder(requireContext())
                     .setTitle(R.string.spirit_cape_title)
