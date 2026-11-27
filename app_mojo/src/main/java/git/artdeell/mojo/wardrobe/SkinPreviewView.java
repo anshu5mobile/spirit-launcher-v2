@@ -39,6 +39,7 @@ public class SkinPreviewView extends View {
     private final float[] mDstPts = new float[6];
 
     private Bitmap mSkin;
+    @Nullable private Bitmap mCape;
     private boolean mSlim;
     private List<Face> mFaces = new ArrayList<>();
     private String mPlaceholder = "";
@@ -77,6 +78,7 @@ public class SkinPreviewView extends View {
         float nx, ny, nz;
         int sx, sy, sw, sh;
         int part, layer;
+        boolean cape;
         // Filled in per frame
         float depth;
         float[] screen = new float[6];
@@ -118,6 +120,26 @@ public class SkinPreviewView extends View {
         mSkin = skin;
         mSlim = slim;
         buildModel();
+        invalidate();
+    }
+
+    /** A cape picture (64x32, a bigger copy of it, or the classic 22x17), drawn on the back of the model. null removes it. */
+    public void setCape(@Nullable Bitmap cape) {
+        if(cape != null && cape.getWidth() == 22 && cape.getHeight() == 17) {
+            Bitmap big = Bitmap.createBitmap(64, 32, Bitmap.Config.ARGB_8888);
+            new Canvas(big).drawBitmap(cape, 0, 0, null);
+            cape = big;
+        }
+        mCape = cape;
+        buildModel();
+        invalidate();
+    }
+
+    /** A still picture (for lists): no turning, no touch, seen from the front or, with fromBack, from behind */
+    public void setStill(boolean fromBack) {
+        mAutoSpin = false;
+        mYaw = fromBack ? 155f : -28f;
+        setEnabled(false);
         invalidate();
     }
 
@@ -294,6 +316,14 @@ public class SkinPreviewView extends View {
             addBox(faces, 0, 0, -2, 4, 12, 4, layer == 0 ? 16 : 0, 48, g);
             tag(faces, start, LEFT_LEG, layer);
         }
+        if(mCape != null) {
+            // The cape hangs behind the body. Its outer side is the (1,1) 10x16 part of the cape picture.
+            Face outer = face(5, 24, -3, -10, 0, 0, 0, -16, 0, 0, 0, -1, 1, 1, 10, 16);
+            outer.cape = true;
+            outer.part = BODY;
+            outer.layer = 0;
+            faces.add(outer);
+        }
         mFaces = faces;
     }
 
@@ -354,6 +384,7 @@ public class SkinPreviewView extends View {
         }
 
         float scaleTex = mSkin.getWidth() / 64f;
+        float scaleCape = mCape == null ? 1f : mCape.getWidth() / 64f;
         // The model is 32 units tall and 16 wide; fit it with a little margin
         float unit = Math.min(getHeight() / 36f, getWidth() / 24f) * mZoom;
         float cx = getWidth() / 2f, cy = getHeight() / 2f + 16f * unit;
@@ -379,10 +410,13 @@ public class SkinPreviewView extends View {
         Collections.sort(visible, DEPTH_ORDER);
 
         for(Face f : visible) {
-            int sw = Math.max(1, Math.round(f.sw * scaleTex)), sh = Math.max(1, Math.round(f.sh * scaleTex));
-            mSrc.set(Math.round(f.sx * scaleTex), Math.round(f.sy * scaleTex),
-                    Math.round(f.sx * scaleTex) + sw, Math.round(f.sy * scaleTex) + sh);
-            if(mSrc.right > mSkin.getWidth() || mSrc.bottom > mSkin.getHeight()) continue;
+            final Bitmap tex = f.cape ? mCape : mSkin;
+            if(tex == null || tex.isRecycled()) continue;
+            final float st = f.cape ? scaleCape : scaleTex;
+            int sw = Math.max(1, Math.round(f.sw * st)), sh = Math.max(1, Math.round(f.sh * st));
+            mSrc.set(Math.round(f.sx * st), Math.round(f.sy * st),
+                    Math.round(f.sx * st) + sw, Math.round(f.sy * st) + sh);
+            if(mSrc.right > tex.getWidth() || mSrc.bottom > tex.getHeight()) continue;
             mSrcPts[0] = 0;  mSrcPts[1] = 0;
             mSrcPts[2] = sw; mSrcPts[3] = 0;
             mSrcPts[4] = 0;  mSrcPts[5] = sh;
@@ -391,7 +425,7 @@ public class SkinPreviewView extends View {
             mDst.set(0, 0, sw, sh);
             canvas.save();
             canvas.concat(mMatrix);
-            canvas.drawBitmap(mSkin, mSrc, mDst, mPaint);
+            canvas.drawBitmap(tex, mSrc, mDst, mPaint);
             canvas.restore();
         }
 
@@ -421,6 +455,7 @@ public class SkinPreviewView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if(!isEnabled()) return false; // list tiles: the touch belongs to the tile around it
         if(mEditMode) return onEditTouch(event);
         switch(event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:

@@ -216,6 +216,7 @@ public class WardrobeFragment extends Fragment {
     private void refreshViews() {
         if(mPreview == null) return;
         mPreview.setSkin(mBitmap, mSlim);
+        mPreview.setCape(localCape());
         mModel.setText(mSlim ? R.string.spirit_model_slim : R.string.spirit_model_classic);
         mModel.setVisibility(mBitmap != null ? View.VISIBLE : View.GONE);
         mActions.setVisibility(mBitmap != null && mPending ? View.VISIBLE : View.GONE);
@@ -406,29 +407,86 @@ public class WardrobeFragment extends Fragment {
         });
     }
 
+    /** The cape picture chosen for this account in the launcher (offline / Ely.by), or null */
+    @Nullable
+    private Bitmap localCape() {
+        Account account = mAccount;
+        if(account == null || account.authType == git.artdeell.mojo.authenticator.AuthType.MICROSOFT) return null;
+        java.io.File f = SkinStore.capeFile(account);
+        return f.isFile() ? android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath()) : null;
+    }
+
+    private View libraryTile(String title, @Nullable Bitmap skin, boolean slim, @Nullable Bitmap cape, boolean fromBack) {
+        Context c = requireContext();
+        float d = c.getResources().getDisplayMetrics().density;
+        android.widget.LinearLayout tile = new android.widget.LinearLayout(c);
+        tile.setOrientation(android.widget.LinearLayout.VERTICAL);
+        tile.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        tile.setBackgroundResource(R.drawable.spirit_card_bg);
+        tile.setClickable(true);
+        tile.setFocusable(true);
+        int pad = (int) (8 * d);
+        tile.setPadding(pad, pad, pad, pad);
+        SkinPreviewView preview = new SkinPreviewView(c);
+        preview.setSkin(skin, slim);
+        preview.setCape(cape);
+        preview.setStill(fromBack);
+        tile.addView(preview, new android.widget.LinearLayout.LayoutParams((int) (110 * d), (int) (150 * d)));
+        TextView name = new TextView(c);
+        name.setText(title);
+        name.setMaxLines(2);
+        name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        name.setGravity(android.view.Gravity.CENTER);
+        name.setTextColor(androidx.core.content.ContextCompat.getColor(c, R.color.spirit_text));
+        name.setTextSize(12);
+        name.setTypeface(null, android.graphics.Typeface.BOLD);
+        tile.addView(name, new android.widget.LinearLayout.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+        return tile;
+    }
+
     private void openLibrary() {
         final Context appContext = requireContext().getApplicationContext();
         MojoApplication.sExecutorService.execute(() -> {
             SkinStore.seedBuiltins(appContext);
             final List<SkinStore.Entry> entries = SkinStore.list();
+            // Pictures are read here, off the main thread
+            final java.util.List<Bitmap> pictures = new ArrayList<>();
+            for(SkinStore.Entry e : entries) pictures.add(SkinStore.load(e));
+            final Bitmap cape = localCape();
             ui(() -> {
-                String[] names = new String[entries.size()];
-                for(int i = 0; i < names.length; i++) {
-                    SkinStore.Entry e = entries.get(i);
-                    names[i] = (e.fav ? "\u2605 " : "") + e.name + (e.slim ? "  (slim)" : "");
+                final android.widget.GridLayout grid = new android.widget.GridLayout(requireContext());
+                grid.setColumnCount(2);
+                final float d = getResources().getDisplayMetrics().density;
+                final AlertDialog[] holder = new AlertDialog[1];
+                int margin = (int) (4 * d);
+                if(cape != null) {
+                    View t = libraryTile(getString(R.string.spirit_cape_title), mBitmap, mSlim, cape, true);
+                    t.setOnClickListener(v -> openCapes());
+                    android.widget.GridLayout.LayoutParams lp = new android.widget.GridLayout.LayoutParams();
+                    lp.setMargins(margin, margin, margin, margin);
+                    grid.addView(t, lp);
                 }
-                AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                for(int i = 0; i < entries.size(); i++) {
+                    final SkinStore.Entry e = entries.get(i);
+                    String label = (e.fav ? "\u2605 " : "") + e.name + (e.slim ? "  (slim)" : "");
+                    View t = libraryTile(label, pictures.get(i), e.slim, null, false);
+                    t.setOnClickListener(v -> { if(holder[0] != null) holder[0].dismiss(); useEntry(e); });
+                    t.setOnLongClickListener(v -> { entryMenu(e, holder[0]); return true; });
+                    android.widget.GridLayout.LayoutParams lp = new android.widget.GridLayout.LayoutParams();
+                    lp.setMargins(margin, margin, margin, margin);
+                    grid.addView(t, lp);
+                }
+                android.widget.ScrollView scroll = new android.widget.ScrollView(requireContext());
+                scroll.addView(grid);
+                scroll.setPadding((int) (8 * d), (int) (8 * d), (int) (8 * d), 0);
+                holder[0] = new AlertDialog.Builder(requireContext())
                         .setTitle(R.string.spirit_skin_library_title)
-                        .setItems(names, (d, which) -> useEntry(entries.get(which)))
-                        .setPositiveButton(R.string.spirit_skin_add, (d, w) -> addSkinToLibrary())
-                        .setNeutralButton(R.string.spirit_skin_history, (d, w) -> openHistory())
+                        .setView(scroll)
+                        .setPositiveButton(R.string.spirit_skin_add, (dd, w) -> addSkinToLibrary())
+                        .setNeutralButton(R.string.spirit_skin_history, (dd, w) -> openHistory())
                         .setNegativeButton(android.R.string.cancel, null)
                         .create();
-                dialog.show();
-                dialog.getListView().setOnItemLongClickListener((parent, v, position, id) -> {
-                    entryMenu(entries.get(position), dialog);
-                    return true;
-                });
+                holder[0].show();
             });
         });
     }
