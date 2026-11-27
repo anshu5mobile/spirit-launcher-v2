@@ -40,14 +40,66 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
             }
     );
 
-    private final ActivityResultLauncher<String[]> mCursorLauncher = registerForActivityResult(
-            new ActivityResultContracts.OpenDocument(), (uri) -> {
-                if(uri == null) return;
-                boolean ok = git.artdeell.mojo.game.CursorImage.importFrom(requireContext(), uri);
-                git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(),
-                        ok ? R.string.spirit_cursor_set : R.string.spirit_cursor_fail, Toast.LENGTH_SHORT).show();
+    // The gallery app opens directly (not the file browser)
+    private final ActivityResultLauncher<android.content.Intent> mCursorLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), (result) -> {
+                android.content.Intent data = result.getData();
+                if(result.getResultCode() != Activity.RESULT_OK || data == null || data.getData() == null) return;
+                showCursorCrop(data.getData());
             }
     );
+
+    private void showCursorCrop(Uri uri) {
+        android.graphics.Bitmap bmp = null;
+        try(java.io.InputStream in = requireContext().getContentResolver().openInputStream(uri)) {
+            android.graphics.BitmapFactory.Options bounds = new android.graphics.BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            java.io.ByteArrayOutputStream raw = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while(in != null && (n = in.read(buf)) > 0 && raw.size() < 24 * 1024 * 1024) raw.write(buf, 0, n);
+            byte[] data = raw.toByteArray();
+            android.graphics.BitmapFactory.decodeByteArray(data, 0, data.length, bounds);
+            int sample = 1;
+            while(bounds.outWidth / sample > 1600 || bounds.outHeight / sample > 1600) sample *= 2;
+            android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+            o.inSampleSize = sample;
+            bmp = android.graphics.BitmapFactory.decodeByteArray(data, 0, data.length, o);
+        } catch (IOException | RuntimeException | OutOfMemoryError e) {
+            bmp = null;
+        }
+        if(bmp == null) {
+            git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_cursor_fail, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final android.graphics.Bitmap picture = bmp;
+        android.widget.LinearLayout box = new android.widget.LinearLayout(requireContext());
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        final git.artdeell.mojo.utils.CropImageView crop = new git.artdeell.mojo.utils.CropImageView(requireContext());
+        crop.setBitmap(picture);
+        int h = (int) (requireContext().getResources().getDisplayMetrics().density * 300);
+        box.addView(crop, new android.widget.LinearLayout.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, h));
+        final android.widget.CheckBox removeBg = new android.widget.CheckBox(requireContext());
+        removeBg.setText(R.string.spirit_cursor_remove_bg);
+        removeBg.setChecked(true);
+        removeBg.setTextColor(0xFFFFFFFF);
+        box.addView(removeBg);
+        new AlertDialog.Builder(requireContext(), R.style.SpiritAlertDialog)
+                .setTitle(R.string.spirit_cursor_crop_title)
+                .setView(box)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    final android.graphics.Bitmap cut = crop.getCropped();
+                    final boolean strip = removeBg.isChecked();
+                    final android.content.Context app = requireContext().getApplicationContext();
+                    MojoApplication.sExecutorService.execute(() -> {
+                        final boolean ok = git.artdeell.mojo.game.CursorImage.save(app, cut, strip);
+                        Tools.runOnUiThread(() -> git.artdeell.mojo.utils.SpiritToast.makeText(app,
+                                ok ? R.string.spirit_cursor_set : R.string.spirit_cursor_fail, Toast.LENGTH_SHORT).show());
+                    });
+                })
+                .show();
+    }
 
     @Override
     public void onCreatePreferences(Bundle b, String str) {
@@ -61,7 +113,7 @@ public class LauncherPreferenceMiscellaneousFragment extends LauncherPreferenceF
         });
         setupCacheClearPreference();
         setupMicrophoneRequestPreference();
-        requirePreference("spiritCursorPick").setOnPreferenceClickListener(preference -> { mCursorLauncher.launch(new String[]{"image/*"}); return true; });
+        requirePreference("spiritCursorPick").setOnPreferenceClickListener(preference -> { mCursorLauncher.launch(new android.content.Intent(android.content.Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI)); return true; });
         requirePreference("spiritCursorReset").setOnPreferenceClickListener(preference -> {
             git.artdeell.mojo.game.CursorImage.reset(requireContext());
             git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_cursor_reset_done, Toast.LENGTH_SHORT).show();

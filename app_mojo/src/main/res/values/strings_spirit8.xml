@@ -56,4 +56,6 @@
     <string name="spirit_server_delete_confirm">Remove this server from your list?</string>
     <string name="spirit_server_removed">Server removed</string>
     <string name="spirit_server_online_note">Most big servers only let Microsoft accounts join. With an offline account you can join servers that allow it.</string>
+    <string name="spirit_cursor_crop_title">Crop your cursor</string>
+    <string name="spirit_cursor_remove_bg">Remove the background</string>
 </resources>
