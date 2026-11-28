@@ -64,4 +64,14 @@
     <string name="spirit_server_filter_language">Language: %1$s</string>
     <string name="spirit_server_yes">Yes</string>
     <string name="spirit_server_add_btn">Add</string>
+    <string name="spirit_perf_gc_title">Last game session: stutter report</string>
+    <string name="spirit_perf_gc_none">Play the game once, then open this page again. The numbers come from the game itself, measured on your phone.</string>
+    <string name="spirit_perf_gc_session">Session length</string>
+    <string name="spirit_perf_gc_pauses">Memory clean-ups</string>
+    <string name="spirit_perf_gc_longest">Longest freeze</string>
+    <string name="spirit_perf_gc_share">Time frozen</string>
+    <string name="spirit_perf_gc_heap">Game memory (heap)</string>
+    <string name="spirit_perf_gc_verdict_full">The game ran out of memory %1$d times and froze to clean everything up. That is the usual cause of lag at 20-40 FPS. Give it more RAM, or turn off some mods.</string>
+    <string name="spirit_perf_gc_verdict_bad">Some freezes were longer than 100 ms, or the game froze a lot. More RAM or fewer mods helps.</string>
+    <string name="spirit_perf_gc_verdict_ok">Memory clean-ups were short, so the stutter probably comes from somewhere else (drawing, mods or heat).</string>
 </resources>

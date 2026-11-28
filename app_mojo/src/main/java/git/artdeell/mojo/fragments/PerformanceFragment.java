@@ -267,6 +267,27 @@ public class PerformanceFragment extends Fragment {
         line(cur, getString(R.string.spirit_perf_instance), mTarget != null ? mTarget.instanceName + (mTarget.mcVersion != null ? " · " + mTarget.mcVersion : "") : "-");
         mBody.addView(cur);
 
+        // --- last session: how long the game stopped for garbage collection (measured by the JVM on this phone)
+        LinearLayout gc = card(getString(R.string.spirit_perf_gc_title));
+        git.artdeell.mojo.perf.GcReport report = git.artdeell.mojo.perf.GcReport.read(new File(Tools.DIR_DATA, "spirit-gc.log"));
+        if(report == null) {
+            gc.addView(text(getString(R.string.spirit_perf_gc_none), 12, DIM, false));
+        } else {
+            line(gc, getString(R.string.spirit_perf_gc_session), String.format(java.util.Locale.US, "%.0f s", report.sessionSeconds));
+            line(gc, getString(R.string.spirit_perf_gc_pauses), report.pauses + " (" + report.over50 + " over 50 ms, " + report.over100 + " over 100 ms)");
+            line(gc, getString(R.string.spirit_perf_gc_longest), String.format(java.util.Locale.US, "%.0f ms", report.maxMs));
+            line(gc, getString(R.string.spirit_perf_gc_share), String.format(java.util.Locale.US, "%.1f %%", report.pausePercent()));
+            if(report.heapMb > 0) line(gc, getString(R.string.spirit_perf_gc_heap), report.heapMb + " MB");
+            String verdict;
+            if(report.fullGcs > 0) verdict = getString(R.string.spirit_perf_gc_verdict_full, report.fullGcs);
+            else if(report.over100 > 0 || report.pausePercent() > 5) verdict = getString(R.string.spirit_perf_gc_verdict_bad);
+            else verdict = getString(R.string.spirit_perf_gc_verdict_ok);
+            TextView v = text(verdict, 12, report.fullGcs > 0 || report.over100 > 0 || report.pausePercent() > 5 ? WARN : TEXT, false);
+            v.setPadding(0, dp(6), 0, 0);
+            gc.addView(v);
+        }
+        mBody.addView(gc);
+
         // --- tips
         LinearLayout tips = card(getString(R.string.spirit_perf_tips));
         tips.addView(text(getString(R.string.spirit_perf_tips_body), 13, TEXT, false));

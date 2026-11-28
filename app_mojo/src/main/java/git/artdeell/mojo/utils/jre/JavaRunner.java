@@ -282,12 +282,17 @@ public class JavaRunner {
      * Spirit: safe performance defaults. Anything the user or the version json already sets is left alone,
      * and unknown flags are ignored by the VM, so a runtime without G1 cannot fail to start because of this.
      */
-    private static void addPerformanceArgs(List<String> args) {
+    private static void addPerformanceArgs(List<String> args, int javaVersion) {
         if(!hasArg(args, "-XX:+IgnoreUnrecognizedVMOptions")) args.add(0, "-XX:+IgnoreUnrecognizedVMOptions");
         // No perf-data memory mapped file: faster start and less disk writing
         if(!hasArg(args, "-XX:+UsePerfData") && !hasArg(args, "-XX:-UsePerfData")) args.add("-XX:-UsePerfData");
         // NOTE: -XX:-BytecodeVerificationRemote was tried here and removed: it is a diagnostic flag on newer JVMs and
         // makes the VM refuse to start ("Bad arguments") unless -XX:+UnlockDiagnosticVMOptions comes first.
+        // A small log of the collector (Java 9 and newer only, Java 8 does not know -Xlog). The Performance Center reads
+        // it to show how long the game stopped for garbage collection in the last session.
+        if(javaVersion >= 9 && LauncherPreferences.DEFAULT_PREF.getBoolean("spiritGcLog", true) && !hasArg(args, "-Xlog:gc")) {
+            args.add("-Xlog:gc:file=" + Tools.DIR_DATA + "/spirit-gc.log:uptime:filecount=1,filesize=2m");
+        }
         // "Smoother frames": ask the collector for shorter pauses (a smaller pause target makes it work in smaller
         // steps) and process references with several threads. Both are plain product flags, the collector itself
         // is still the JVM's choice. Not measured on a phone, so it has its own switch (Misc settings) and is skipped
@@ -343,7 +348,7 @@ public class JavaRunner {
         vmArgs.clear();
 
 
-        addPerformanceArgs(runtimeArgs);
+        addPerformanceArgs(runtimeArgs, runtime.javaVersion);
         runtimeArgs.add("-XX:ActiveProcessorCount=" + java.lang.Runtime.getRuntime().availableProcessors());
         addx86SignalWorkaround(runtimeArgs);
         StringBuilder classpathBuilder = new StringBuilder().append("-Djava.class.path=");
