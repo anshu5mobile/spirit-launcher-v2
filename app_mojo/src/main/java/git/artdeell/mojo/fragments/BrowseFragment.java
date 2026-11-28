@@ -1,5 +1,6 @@
 package git.artdeell.mojo.fragments;
 
+import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -79,8 +80,29 @@ public class BrowseFragment extends Fragment {
             {"English", "en"}, {"Hindi", "hi"}, {"Spanish", "es"}, {"Portuguese", "pt"}, {"French", "fr"},
             {"German", "de"}, {"Russian", "ru"}, {"Turkish", "tr"}, {"Indonesian", "id"}, {"Chinese", "zh"}
     };
-    private boolean mServerOnlineOnly = false;
-    @Nullable private String mServerLanguage;
+    private final git.artdeell.mojo.browse.ModrinthServers.Filters mServerFilters = new git.artdeell.mojo.browse.ModrinthServers.Filters();
+    /** Tags of Modrinth's server list: header, then slug / label pairs (the slugs are the ones Modrinth uses) */
+    private static final String[][] SERVER_TAGS = {
+            {"#Gameplay"}, {"skyblock", "Skyblock"}, {"oneblock", "One Block"}, {"gens", "Gens"}, {"prison", "Prison"},
+            {"factions", "Factions"}, {"lifesteal", "Lifesteal"}, {"anarchy", "Anarchy"}, {"towns", "Towns"},
+            {"vanilla-like", "Vanilla Like"}, {"rpg", "RPG"}, {"minigames", "Minigames"}, {"racing", "Racing"},
+            {"battle-royale", "Battle Royale"}, {"parkour", "Parkour"}, {"bedwars", "Bed Wars"}, {"kitpvp", "Kit PvP"},
+            {"microgames", "Microgames"},
+            {"#Features"}, {"pokemon", "Pokémon"}, {"teams", "Teams"}, {"pvp", "PvP"}, {"pve", "PvE"}, {"op", "OP"},
+            {"economy", "Economy"}, {"plots", "Plots"}, {"questing", "Questing"}, {"personal-worlds", "Personal Worlds"},
+            {"media", "Media"}, {"bosses", "Bosses"}, {"classes", "Classes"}, {"custom-content", "Custom Content"},
+            {"dungeons", "Dungeons"},
+            {"#Meta"}, {"crossplay", "Crossplay"}, {"whitelisted", "Whitelisted"}, {"keep-inventory", "Keep Inventory"},
+            {"network", "Network"}, {"world-resets", "World Resets"}, {"creative-mode", "Creative Mode"},
+            {"hardcore-mode", "Hardcore Mode"}, {"survival-mode", "Survival Mode"}, {"adventure-mode", "Adventure Mode"},
+            {"#Community"}, {"smp", "SMP"}, {"mmo", "MMO"}, {"roleplay", "Roleplay"}, {"social", "Social"},
+            {"creator-community", "Creator Community"}, {"recording-smp", "Recording SMP"}, {"competitive", "Competitive"},
+            {"technical", "Technical"},
+    };
+    private static final String[][] SERVER_REGIONS = {
+            {"Asia", "asia"}, {"Australia", "australia"}, {"Europe", "europe"}, {"Middle East", "middle_east"},
+            {"Russia", "russia"}, {"South America", "south_america"}, {"US East", "us_east"}, {"US West", "us_west"}
+    };
 
     private BrowseKind mKind = BrowseKind.MODS;
     private int mSortIndex = 0;
@@ -359,27 +381,120 @@ public class BrowseFragment extends Fragment {
     }
 
     private void openServerFilters() {
-        String language = "Any";
-        for(String[] l : SERVER_LANGUAGES) if(l[1].equals(mServerLanguage)) language = l[0];
-        String[] rows = {
-                getString(R.string.spirit_server_filter_online, getString(mServerOnlineOnly ? R.string.spirit_server_yes : R.string.spirit_filter_any)),
-                getString(R.string.spirit_server_filter_language, language),
-                getString(R.string.spirit_filter_reset)
-        };
-        new AlertDialog.Builder(requireContext())
+        final Context c = requireContext();
+        final float d = c.getResources().getDisplayMetrics().density;
+        final int text = ContextCompat.getColor(c, R.color.spirit_text);
+        final int dim = ContextCompat.getColor(c, R.color.spirit_text_dim);
+        final git.artdeell.mojo.browse.ModrinthServers.Filters f = mServerFilters;
+        final android.widget.LinearLayout box = new android.widget.LinearLayout(c);
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        box.setPadding((int) (20 * d), (int) (8 * d), (int) (20 * d), (int) (8 * d));
+
+        // Server type: Java / Bedrock / both
+        box.addView(filterHeader(c, "Server type", dim));
+        final android.widget.RadioGroup type = radioGroup(c, text, new String[]{"Java", "Bedrock", "Both"}, f.type);
+        box.addView(type);
+        // Account: cracked or premium
+        box.addView(filterHeader(c, "Account needed", dim));
+        final android.widget.RadioGroup auth = radioGroup(c, text,
+                new String[]{"Any", "Cracked (offline mode) allowed", "Premium (Microsoft) only"}, f.auth);
+        box.addView(auth);
+        final TextView authNote = new TextView(c);
+        authNote.setText("Servers tell Modrinth themselves whether they allow offline mode, so a server can be missing the tag.");
+        authNote.setTextColor(dim);
+        authNote.setTextSize(11);
+        box.addView(authNote);
+
+        final android.widget.CheckBox online = new android.widget.CheckBox(c);
+        online.setText("Online now only");
+        online.setTextColor(text);
+        online.setChecked(f.onlineOnly);
+        box.addView(online);
+
+        box.addView(filterHeader(c, "Region", dim));
+        final android.widget.Spinner region = spinner(c, SERVER_REGIONS, f.region);
+        box.addView(region);
+        box.addView(filterHeader(c, "Language", dim));
+        final android.widget.Spinner language = spinner(c, SERVER_LANGUAGES, f.language);
+        box.addView(language);
+
+        final java.util.Map<String, android.widget.CheckBox> tagBoxes = new java.util.LinkedHashMap<>();
+        for(String[] t : SERVER_TAGS) {
+            if(t.length == 1) { box.addView(filterHeader(c, t[0].substring(1), dim)); continue; }
+            android.widget.CheckBox cb = new android.widget.CheckBox(c);
+            cb.setText(t[1]);
+            cb.setTextColor(text);
+            cb.setChecked(f.tags.contains(t[0]));
+            tagBoxes.put(t[0], cb);
+            box.addView(cb);
+        }
+        android.widget.ScrollView scroll = new android.widget.ScrollView(c);
+        scroll.addView(box);
+        new AlertDialog.Builder(c)
                 .setTitle(R.string.spirit_browse_filters)
-                .setItems(rows, (d, which) -> {
-                    if(which == 0) { mServerOnlineOnly = !mServerOnlineOnly; reload(); }
-                    else if(which == 1) {
-                        String[] names = new String[SERVER_LANGUAGES.length + 1];
-                        names[0] = getString(R.string.spirit_filter_any);
-                        for(int i = 0; i < SERVER_LANGUAGES.length; i++) names[i + 1] = SERVER_LANGUAGES[i][0];
-                        new AlertDialog.Builder(requireContext())
-                                .setItems(names, (dd, w) -> { mServerLanguage = w == 0 ? null : SERVER_LANGUAGES[w - 1][1]; reload(); })
-                                .show();
-                    } else { mServerOnlineOnly = false; mServerLanguage = null; reload(); }
+                .setView(scroll)
+                .setPositiveButton("Apply", (dlg, w) -> {
+                    f.type = checkedIndex(type);
+                    f.auth = checkedIndex(auth);
+                    f.onlineOnly = online.isChecked();
+                    int r = region.getSelectedItemPosition();
+                    f.region = r <= 0 ? null : SERVER_REGIONS[r - 1][1];
+                    int l = language.getSelectedItemPosition();
+                    f.language = l <= 0 ? null : SERVER_LANGUAGES[l - 1][1];
+                    f.tags.clear();
+                    for(java.util.Map.Entry<String, android.widget.CheckBox> e : tagBoxes.entrySet()) if(e.getValue().isChecked()) f.tags.add(e.getKey());
+                    reload();
                 })
+                .setNeutralButton(R.string.spirit_filter_reset, (dlg, w) -> {
+                    f.type = git.artdeell.mojo.browse.ModrinthServers.Filters.JAVA;
+                    f.auth = git.artdeell.mojo.browse.ModrinthServers.Filters.AUTH_ANY;
+                    f.onlineOnly = false; f.language = null; f.region = null; f.tags.clear();
+                    reload();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
+    }
+
+    private static TextView filterHeader(Context c, String text, int color) {
+        TextView h = new TextView(c);
+        h.setText(text);
+        h.setTextColor(color);
+        h.setTextSize(13);
+        h.setTypeface(null, Typeface.BOLD);
+        h.setPadding(0, (int) (14 * c.getResources().getDisplayMetrics().density), 0, (int) (4 * c.getResources().getDisplayMetrics().density));
+        return h;
+    }
+
+    private static android.widget.RadioGroup radioGroup(Context c, int textColor, String[] labels, int checked) {
+        android.widget.RadioGroup g = new android.widget.RadioGroup(c);
+        for(int i = 0; i < labels.length; i++) {
+            android.widget.RadioButton b = new android.widget.RadioButton(c);
+            b.setId(View.generateViewId());
+            b.setText(labels[i]);
+            b.setTextColor(textColor);
+            g.addView(b);
+            if(i == checked) g.check(b.getId());
+        }
+        return g;
+    }
+
+    private static int checkedIndex(android.widget.RadioGroup g) {
+        View chosen = g.findViewById(g.getCheckedRadioButtonId());
+        return Math.max(0, g.indexOfChild(chosen));
+    }
+
+    private static android.widget.Spinner spinner(Context c, String[][] choices, @Nullable String current) {
+        android.widget.Spinner sp = new android.widget.Spinner(c);
+        String[] names = new String[choices.length + 1];
+        names[0] = c.getString(R.string.spirit_filter_any);
+        int selected = 0;
+        for(int i = 0; i < choices.length; i++) {
+            names[i + 1] = choices[i][0];
+            if(choices[i][1].equals(current)) selected = i + 1;
+        }
+        sp.setAdapter(new android.widget.ArrayAdapter<>(c, android.R.layout.simple_spinner_dropdown_item, names));
+        sp.setSelection(selected);
+        return sp;
     }
 
     private void openFilters() {
@@ -656,15 +771,14 @@ public class BrowseFragment extends Fragment {
         final String query = mInput.getText().toString().trim();
         final String index = SERVER_SORTS[mSortIndex % SERVER_SORTS.length];
         final int offset = mOffset;
-        final boolean onlineOnly = mServerOnlineOnly;
-        final String language = mServerLanguage;
+        final git.artdeell.mojo.browse.ModrinthServers.Filters filters = mServerFilters;
         mProgress.setVisibility(View.VISIBLE);
         mMore.setVisibility(View.GONE);
         mEmpty.setVisibility(View.GONE);
         MojoApplication.sExecutorService.execute(() -> {
             git.artdeell.mojo.browse.ModrinthServers.Page page = null;
             try {
-                page = git.artdeell.mojo.browse.ModrinthServers.search(query, index, offset, onlineOnly, language);
+                page = git.artdeell.mojo.browse.ModrinthServers.search(query, index, offset, filters);
             } catch (IOException | RuntimeException e) {
                 page = null;
             }
@@ -680,7 +794,7 @@ public class BrowseFragment extends Fragment {
                 for(git.artdeell.mojo.browse.ModrinthServers.Server s : result.servers) addModrinthServerEntry(s);
                 mOffset += result.raw;
                 if(mList.getChildCount() == 0) showEmpty(getString(R.string.spirit_browse_no_results));
-                mMore.setVisibility(result.raw >= git.artdeell.mojo.browse.ModrinthServers.PAGE_SIZE ? View.VISIBLE : View.GONE);
+                mMore.setVisibility(result.raw >= result.limit ? View.VISIBLE : View.GONE);
             });
         });
     }
@@ -692,6 +806,8 @@ public class BrowseFragment extends Fragment {
                 ? getString(R.string.spirit_server_online, s.players, s.max, s.version == null ? "" : s.version)
                 : getString(R.string.spirit_server_offline);
         String sub = s.address + " · " + status;
+        if(s.bedrock) sub += " · Bedrock";
+        else if(s.cracked) sub += " · Cracked OK";
         if(!s.summary.isEmpty()) sub += "\n" + s.summary;
         ((TextView) entry.findViewById(R.id.spirit_entry_sub)).setText(sub);
         ImageView icon = entry.findViewById(R.id.spirit_entry_icon);
@@ -704,8 +820,15 @@ public class BrowseFragment extends Fragment {
             sIcons.getImage(receiver, "mrs_" + s.id, s.iconUrl);
         }
         TextView add = entry.findViewById(R.id.spirit_entry_install);
-        add.setText(R.string.spirit_server_add_btn);
+        add.setText(s.bedrock ? "Copy" : getString(R.string.spirit_server_add_btn));
         View.OnClickListener click = v -> {
+            if(s.bedrock) {
+                // This launcher plays Minecraft: Java Edition, so a Bedrock address can only be copied
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                if(cm != null) cm.setPrimaryClip(android.content.ClipData.newPlainText("server", s.address));
+                git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), "Address copied. This launcher plays Java Edition only.", Toast.LENGTH_LONG).show();
+                return;
+            }
             BrowseTarget target = mTarget;
             if(target == null) {
                 git.artdeell.mojo.utils.SpiritToast.makeText(requireContext(), R.string.spirit_browse_no_instance, Toast.LENGTH_LONG).show();
